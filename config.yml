@@ -1,0 +1,26 @@
+server:
+  host: 0.0.0.0
+  port: 8008
+
+meta:
+  title: i like git
+  description: hey kid, come get your free software
+  host: git.olexsmir.xyz
+  templates_dir: /home/olex/code/mugit/templates
+
+repo:
+  dir: /home/olex/mugit-test/
+  readmes:
+    - README
+    - README.md
+    - readme
+    - readme.md
+    - readme.txt
+  masters:
+    - master
+    - main
+  private:
+    # repo also can be marked as private by:
+    # - putting `muprivate` file in the root of repo
+    # - adding `[mugit]\n  private = true`
+    - org
