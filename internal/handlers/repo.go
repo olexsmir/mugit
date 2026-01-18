@@ -14,11 +14,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dustin/go-humanize"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/renderer/html"
 	"olexsmir.xyz/mugit/internal/git"
+	"olexsmir.xyz/mugit/internal/humanize"
 )
 
 func (h *handlers) index(w http.ResponseWriter, r *http.Request) {

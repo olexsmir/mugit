@@ -4,7 +4,6 @@ go 1.25.3
 
 require (
 	github.com/bluekeyes/go-gitdiff v0.8.1
-	github.com/dustin/go-humanize v1.0.1
 	github.com/go-git/go-git/v5 v5.16.4
 	github.com/yuin/goldmark v1.7.16
 	gopkg.in/yaml.v2 v2.4.0
