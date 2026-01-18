@@ -1,0 +1,79 @@
+package handlers
+
+import (
+	"fmt"
+	"html/template"
+	"net/http"
+	"path/filepath"
+	"strings"
+	"time"
+
+	"olexsmir.xyz/mugit/internal/config"
+	"olexsmir.xyz/mugit/internal/humanize"
+	"olexsmir.xyz/mugit/web"
+)
+
+type handlers struct {
+	c *config.Config
+	t *template.Template
+}
+
+func InitRoutes(cfg *config.Config) *http.ServeMux {
+	tmpls := template.Must(template.New("").
+		Funcs(templateFuncs).
+		ParseFS(web.TemplatesFS, "*"))
+	h := handlers{cfg, tmpls}
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /", h.index)
+	mux.HandleFunc("GET /static/{file}", h.serveStatic)
+	mux.HandleFunc("GET /{name}", h.multiplex)
+	mux.HandleFunc("POST /{name}", h.multiplex)
+	mux.HandleFunc("GET /{name}/{rest...}", h.multiplex)
+	mux.HandleFunc("POST /{name}/{rest...}", h.multiplex)
+	mux.HandleFunc("GET /{name}/tree/{ref}/{rest...}", h.repoTree)
+	mux.HandleFunc("GET /{name}/blob/{ref}/{rest...}", h.fileContents)
+	mux.HandleFunc("GET /{name}/log/{ref}", h.log)
+	mux.HandleFunc("GET /{name}/commit/{ref}", h.commit)
+	mux.HandleFunc("GET /{name}/refs/{$}", h.refs)
+	return mux
+}
+
+// multiplex, check if the request smells like gitprotocol-http(5), if so, it
+// passes it to git smart http, otherwise renders templates
+func (h *handlers) multiplex(w http.ResponseWriter, r *http.Request) {
+	if r.URL.RawQuery == "service=git-receive-pack" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("http pushing isn't supported"))
+		return
+	}
+
+	path := r.PathValue("rest")
+	if path == "info/refs" && r.Method == "GET" && r.URL.RawQuery == "service=git-upload-pack" {
+		h.infoRefs(w, r)
+	} else if path == "git-upload-pack" && r.Method == "POST" {
+		h.uploadPack(w, r)
+	} else if r.Method == "GET" {
+		h.repoIndex(w, r)
+	}
+}
+
+func (h *handlers) serveStatic(w http.ResponseWriter, r *http.Request) {
+	f := filepath.Clean(r.PathValue("file"))
+	// TODO: check if files exists
+	http.ServeFileFS(w, r, web.StaticFS, f)
+}
+
+var templateFuncs = template.FuncMap{
+	"commitSummary": func(v any) string {
+		s := fmt.Sprint(v)
+		if i := strings.IndexByte(s, '\n'); i >= 0 {
+			s = strings.TrimSuffix(s[:i], "\r")
+			return s + "..."
+		}
+		return strings.TrimSuffix(s, "\r")
+	},
+	"humanTime": func(t time.Time) string {
+		return humanize.Time(t)
+	},
+}

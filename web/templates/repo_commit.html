@@ -1,0 +1,120 @@
+{{ define "commit" }}
+<html>
+  <head>
+    {{ template "head" . }}
+    <title>{{ .name }}: {{ .commit.This }}</title>
+  </head>
+  {{ template "repo_header" . }}
+  <body>
+    <main>
+      <section class="commit">
+        <div class="box">
+          <div class="commit-info">
+            <span class="commit-date">{{ .commit.Author.When.Format "Mon, 02 Jan 2006 15:04:05 -0700" }}</span>
+            {{ .commit.Author.Name }} <a href="mailto:{{ .commit.Author.Email }}" class="commit-email">{{ .commit.Author.Email }}</a>
+          </div>
+          <pre class="commit-message">{{- .commit.Message -}}</pre>
+        </div>
+
+        <table class="commit-refs">
+          <tbody>
+            <tr>
+              <td class="label"><strong>commit</strong></td>
+              <td>
+                <span class="commit-hash">{{ .commit.This }}</span>
+              </td>
+            </tr>
+            {{ if .commit.Parent }}
+            <tr>
+              <td class="label"><strong>parent</strong></td>
+              <td>
+                <span class="commit-hash">{{ .commit.Parent }}</span>
+              </td>
+            </tr>
+            {{ end }}
+          </tbody>
+        </table>
+
+        <div class="diff-stat">
+          <div>
+          {{ .stat.FilesChanged }} files changed,
+          {{ .stat.Insertions }} insertions(+),
+          {{ .stat.Deletions }} deletions(-)
+          </div>
+
+          <div class="jump">
+            <strong>jump to</strong>
+            <table class="jump-table">
+              <tbody>
+                {{ range .diff }}
+                {{ $path := .Name.New }}
+                {{ if not $path }}{{ $path = .Name.Old }}{{ end }}
+                <tr>
+                  <td class="diff-type">
+                    {{ if .IsNew }}<span class="diff-type diff-add">A</span>{{ end }}
+                    {{ if .IsDelete }}<span class="diff-type diff-del">D</span>{{ end }}
+                    {{ if not (or .IsNew .IsDelete) }}<span class="diff-type diff-mod">M</span>{{ end }}
+                  </td>
+                  <td class="path"><a href="#{{ $path }}">{{ $path }}</a></td>
+                </tr>
+                {{ end }}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+      <section>
+        {{ $repo := .name }}
+        {{ $this := .commit.This }}
+        {{ $parent := .commit.Parent }}
+        {{ range .diff }}
+          {{ $path := .Name.New }}
+          {{ if not $path }}{{ $path = .Name.Old }}{{ end }}
+          <div id="{{ $path }}">
+            <div class="diff">
+            {{ if .IsNew }}
+            <span class="diff-type diff-add">A</span>
+            {{ end }}
+            {{ if .IsDelete }}
+            <span class="diff-type diff-del">D</span>
+            {{ end }}
+            {{ if not (or .IsNew .IsDelete) }}
+            <span class="diff-type diff-mod">M</span>
+            {{ end }}
+          {{ if .Name.Old }}
+          <a href="/{{ $repo }}/blob/{{ $parent }}/{{ .Name.Old }}">{{ .Name.Old }}</a>
+          {{ if .Name.New }}
+            &#8594; 
+            <a href="/{{ $repo }}/blob/{{ $this }}/{{ .Name.New }}">{{ .Name.New }}</a>
+          {{ end }}
+          {{ else }}
+          <a href="/{{ $repo }}/blob/{{ $this }}/{{ .Name.New }}">{{ .Name.New }}</a>
+          {{- end -}}
+          {{ if .IsBinary }}
+          <p>Not showing binary file.</p>
+          {{ else }}
+            <pre>
+            {{- range .TextFragments -}}
+            <p>{{- .Header -}}</p>
+            {{- range .Lines -}}
+              {{- if eq .Op.String "+" -}}
+              <span class="diff-add">{{ .String }}</span>
+              {{- end -}}
+              {{- if eq .Op.String "-" -}}
+              <span class="diff-del">{{ .String }}</span>
+              {{- end -}}
+              {{- if eq .Op.String " " -}}
+              <span class="diff-noop">{{ .String }}</span>
+              {{- end -}}
+            {{- end -}}
+            {{- end -}}
+          {{- end -}}
+            </pre>
+          </div>
+          </div>
+        {{ end }}
+      </section>
+    </main>
+  </body>
+</html>
+{{ end }}

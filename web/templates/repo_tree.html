@@ -1,0 +1,73 @@
+{{ define "repo_tree" }}
+<html>
+  <head>
+    {{ template "head" . }}
+    <title>{{ .name }}: tree ({{ .ref }})</title>
+  </head>
+  {{ template "repo_header" . }}
+  <body>
+    <main>
+      {{ $repo := .name }}
+      {{ $ref := .ref }}
+      {{ $parent := .parent }}
+
+      <table class="tree">
+        <thead>
+          <tr class="nohover">
+            <th class="mode">mode</th>
+            <th class="size">size</th>
+            <th class="name">name</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{ if $parent }}
+          <tr>
+            <td class="mode"></td>
+            <td class="size"></td>
+            <td class="name"><a href="/{{ $repo }}/tree/{{ $ref }}/{{ .dotdot }}">..</a></td>
+          </tr>
+          {{ end }}
+
+          {{ range .files }}
+          {{ if not .IsFile }}
+          <tr>
+            <td class="mode">{{ .Mode }}</td>
+            <td class="size">{{ .Size }}</td>
+            <td class="name">
+              {{ if $parent }}
+              <a href="/{{ $repo }}/tree/{{ $ref }}/{{ $parent }}/{{ .Name }}">{{ .Name }}/</a>
+              {{ else }}
+              <a href="/{{ $repo }}/tree/{{ $ref }}/{{ .Name }}">{{ .Name }}/</a>
+              {{ end }}
+            </td>
+          </tr>
+          {{ end }}
+          {{ end }}
+
+          {{ range .files }}
+          {{ if .IsFile }}
+          <tr>
+            <td class="mode">{{ .Mode }}</td>
+            <td class="size">{{ .Size }}</td>
+            <td class="name">
+              {{ if $parent }}
+              <a href="/{{ $repo }}/blob/{{ $ref }}/{{ $parent }}/{{ .Name }}">{{ .Name }}</a>
+              {{ else }}
+              <a href="/{{ $repo }}/blob/{{ $ref }}/{{ .Name }}">{{ .Name }}</a>
+              {{ end }}
+            </td>
+          </tr>
+          {{ end }}
+          {{ end }}
+        </tbody>
+      </table>
+
+      <article>
+        <pre>
+          {{- if .readme }}{{ .readme }}{{- end -}}
+        </pre>
+      </article>
+    </main>
+  </body>
+</html>
+{{ end }}

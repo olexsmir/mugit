@@ -1,0 +1,47 @@
+{{ define "repo_index" }}
+<!DOCTYPE html>
+<html>
+  <head>
+    {{ template "head" . }}
+    <title>{{ .name }} &mdash; {{ .meta.Title }}</title>
+  </head>
+  <body>
+    {{ template "repo_header" . }}
+
+    <main>
+      {{ $repo := .name }}
+
+      <section class="repo-index">
+        <div class="repo-index-main">
+          {{ range .commits }}
+          <div class="box">
+            <div>
+              <a href="/{{ $repo }}/commit/{{ .Hash.String }}" class="commit-hash">{{ slice .Hash.String 0 8 }}</a>
+              &mdash; {{ .Author.Name }}
+              <span class="commit-date commit-info">{{ .Author.When.Format "Mon, 02 Jan 2006" }}</span>
+            </div>
+            <div>{{ commitSummary .Message }}</div>
+          </div>
+          {{ end }}
+        </div>
+
+        <aside class="repo-index-side">
+          <div class="box">
+            <strong>clone</strong>
+            <pre>{{- /**/ -}}
+https://{{ .servername }}/{{ .name }}
+git@{{ .servername }}:{{ .name }}
+{{- /**/ -}}</pre>
+          </div>
+        </aside>
+      </section>
+
+      {{- if .readme }}
+      <article class="readme">
+        {{- .readme -}}
+      </article>
+      {{- end -}}
+    </main>
+  </body>
+</html>
+{{ end }}

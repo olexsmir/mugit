@@ -29,8 +29,8 @@ func run() error {
 	mux := handlers.InitRoutes(cfg)
 
 	port := strconv.Itoa(cfg.Server.Port)
-	err = http.ListenAndServe(net.JoinHostPort(cfg.Server.Host, port), mux)
-	if err != nil {
+	slog.Info("starting server", "host", cfg.Server.Host, "port", port)
+	if err = http.ListenAndServe(net.JoinHostPort(cfg.Server.Host, port), mux); err != nil {
 		slog.Error("server error", "err", err)
 	}
 

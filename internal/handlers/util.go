@@ -5,16 +5,21 @@ import (
 	"net/http"
 )
 
-func (h *handlers) write404(w http.ResponseWriter) {
-	w.WriteHeader(http.StatusNotFound)
-	if err := h.t.ExecuteTemplate(w, "404", nil); err != nil {
-		slog.Error("404 template", "err", err)
+func (h *handlers) templ(w http.ResponseWriter, name string, data any) {
+	if err := h.t.ExecuteTemplate(w, name, data); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		slog.Error("template", "name", name, "err", err)
 	}
 }
 
-func (h *handlers) write500(w http.ResponseWriter) {
+func (h *handlers) write404(w http.ResponseWriter, err error) {
+	slog.Info("404", "err", err)
+	w.WriteHeader(http.StatusNotFound)
+	h.templ(w, "404", nil)
+}
+
+func (h *handlers) write500(w http.ResponseWriter, err error) {
+	slog.Info("500", "err", err)
 	w.WriteHeader(http.StatusInternalServerError)
-	if err := h.t.ExecuteTemplate(w, "500", nil); err != nil {
-		slog.Error("500 template", "err", err)
-	}
+	h.templ(w, "500", nil)
 }

@@ -14,21 +14,15 @@ type Config struct {
 		Port int    `yaml:"port"`
 	} `yaml:"server"`
 	Meta struct {
-		Title        string `yaml:"title"`
-		Description  string `yaml:"description"`
-		Host         string `yaml:"host"`
-		ChromaTheme  string `yaml:"chroma_theme"`
-		TemplatesDir string `yaml:"templates_dir"`
+		Title       string `yaml:"title"`
+		Description string `yaml:"description"`
+		Host        string `yaml:"host"`
 	} `yaml:"meta"`
 	Repo struct {
 		Dir     string   `yaml:"dir"`
 		Readmes []string `yaml:"readmes"`
 		Masters []string `yaml:"masters"`
-		Private []string `yaml:"private"`
 	} `yaml:"repo"`
-	SSH struct {
-		Keys []string `yaml:"keys"`
-	} `yaml:"ssh"`
 }
 
 func Load(fpath string) (*Config, error) {
@@ -45,12 +39,6 @@ func Load(fpath string) (*Config, error) {
 	if config.Repo.Dir, err = filepath.Abs(config.Repo.Dir); err != nil {
 		return nil, err
 	}
-
-	if config.Meta.TemplatesDir, err = filepath.Abs(config.Meta.TemplatesDir); err != nil {
-		return nil, err
-	}
-
-	fmt.Println(config.Meta.TemplatesDir)
 
 	if verr := config.validate(); verr != nil {
 		return nil, verr

@@ -1,0 +1,28 @@
+{{ define "repo_header" }}
+<header class="repo-header">
+  <div class="repo-breadcrumb">
+    <a href="/">all repos</a>
+    {{- if .ref }}
+    <span class="ref">@ {{ .ref }}</span>
+    {{- end }}
+  </div>
+
+  <h1 class="repo-name">{{ .name }}</h1>
+  {{- if .desc }}
+  <div class="desc">{{ .desc }}</div>
+  {{- end }}
+
+  <nav class="repo-nav">
+    <ul>
+      {{- if .name }}
+      <li><a href="/{{ .name }}">summary</a></li>
+      <li><a href="/{{ .name }}/refs">refs</a></li>
+      {{- if .ref }}
+      <li><a href="/{{ .name }}/tree/{{ .ref }}/">tree</a></li>
+      <li><a href="/{{ .name }}/log/{{ .ref }}">log</a></li>
+      {{- end }}
+      {{- end }}
+    </ul>
+  </nav>
+</header>
+{{ end }}

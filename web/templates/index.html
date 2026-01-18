@@ -1,0 +1,35 @@
+{{ define "index" }}
+<!DOCTYPE html>
+<html>
+  <head>
+    {{ template "head" . }}
+    <title>{{ .meta.Title }}</title>
+  </head>
+  <header>
+    <h1>{{ .meta.Title }}</h1>
+    <h2>{{ .meta.Description }}</h2>
+  </header>
+  <body>
+    <main>
+      <table class="index">
+        <thead>
+          <tr class="nohover">
+            <th class="url">Name</th>
+            <th class="desc">Description</th>
+            <th class="idle">Idle</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{ range .repos }}
+          <tr>
+            <td class="url"><a href="/{{ .Name }}">{{ .Name }}</a></td>
+            <td class="desc">{{ .Desc }}</td>
+            <td class="idle">{{ .Idle }}</td>
+          </tr>
+          {{ end}}
+        </tbody>
+      </table>
+    </main>
+  </body>
+</html>
+{{ end }}

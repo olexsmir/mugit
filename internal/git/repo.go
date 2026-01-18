@@ -44,7 +44,10 @@ func Open(path string, ref string) (*Repo, error) {
 }
 
 func (g *Repo) Commits() ([]*object.Commit, error) {
-	ci, err := g.r.Log(&git.LogOptions{From: g.h})
+	ci, err := g.r.Log(&git.LogOptions{
+		From:  g.h,
+		Order: git.LogOrderCommitterTime,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("commits from ref: %w", err)
 	}

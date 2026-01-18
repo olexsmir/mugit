@@ -1,0 +1,43 @@
+{{ define "repo_log" }}
+<html>
+  <head>
+    {{ template "head" . }}
+  <title>{{ .name }}: log</title>
+  </head>
+  {{ template "repo_header" . }}
+  <body>
+    <main>
+      {{ $repo := .name }}
+
+      <table class="log">
+        <thead>
+          <tr class="nohover">
+            <th class="msg">commit</th>
+            <th class="author">author</th>
+            <th class="age">age</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{ range .commits }}
+          <tr>
+            <td class="msg">
+              <a href="/{{ $repo }}/commit/{{ .Hash.String }}">{{ commitSummary .Message }}</a>
+            </td>
+            <td class="author">
+              <span class="author-short">
+                {{ .Author.Name }} <a href="mailto:{{ .Author.Email }}" class="commit-email">{{ .Author.Email }}</a>
+              </span>
+              <span class="author-tip" role="tooltip">
+                <strong>{{ .Author.Name }}</strong><br>
+                <a href="mailto:{{ .Author.Email }}" class="commit-email">{{ .Author.Email }}</a>
+              </span>
+            </td>
+            <td class="age">{{ humanTime .Committer.When }}</td>
+          </tr>
+          {{ end }}
+        </tbody>
+      </table>
+    </main>
+  </body>
+</html>
+{{ end }}

@@ -6,7 +6,6 @@ meta:
   title: i like git
   description: hey kid, come get your free software
   host: git.olexsmir.xyz
-  templates_dir: /home/olex/code/mugit/templates
 
 repo:
   dir: /home/olex/mugit-test/
@@ -19,8 +18,3 @@ repo:
   masters:
     - master
     - main
-  private:
-    # repo also can be marked as private by:
-    # - putting `muprivate` file in the root of repo
-    # - adding `[mugit]\n  private = true`
-    - org
