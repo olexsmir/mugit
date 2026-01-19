@@ -4,8 +4,10 @@ go 1.25.3
 
 require (
 	github.com/bluekeyes/go-gitdiff v0.8.1
+	github.com/gliderlabs/ssh v0.3.8
 	github.com/go-git/go-git/v5 v5.16.4
 	github.com/yuin/goldmark v1.7.16
+	golang.org/x/crypto v0.47.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -13,6 +15,7 @@ require (
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/ProtonMail/go-crypto v1.1.6 // indirect
+	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
 	github.com/cloudflare/circl v1.6.1 // indirect
 	github.com/cyphar/filepath-securejoin v0.4.1 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
@@ -25,8 +28,7 @@ require (
 	github.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3 // indirect
 	github.com/skeema/knownhosts v1.3.1 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
-	golang.org/x/crypto v0.37.0 // indirect
-	golang.org/x/net v0.39.0 // indirect
-	golang.org/x/sys v0.32.0 // indirect
+	golang.org/x/net v0.48.0 // indirect
+	golang.org/x/sys v0.40.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )

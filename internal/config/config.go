@@ -18,6 +18,12 @@ type Config struct {
 		Description string `yaml:"description"`
 		Host        string `yaml:"host"`
 	} `yaml:"meta"`
+	SSH struct {
+		Enable  bool     `yaml:"enable"`
+		Port    int      `yaml:"port"`
+		HostKey string   `yaml:"host_key"`
+		Keys    []string `yaml:"keys"`
+	} `yaml:"ssh"`
 	Repo struct {
 		Dir     string   `yaml:"dir"`
 		Readmes []string `yaml:"readmes"`

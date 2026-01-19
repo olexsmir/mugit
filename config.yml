@@ -3,9 +3,17 @@ server:
   port: 8008
 
 meta:
-  title: i like git
   description: hey kid, come get your free software
+  title: git.olexsmir.xyz
   host: git.olexsmir.xyz
+
+ssh:
+  enable: true
+  port: 2222
+  host_key: /home/olex/.ssh/mugit
+  keys:
+    - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPLLJdkVYKZgsayw+sHanKPKZbI0RMS2CakqBCEi5Trz
+    - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMPQ0Qz0DFB+rGrD8ScUqbUTZ1/O8FHrOBF5bIAGQgMj olex@rachlinux
 
 repo:
   dir: /home/olex/mugit-test/

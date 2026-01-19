@@ -1,15 +1,19 @@
 package main
 
 import (
+	"context"
 	"log"
 	"log/slog"
 	"net"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 
 	"olexsmir.xyz/mugit/internal/config"
 	"olexsmir.xyz/mugit/internal/handlers"
+	"olexsmir.xyz/mugit/internal/ssh"
 )
 
 func main() {
@@ -26,12 +30,38 @@ func run() error {
 		return err
 	}
 
-	mux := handlers.InitRoutes(cfg)
+	httpServer := &http.Server{
+		Addr:    net.JoinHostPort(cfg.Server.Host, strconv.Itoa(cfg.Server.Port)),
+		Handler: handlers.InitRoutes(cfg),
+	}
 
-	port := strconv.Itoa(cfg.Server.Port)
-	slog.Info("starting server", "host", cfg.Server.Host, "port", port)
-	if err = http.ListenAndServe(net.JoinHostPort(cfg.Server.Host, port), mux); err != nil {
-		slog.Error("server error", "err", err)
+	go func() {
+		slog.Info("starting http server", "host", cfg.Server.Host, "port", cfg.Server.Port)
+
+		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			slog.Error("HTTP server error", "err", err)
+		}
+	}()
+
+	sshServer := ssh.NewServer(cfg)
+	if cfg.SSH.Enable {
+		slog.Info("starting ssh server", "port", cfg.SSH.Port)
+		if err := sshServer.Start(); err != nil {
+			slog.Error("ssh server error", "err", err)
+		}
+	}
+
+	// Wait for interrupt signal
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	sig := <-sigChan
+	slog.Info("received signal, starting graceful shutdown", "signal", sig)
+
+	if err := httpServer.Shutdown(context.TODO()); err != nil {
+		slog.Error("HTTP server shutdown error", "err", err)
+	} else {
+		slog.Info("HTTP server shutdown complete")
 	}
 
 	return nil
