@@ -17,7 +17,6 @@ import (
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/renderer/html"
-	"olexsmir.xyz/mugit/internal/git"
 	"olexsmir.xyz/mugit/internal/humanize"
 )
 
@@ -36,7 +35,7 @@ func (h *handlers) index(w http.ResponseWriter, r *http.Request) {
 	repoInfos := []repoInfo{}
 	for _, dir := range dirs {
 		name := dir.Name()
-		repo, err := git.Open(filepath.Join(h.c.Repo.Dir, name), "")
+		repo, err := h.openPublicRepo(name, "")
 		if err != nil {
 			slog.Error("", "name", name, "err", err)
 			continue
@@ -50,11 +49,6 @@ func (h *handlers) index(w http.ResponseWriter, r *http.Request) {
 
 		lastComit, err := repo.LastCommit()
 		if err != nil {
-			slog.Error("", "err", err)
-			continue
-		}
-
-		if isPrivate, err := repo.IsPrivate(); err != nil || isPrivate {
 			slog.Error("", "err", err)
 			continue
 		}
@@ -85,15 +79,9 @@ var markdown = goldmark.New(
 	))
 
 func (h *handlers) repoIndex(w http.ResponseWriter, r *http.Request) {
-	name := filepath.Clean(r.PathValue("name"))
-	repo, err := git.Open(filepath.Join(h.c.Repo.Dir, name), "")
+	name := r.PathValue("name")
+	repo, err := h.openPublicRepo(name, "")
 	if err != nil {
-		h.write404(w, err)
-		return
-	}
-
-	isPrivate, err := repo.IsPrivate()
-	if isPrivate || err != nil {
 		h.write404(w, err)
 		return
 	}
@@ -154,11 +142,11 @@ func (h *handlers) repoIndex(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handlers) repoTree(w http.ResponseWriter, r *http.Request) {
-	name := filepath.Clean(r.PathValue("name"))
+	name := r.PathValue("name")
 	ref := r.PathValue("ref")
 	treePath := r.PathValue("rest")
 
-	repo, err := git.Open(filepath.Join(h.c.Repo.Dir, name), ref)
+	repo, err := h.openPublicRepo(name, ref)
 	if err != nil {
 		h.write404(w, err)
 		return
@@ -195,7 +183,7 @@ func (h *handlers) repoTree(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handlers) fileContents(w http.ResponseWriter, r *http.Request) {
-	name := filepath.Clean(r.PathValue("name"))
+	name := r.PathValue("name")
 	ref := r.PathValue("ref")
 	treePath := r.PathValue("rest")
 
@@ -204,14 +192,8 @@ func (h *handlers) fileContents(w http.ResponseWriter, r *http.Request) {
 		raw = rawParam
 	}
 
-	repo, err := git.Open(filepath.Join(h.c.Repo.Dir, name), "")
+	repo, err := h.openPublicRepo(name, ref)
 	if err != nil {
-		h.write404(w, err)
-		return
-	}
-
-	isPrivate, err := repo.IsPrivate()
-	if isPrivate || err != nil {
 		h.write404(w, err)
 		return
 	}
@@ -261,10 +243,10 @@ func (h *handlers) fileContents(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handlers) log(w http.ResponseWriter, r *http.Request) {
-	name := filepath.Clean(r.PathValue("name"))
+	name := r.PathValue("name")
 	ref := r.PathValue("ref")
 
-	repo, err := git.Open(filepath.Join(h.c.Repo.Dir, name), ref)
+	repo, err := h.openPublicRepo(name, ref)
 	if err != nil {
 		h.write404(w, err)
 		return
@@ -299,10 +281,9 @@ func (h *handlers) log(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handlers) commit(w http.ResponseWriter, r *http.Request) {
-	name := filepath.Clean(r.PathValue("name"))
+	name := r.PathValue("name")
 	ref := r.PathValue("ref")
-
-	repo, err := git.Open(filepath.Join(h.c.Repo.Dir, name), ref)
+	repo, err := h.openPublicRepo(name, ref)
 	if err != nil {
 		h.write404(w, err)
 		return
@@ -337,8 +318,8 @@ func (h *handlers) commit(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handlers) refs(w http.ResponseWriter, r *http.Request) {
-	name := filepath.Clean(r.PathValue("name"))
-	repo, err := git.Open(filepath.Join(h.c.Repo.Dir, name), "")
+	name := r.PathValue("name")
+	repo, err := h.openPublicRepo(name, "")
 	if err != nil {
 		h.write404(w, err)
 		return

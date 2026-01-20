@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"path/filepath"
+	"slices"
 	"strconv"
 
 	"github.com/gliderlabs/ssh"
@@ -53,14 +54,9 @@ func (s *Server) authhandler(ctx ssh.Context, key ssh.PublicKey) bool {
 
 	slog.Info("ssh request", "fingerprint", fingerprint)
 
-	authorized := false
-	for _, authKey := range s.authKeys {
-		if ssh.KeysEqual(key, authKey) {
-			authorized = true
-			break
-		}
-	}
-
+	authorized := slices.ContainsFunc(s.authKeys, func(i gossh.PublicKey) bool {
+		return ssh.KeysEqual(key, i)
+	})
 	ctx.SetValue(authorizedKey, authorized)
 	return true
 }

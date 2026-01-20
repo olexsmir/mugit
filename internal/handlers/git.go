@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"compress/gzip"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -31,15 +32,9 @@ func (h *handlers) multiplex(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handlers) infoRefs(w http.ResponseWriter, r *http.Request) {
-	name := filepath.Clean(r.PathValue("name"))
-	repo, err := git.Open(filepath.Join(h.c.Repo.Dir, name), "")
+	name := r.PathValue("name")
+	_, err := h.openPublicRepo(name, "")
 	if err != nil {
-		h.write404(w, err)
-		return
-	}
-
-	isPrivate, err := repo.IsPrivate()
-	if isPrivate || err != nil {
 		h.write404(w, err)
 		return
 	}
@@ -57,15 +52,9 @@ func (h *handlers) infoRefs(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handlers) uploadPack(w http.ResponseWriter, r *http.Request) {
-	name := filepath.Clean(r.PathValue("name"))
-	repo, err := git.Open(filepath.Join(h.c.Repo.Dir, name), "")
+	name := r.PathValue("name")
+	_, err := h.openPublicRepo(name, "")
 	if err != nil {
-		h.write404(w, err)
-		return
-	}
-
-	isPrivate, err := repo.IsPrivate()
-	if isPrivate || err != nil {
 		h.write404(w, err)
 		return
 	}
@@ -95,6 +84,25 @@ func (h *handlers) uploadPack(w http.ResponseWriter, r *http.Request) {
 		slog.Error("git: upload-pack", "err", err)
 		return
 	}
+}
+
+func (h *handlers) openPublicRepo(name, ref string) (*git.Repo, error) {
+	n := filepath.Clean(name)
+	repo, err := git.Open(filepath.Join(h.c.Repo.Dir, n), ref)
+	if err != nil {
+		return nil, err
+	}
+
+	isPrivate, err := repo.IsPrivate()
+	if err != nil {
+		return nil, err
+	}
+
+	if isPrivate {
+		return nil, fmt.Errorf("repo is private")
+	}
+
+	return repo, nil
 }
 
 type flushWriter struct {
