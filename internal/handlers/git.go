@@ -7,13 +7,42 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"olexsmir.xyz/mugit/internal/git"
 	"olexsmir.xyz/mugit/internal/git/gitservice"
 )
 
-func (h *handlers) infoRefs(w http.ResponseWriter, r *http.Request) {
-	// TODO: 404 for private repos
+// multiplex, check if the request smells like gitprotocol-http(5), if so, it
+// passes it to git smart http, otherwise renders templates
+func (h *handlers) multiplex(w http.ResponseWriter, r *http.Request) {
+	if r.URL.RawQuery == "service=git-receive-pack" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("http pushing isn't supported"))
+		return
+	}
 
+	path := r.PathValue("rest")
+	if path == "info/refs" && r.Method == "GET" && r.URL.RawQuery == "service=git-upload-pack" {
+		h.infoRefs(w, r)
+	} else if path == "git-upload-pack" && r.Method == "POST" {
+		h.uploadPack(w, r)
+	} else if r.Method == "GET" {
+		h.repoIndex(w, r)
+	}
+}
+
+func (h *handlers) infoRefs(w http.ResponseWriter, r *http.Request) {
 	name := filepath.Clean(r.PathValue("name"))
+	repo, err := git.Open(filepath.Join(h.c.Repo.Dir, name), "")
+	if err != nil {
+		h.write404(w, err)
+		return
+	}
+
+	isPrivate, err := repo.IsPrivate()
+	if isPrivate || err != nil {
+		h.write404(w, err)
+		return
+	}
 
 	w.Header().Set("content-type", "application/x-git-upload-pack-advertisement")
 	w.WriteHeader(http.StatusOK)
@@ -28,9 +57,18 @@ func (h *handlers) infoRefs(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handlers) uploadPack(w http.ResponseWriter, r *http.Request) {
-	// TODO: 404 for private repos
-
 	name := filepath.Clean(r.PathValue("name"))
+	repo, err := git.Open(filepath.Join(h.c.Repo.Dir, name), "")
+	if err != nil {
+		h.write404(w, err)
+		return
+	}
+
+	isPrivate, err := repo.IsPrivate()
+	if isPrivate || err != nil {
+		h.write404(w, err)
+		return
+	}
 
 	w.Header().Set("content-type", "application/x-git-upload-pack-result")
 	w.Header().Set("Connection", "Keep-Alive")

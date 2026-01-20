@@ -79,7 +79,7 @@ func (s *Server) handler(sess ssh.Session) {
 	repoPath := cmd[1]
 
 	repoPath = filepath.Join(s.c.Repo.Dir, filepath.Clean(repoPath))
-	_, err := git.Open(repoPath, "")
+	repo, err := git.Open(repoPath, "")
 	if err != nil {
 		slog.Error("ssh: failed to open repo", "err", err)
 		s.repoNotFound(sess)
@@ -88,6 +88,17 @@ func (s *Server) handler(sess ssh.Session) {
 
 	switch gitCmd {
 	case "git-upload-pack":
+		isPrivate, err := repo.IsPrivate()
+		if err != nil {
+			s.error(sess, err)
+			return
+		}
+
+		if isPrivate && !authorized {
+			s.repoNotFound(sess)
+			return
+		}
+
 		if err := gitservice.UploadPack(repoPath, false, sess, sess); err != nil {
 			s.error(sess, err)
 			return

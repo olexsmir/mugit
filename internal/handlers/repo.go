@@ -54,6 +54,11 @@ func (h *handlers) index(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
+		if isPrivate, err := repo.IsPrivate(); err != nil || isPrivate {
+			slog.Error("", "err", err)
+			continue
+		}
+
 		repoInfos = append(repoInfos, repoInfo{
 			Name: name,
 			Desc: desc,
@@ -88,7 +93,7 @@ func (h *handlers) repoIndex(w http.ResponseWriter, r *http.Request) {
 	}
 
 	isPrivate, err := repo.IsPrivate()
-	if isPrivate || err != nil { // FIX: private = 404, err = 500
+	if isPrivate || err != nil {
 		h.write404(w, err)
 		return
 	}

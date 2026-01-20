@@ -39,24 +39,6 @@ func InitRoutes(cfg *config.Config) *http.ServeMux {
 	return mux
 }
 
-// multiplex, check if the request smells like gitprotocol-http(5), if so, it
-// passes it to git smart http, otherwise renders templates
-func (h *handlers) multiplex(w http.ResponseWriter, r *http.Request) {
-	if r.URL.RawQuery == "service=git-receive-pack" {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("http pushing isn't supported"))
-		return
-	}
-
-	path := r.PathValue("rest")
-	if path == "info/refs" && r.Method == "GET" && r.URL.RawQuery == "service=git-upload-pack" {
-		h.infoRefs(w, r)
-	} else if path == "git-upload-pack" && r.Method == "POST" {
-		h.uploadPack(w, r)
-	} else if r.Method == "GET" {
-		h.repoIndex(w, r)
-	}
-}
 
 func (h *handlers) serveStatic(w http.ResponseWriter, r *http.Request) {
 	f := filepath.Clean(r.PathValue("file"))
