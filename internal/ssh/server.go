@@ -81,11 +81,10 @@ func (s *Server) handler(sess ssh.Session) {
 	repoPath = filepath.Join(s.c.Repo.Dir, filepath.Clean(repoPath))
 	_, err := git.Open(repoPath, "")
 	if err != nil {
-		s.error(sess, err)
+		slog.Error("ssh: failed to open repo", "err", err)
+		s.repoNotFound(sess)
 		return
 	}
-
-	fmt.Println(repoPath)
 
 	switch gitCmd {
 	case "git-upload-pack":
@@ -96,11 +95,11 @@ func (s *Server) handler(sess ssh.Session) {
 		sess.Exit(0)
 	case "git-receive-pack":
 		if !authorized {
-			s.repoNotFound(sess)
+			s.unauthorized(sess)
 			return
 		}
 
-		if err := gitservice.ReceivePack(repoPath, sess, sess); err != nil {
+		if err := gitservice.ReceivePack(repoPath, sess, sess, sess.Stderr()); err != nil {
 			s.error(sess, err)
 			return
 		}
@@ -108,7 +107,7 @@ func (s *Server) handler(sess ssh.Session) {
 
 	default:
 		slog.Error("ssh unsupported command", "cmd", cmd)
-		fmt.Fprintln(sess, "Unsupported command")
+		gitservice.PackError(sess, "Unsupported command.")
 		sess.Exit(1)
 	}
 }
@@ -127,12 +126,17 @@ func (s *Server) parseAuthKeys() error {
 }
 
 func (s *Server) repoNotFound(sess ssh.Session) {
-	fmt.Fprintln(sess, "Sorry but repo you're looking for is not found.")
+	gitservice.PackError(sess, "Repository not found.")
+	sess.Exit(1)
+}
+
+func (s *Server) unauthorized(sess ssh.Session) {
+	gitservice.PackError(sess, "You are not authorized to push to this repository.")
 	sess.Exit(1)
 }
 
 func (s *Server) error(sess ssh.Session, err error) {
-	fmt.Fprintln(sess, "unexpected server error")
-	sess.Exit(1)
 	slog.Error("error on ssh side", "err", err)
+	gitservice.PackError(sess, "Unexpected server error.")
+	sess.Exit(1)
 }

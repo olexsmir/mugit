@@ -29,10 +29,10 @@ func InfoRefs(dir string, out io.Writer) error {
 		return fmt.Errorf("start git-upload-pack: %w", err)
 	}
 
-	if err := packLine(out, "# service=git-upload-pack\n"); err != nil {
+	if err := PackLine(out, "# service=git-upload-pack\n"); err != nil {
 		return fmt.Errorf("write pack line: %w", err)
 	}
-	if err := packFlush(out); err != nil {
+	if err := PackFlush(out); err != nil {
 		return fmt.Errorf("flush pack: %w", err)
 	}
 
@@ -64,11 +64,12 @@ func UploadPack(dir string, statelessRPC bool, in io.Reader, out io.Writer) erro
 	})
 }
 
-func ReceivePack(dir string, in io.Reader, out io.Writer) error {
+func ReceivePack(dir string, in io.Reader, out, stderr io.Writer) error {
 	return gitCmd("receive-pack", config{
 		Dir:    dir,
 		Stdin:  in,
 		Stdout: out,
+		Stderr: stderr,
 	})
 }
 
@@ -79,6 +80,7 @@ type config struct {
 	ExtraArgs    []string
 	Stdin        io.Reader
 	Stdout       io.Writer
+	Stderr       io.Writer
 }
 
 func gitCmd(service string, c config) error {
@@ -115,7 +117,11 @@ func gitCmd(service string, c config) error {
 	if err != nil {
 		return err
 	}
-	cmd.Stderr = cmd.Stdout
+	if c.Stderr != nil {
+		cmd.Stderr = c.Stderr
+	} else {
+		cmd.Stderr = cmd.Stdout
+	}
 
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("start %s: %w", service, err)
@@ -149,12 +155,26 @@ func gitCmd(service string, c config) error {
 	return nil
 }
 
-func packLine(w io.Writer, s string) error {
+// PackLine writes a pkt-line formatted string.
+func PackLine(w io.Writer, s string) error {
 	_, err := fmt.Fprintf(w, "%04x%s", len(s)+4, s)
 	return err
 }
 
-func packFlush(w io.Writer) error {
+// PackFlush writes a flush packet.
+func PackFlush(w io.Writer) error {
 	_, err := fmt.Fprint(w, "0000")
 	return err
+}
+
+// PackSideband writes a message to sideband channel (displays as "remote: <msg>" in git client).
+// Channel 2 = progress/info, Channel 3 = error.
+func PackSideband(w io.Writer, channel byte, msg string) error {
+	return PackLine(w, string(channel)+msg)
+}
+
+// PackError writes an ERR packet for protocol-level errors.
+// Git displays this as: fatal: remote error: <msg>
+func PackError(w io.Writer, msg string) error {
+	return PackLine(w, "ERR "+msg)
 }
