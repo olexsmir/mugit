@@ -20,7 +20,6 @@ func (h *handlers) infoRefs(w http.ResponseWriter, r *http.Request) {
 
 	if err := gitservice.InfoRefs(
 		filepath.Join(h.c.Repo.Dir, name), // FIXME: use securejoin
-		true,
 		w,
 	); err != nil {
 		slog.Error("git: info/refs", "err", err)
