@@ -13,6 +13,7 @@ import (
 
 	"olexsmir.xyz/mugit/internal/config"
 	"olexsmir.xyz/mugit/internal/handlers"
+	"olexsmir.xyz/mugit/internal/mirror"
 	"olexsmir.xyz/mugit/internal/ssh"
 )
 
@@ -24,7 +25,7 @@ func main() {
 }
 
 func run() error {
-	cfg, err := config.Load("/home/olex/code/mugit/config.yml")
+	cfg, err := config.Load("/home/olex/mugit-test/config.yml")
 	if err != nil {
 		slog.Error("config error", "err", err)
 		return err
@@ -45,10 +46,20 @@ func run() error {
 
 	sshServer := ssh.NewServer(cfg)
 	if cfg.SSH.Enable {
-		slog.Info("starting ssh server", "port", cfg.SSH.Port)
-		if err := sshServer.Start(); err != nil {
-			slog.Error("ssh server error", "err", err)
-		}
+		go func() {
+			slog.Info("starting ssh server", "port", cfg.SSH.Port)
+			if err := sshServer.Start(); err != nil {
+				slog.Error("ssh server error", "err", err)
+			}
+		}()
+	}
+
+	mirrorer := mirror.NewWorker(cfg)
+	if cfg.Mirror.Enable {
+		go func() {
+			slog.Info("starting mirroring worker")
+			mirrorer.Start(context.TODO())
+		}()
 	}
 
 	// Wait for interrupt signal

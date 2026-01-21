@@ -34,6 +34,10 @@ func (h *handlers) index(w http.ResponseWriter, r *http.Request) {
 
 	repoInfos := []repoInfo{}
 	for _, dir := range dirs {
+		if !dir.IsDir() {
+			continue
+		}
+
 		name := dir.Name()
 		repo, err := h.openPublicRepo(name, "")
 		if err != nil {

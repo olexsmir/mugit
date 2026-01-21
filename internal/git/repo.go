@@ -1,14 +1,18 @@
 package git
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
+	"time"
 
 	"github.com/go-git/go-git/v5"
+	gitconfig "github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
 )
 
 // Thanks https://git.icyphox.sh/legit/blob/master/git/git.go
@@ -43,6 +47,10 @@ func Open(path string, ref string) (*Repo, error) {
 		g.h = *hash
 	}
 	return &g, nil
+}
+
+func (g *Repo) Name() string {
+	return filepath.Base(g.path)
 }
 
 func (g *Repo) Commits() ([]*object.Commit, error) {
@@ -179,4 +187,94 @@ func (g *Repo) FindMasterBranch(masters []string) (string, error) {
 		}
 	}
 	return "", fmt.Errorf("unable to find master branch")
+}
+
+type MirrorInfo struct {
+	IsMirror  bool
+	Remote    string
+	RemoteURL string
+}
+
+func (g *Repo) MirrorInfo() (MirrorInfo, error) {
+	c, err := g.r.Config()
+	if err != nil {
+		return MirrorInfo{}, fmt.Errorf("failed to read config: %w", err)
+	}
+
+	isMirror := c.Raw.Section("mugit").Options.Get("mirror") == "true"
+	for _, remote := range c.Remotes {
+		if len(remote.URLs) > 0 && (remote.Name == "upstream" || remote.Name == "origin") {
+			return MirrorInfo{
+				IsMirror:  isMirror,
+				Remote:    remote.Name,
+				RemoteURL: remote.URLs[0],
+			}, nil
+		}
+	}
+	// TODO: error if mirror opt is set, but there's no remotes
+	return MirrorInfo{}, fmt.Errorf("no mirror remote found")
+}
+
+func (g *Repo) ReadLastSync() (time.Time, error) {
+	c, err := g.r.Config()
+	if err != nil {
+		return time.Time{}, fmt.Errorf("failed to read config: %w", err)
+	}
+
+	raw := c.Raw.Section("mugit").Options.Get("last-sync")
+	if raw == "" {
+		return time.Time{}, fmt.Errorf("last-sync not set")
+	}
+
+	out, err := time.Parse(time.RFC3339, string(raw))
+	if err != nil {
+		return time.Time{}, fmt.Errorf("failed to parse time: %w", err)
+	}
+	return out, nil
+}
+
+func (g *Repo) SetLastSync(lastSync time.Time) error {
+	c, err := g.r.Config()
+	if err != nil {
+		return fmt.Errorf("failed to read config: %w", err)
+	}
+
+	c.Raw.Section("mugit").
+		SetOption("last-sync", lastSync.Format(time.RFC3339))
+	return g.r.SetConfig(c)
+}
+
+func (g *Repo) Fetch(remote string) error {
+	return g.FetchWithAuth(remote, "")
+}
+
+// FetchWithAuth fetches but with auth. Works only with github's auth
+func (g *Repo) FetchWithAuth(remote string, token string) error {
+	rmt, err := g.r.Remote(remote)
+	if err != nil {
+		return fmt.Errorf("failed to get upstream remote: %w", err)
+	}
+
+	opts := &git.FetchOptions{
+		RefSpecs: []gitconfig.RefSpec{
+			// fetch all branches
+			"+refs/heads/*:refs/heads/*",
+			"+refs/tags/*:refs/tags/*",
+		},
+		Tags:  git.AllTags,
+		Prune: true,
+		Force: true,
+	}
+
+	if token != "" {
+		opts.Auth = &http.BasicAuth{
+			Username: token,
+			Password: "x-oauth-basic",
+		}
+	}
+
+	if err := rmt.Fetch(opts); err != nil && !errors.Is(err, git.NoErrAlreadyUpToDate) {
+		return fmt.Errorf("fetch failed: %w", err)
+	}
+	return nil
 }

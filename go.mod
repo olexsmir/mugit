@@ -8,6 +8,7 @@ require (
 	github.com/go-git/go-git/v5 v5.16.4
 	github.com/yuin/goldmark v1.7.16
 	golang.org/x/crypto v0.47.0
+	golang.org/x/sync v0.19.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
