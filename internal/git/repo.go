@@ -2,6 +2,8 @@ package git
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"sort"
 
 	"github.com/go-git/go-git/v5"
@@ -140,13 +142,19 @@ func (g *Repo) Branches() ([]*plumbing.Reference, error) {
 }
 
 func (g *Repo) Description() (string, error) {
-	c, err := g.r.Config()
-	if err != nil {
-		return "", fmt.Errorf("failed to read config: %w", err)
+	// TODO: ??? Support both mugit.description and /description file
+
+	path := filepath.Join(g.path, "description")
+	if _, err := os.Stat(path); err != nil {
+		return "", fmt.Errorf("no description file found")
 	}
 
-	s := c.Raw.Section("mugit")
-	return s.Options.Get("description"), nil
+	d, err := os.ReadFile(path)
+	if err != nil {
+		return "", fmt.Errorf("failed to read description: %w", err)
+	}
+
+	return string(d), nil
 }
 
 func (g *Repo) IsPrivate() (bool, error) {
