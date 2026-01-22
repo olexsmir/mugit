@@ -5,8 +5,8 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
-	"path/filepath"
 
+	securejoin "github.com/cyphar/filepath-securejoin"
 	"olexsmir.xyz/mugit/internal/git/gitservice"
 )
 
@@ -40,8 +40,15 @@ func (h *handlers) infoRefs(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/x-git-upload-pack-advertisement")
 	w.WriteHeader(http.StatusOK)
 
-	path := filepath.Join(h.c.Repo.Dir, filepath.Clean(name))
+	path, err := securejoin.SecureJoin(h.c.Repo.Dir, name)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		slog.Error("git: info/refs", "err", err)
+		return
+	}
+
 	if err := gitservice.InfoRefs(path, w); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 		slog.Error("git: info/refs", "err", err)
 		return
 	}
@@ -62,18 +69,25 @@ func (h *handlers) uploadPack(w http.ResponseWriter, r *http.Request) {
 
 	reader := io.Reader(r.Body)
 	if r.Header.Get("Content-Encoding") == "gzip" {
-		gr, err := gzip.NewReader(r.Body)
-		if err != nil {
+		gr, gerr := gzip.NewReader(r.Body)
+		if gerr != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			slog.Error("git: gzip reader", "err", err)
+			slog.Error("git: gzip reader", "err", gerr)
 			return
 		}
 		defer gr.Close()
 		reader = gr
 	}
 
-	path := filepath.Join(h.c.Repo.Dir, filepath.Clean(name))
+	path, err := securejoin.SecureJoin(h.c.Repo.Dir, name)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		slog.Error("git: info/refs", "err", err)
+		return
+	}
+
 	if err := gitservice.UploadPack(path, true, reader, newFlushWriter(w)); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 		slog.Error("git: upload-pack", "err", err)
 		return
 	}

@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	securejoin "github.com/cyphar/filepath-securejoin"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/renderer/html"
@@ -323,11 +324,15 @@ func countLines(r io.Reader) (int, error) {
 	}
 }
 
-var errPrivateRepo = errors.New("privat err")
+var errPrivateRepo = errors.New("private err")
 
 func (h *handlers) openPublicRepo(name, ref string) (*git.Repo, error) {
-	n := filepath.Clean(name)
-	repo, err := git.Open(filepath.Join(h.c.Repo.Dir, n), ref)
+	path, err := securejoin.SecureJoin(h.c.Repo.Dir, name)
+	if err != nil {
+		return nil, err
+	}
+
+	repo, err := git.Open(path, ref)
 	if err != nil {
 		return nil, err
 	}

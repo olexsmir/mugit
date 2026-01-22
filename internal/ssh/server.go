@@ -3,10 +3,10 @@ package ssh
 import (
 	"fmt"
 	"log/slog"
-	"path/filepath"
 	"slices"
 	"strconv"
 
+	securejoin "github.com/cyphar/filepath-securejoin"
 	"github.com/gliderlabs/ssh"
 	"olexsmir.xyz/mugit/internal/config"
 	"olexsmir.xyz/mugit/internal/git"
@@ -41,7 +41,12 @@ func (s *Server) Start() error {
 		Handler:          s.handler,
 		PublicKeyHandler: s.authhandler,
 	}
-	srv.SetOption(ssh.HostKeyFile(s.c.SSH.HostKey)) // TODO: validate `gossh.ParsePrivateKey`
+
+	if err := srv.SetOption(ssh.HostKeyFile(s.c.SSH.HostKey)); err != nil {
+		// TODO: validate `gossh.ParsePrivateKey`
+		return err
+	}
+
 	return srv.ListenAndServe()
 }
 
@@ -53,7 +58,6 @@ func (s *Server) authhandler(ctx ssh.Context, key ssh.PublicKey) bool {
 	}
 
 	slog.Info("ssh request", "fingerprint", fingerprint)
-
 	authorized := slices.ContainsFunc(s.authKeys, func(i gossh.PublicKey) bool {
 		return ssh.KeysEqual(key, i)
 	})
@@ -73,8 +77,13 @@ func (s *Server) handler(sess ssh.Session) {
 
 	gitCmd := cmd[0]
 	repoPath := cmd[1]
+	repoPath, err := securejoin.SecureJoin(s.c.Repo.Dir, repoPath)
+	if err != nil {
+		slog.Error("ssh: invalid path", "err", err)
+		s.repoNotFound(sess)
+		return
+	}
 
-	repoPath = filepath.Join(s.c.Repo.Dir, filepath.Clean(repoPath))
 	repo, err := git.Open(repoPath, "")
 	if err != nil {
 		slog.Error("ssh: failed to open repo", "err", err)
