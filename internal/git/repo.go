@@ -151,7 +151,6 @@ func (g *Repo) Branches() ([]*plumbing.Reference, error) {
 
 func (g *Repo) Description() (string, error) {
 	// TODO: ??? Support both mugit.description and /description file
-
 	path := filepath.Join(g.path, "description")
 	if _, err := os.Stat(path); err != nil {
 		return "", fmt.Errorf("no description file found")

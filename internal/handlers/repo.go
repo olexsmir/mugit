@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -17,61 +18,19 @@ import (
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/renderer/html"
-	"olexsmir.xyz/mugit/internal/humanize"
+	"olexsmir.xyz/mugit/internal/git"
 )
 
-func (h *handlers) index(w http.ResponseWriter, r *http.Request) {
-	dirs, err := os.ReadDir(h.c.Repo.Dir)
+func (h *handlers) indexHandler(w http.ResponseWriter, r *http.Request) {
+	repos, err := h.listPublicRepos()
 	if err != nil {
 		h.write500(w, err)
 		return
 	}
 
-	type repoInfo struct {
-		Name, Desc, Idle string
-		t                time.Time
-	}
-
-	repoInfos := []repoInfo{}
-	for _, dir := range dirs {
-		if !dir.IsDir() {
-			continue
-		}
-
-		name := dir.Name()
-		repo, err := h.openPublicRepo(name, "")
-		if err != nil {
-			slog.Error("", "name", name, "err", err)
-			continue
-		}
-
-		desc, err := repo.Description()
-		if err != nil {
-			slog.Error("", "err", err)
-			continue
-		}
-
-		lastComit, err := repo.LastCommit()
-		if err != nil {
-			slog.Error("", "err", err)
-			continue
-		}
-
-		repoInfos = append(repoInfos, repoInfo{
-			Name: name,
-			Desc: desc,
-			Idle: humanize.Time(lastComit.Author.When),
-			t:    lastComit.Author.When,
-		})
-	}
-
-	sort.Slice(repoInfos, func(i, j int) bool {
-		return repoInfos[j].t.Before(repoInfos[i].t)
-	})
-
 	data := make(map[string]any)
 	data["meta"] = h.c.Meta
-	data["repos"] = repoInfos
+	data["repos"] = repos
 	h.templ(w, "index", data)
 }
 
@@ -145,19 +104,13 @@ func (h *handlers) repoIndex(w http.ResponseWriter, r *http.Request) {
 	h.templ(w, "repo_index", data)
 }
 
-func (h *handlers) repoTree(w http.ResponseWriter, r *http.Request) {
+func (h *handlers) repoTreeHandler(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("name")
 	ref := r.PathValue("ref")
 	treePath := r.PathValue("rest")
 
 	repo, err := h.openPublicRepo(name, ref)
 	if err != nil {
-		h.write404(w, err)
-		return
-	}
-
-	isPrivate, err := repo.IsPrivate()
-	if isPrivate || err != nil {
 		h.write404(w, err)
 		return
 	}
@@ -186,7 +139,7 @@ func (h *handlers) repoTree(w http.ResponseWriter, r *http.Request) {
 	h.templ(w, "repo_tree", data)
 }
 
-func (h *handlers) fileContents(w http.ResponseWriter, r *http.Request) {
+func (h *handlers) fileContentsHandler(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("name")
 	ref := r.PathValue("ref")
 	treePath := r.PathValue("rest")
@@ -214,18 +167,18 @@ func (h *handlers) fileContents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := make(map[string]any)
-	data["name"] = name
-	data["ref"] = ref
-	data["desc"] = desc
-	data["path"] = treePath
-
 	if raw {
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "text/plain")
 		w.Write([]byte(contents))
 		return
 	}
+
+	data := make(map[string]any)
+	data["name"] = name
+	data["ref"] = ref
+	data["desc"] = desc
+	data["path"] = treePath
 
 	lc, err := countLines(strings.NewReader(contents))
 	if err != nil {
@@ -243,21 +196,15 @@ func (h *handlers) fileContents(w http.ResponseWriter, r *http.Request) {
 	data["content"] = contents
 	data["meta"] = h.c.Meta
 
-	h.templ(w, "file", data)
+	h.templ(w, "repo_file", data)
 }
 
-func (h *handlers) log(w http.ResponseWriter, r *http.Request) {
+func (h *handlers) logHandler(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("name")
 	ref := r.PathValue("ref")
 
 	repo, err := h.openPublicRepo(name, ref)
 	if err != nil {
-		h.write404(w, err)
-		return
-	}
-
-	isPrivate, err := repo.IsPrivate()
-	if isPrivate || err != nil {
 		h.write404(w, err)
 		return
 	}
@@ -284,17 +231,11 @@ func (h *handlers) log(w http.ResponseWriter, r *http.Request) {
 	h.templ(w, "repo_log", data)
 }
 
-func (h *handlers) commit(w http.ResponseWriter, r *http.Request) {
+func (h *handlers) commitHandler(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("name")
 	ref := r.PathValue("ref")
 	repo, err := h.openPublicRepo(name, ref)
 	if err != nil {
-		h.write404(w, err)
-		return
-	}
-
-	isPrivate, err := repo.IsPrivate()
-	if isPrivate || err != nil {
 		h.write404(w, err)
 		return
 	}
@@ -321,16 +262,10 @@ func (h *handlers) commit(w http.ResponseWriter, r *http.Request) {
 	h.templ(w, "commit", data)
 }
 
-func (h *handlers) refs(w http.ResponseWriter, r *http.Request) {
+func (h *handlers) refsHandler(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("name")
 	repo, err := h.openPublicRepo(name, "")
 	if err != nil {
-		h.write404(w, err)
-		return
-	}
-
-	isPrivate, err := repo.IsPrivate()
-	if isPrivate || err != nil {
 		h.write404(w, err)
 		return
 	}
@@ -386,4 +321,79 @@ func countLines(r io.Reader) (int, error) {
 			return 0, err
 		}
 	}
+}
+
+var errPrivateRepo = errors.New("privat err")
+
+func (h *handlers) openPublicRepo(name, ref string) (*git.Repo, error) {
+	n := filepath.Clean(name)
+	repo, err := git.Open(filepath.Join(h.c.Repo.Dir, n), ref)
+	if err != nil {
+		return nil, err
+	}
+
+	isPrivate, err := repo.IsPrivate()
+	if err != nil {
+		return nil, err
+	}
+	if isPrivate {
+		return nil, errPrivateRepo
+	}
+
+	return repo, nil
+}
+
+type repoList struct {
+	Name       string
+	Desc       string
+	LastCommit time.Time
+}
+
+func (h *handlers) listPublicRepos() ([]repoList, error) {
+	dirs, err := os.ReadDir(h.c.Repo.Dir)
+	if err != nil {
+		return nil, err
+	}
+
+	var repos []repoList
+	var errs []error
+	for _, dir := range dirs {
+		if !dir.IsDir() {
+			continue
+		}
+
+		name := dir.Name()
+		repo, err := h.openPublicRepo(name, "")
+		if err != nil {
+			if errors.Is(err, errPrivateRepo) {
+				continue
+			}
+			errs = append(errs, err)
+			continue
+		}
+
+		desc, err := repo.Description()
+		if err != nil {
+			errs = append(errs, err)
+			continue
+		}
+
+		lastComit, err := repo.LastCommit()
+		if err != nil {
+			errs = append(errs, err)
+			continue
+		}
+
+		repos = append(repos, repoList{
+			Name:       name,
+			Desc:       desc,
+			LastCommit: lastComit.Author.When,
+		})
+	}
+
+	sort.Slice(repos, func(i, j int) bool {
+		return repos[j].LastCommit.Before(repos[i].LastCommit)
+	})
+
+	return repos, errors.Join(errs...)
 }

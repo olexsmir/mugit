@@ -25,20 +25,19 @@ func InitRoutes(cfg *config.Config) *http.ServeMux {
 	h := handlers{cfg, tmpls}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /", h.index)
+	mux.HandleFunc("GET /", h.indexHandler)
 	mux.HandleFunc("GET /static/{file}", h.serveStatic)
 	mux.HandleFunc("GET /{name}", h.multiplex)
 	mux.HandleFunc("POST /{name}", h.multiplex)
 	mux.HandleFunc("GET /{name}/{rest...}", h.multiplex)
 	mux.HandleFunc("POST /{name}/{rest...}", h.multiplex)
-	mux.HandleFunc("GET /{name}/tree/{ref}/{rest...}", h.repoTree)
-	mux.HandleFunc("GET /{name}/blob/{ref}/{rest...}", h.fileContents)
-	mux.HandleFunc("GET /{name}/log/{ref}", h.log)
-	mux.HandleFunc("GET /{name}/commit/{ref}", h.commit)
-	mux.HandleFunc("GET /{name}/refs/{$}", h.refs)
+	mux.HandleFunc("GET /{name}/tree/{ref}/{rest...}", h.repoTreeHandler)
+	mux.HandleFunc("GET /{name}/blob/{ref}/{rest...}", h.fileContentsHandler)
+	mux.HandleFunc("GET /{name}/log/{ref}", h.logHandler)
+	mux.HandleFunc("GET /{name}/commit/{ref}", h.commitHandler)
+	mux.HandleFunc("GET /{name}/refs/{$}", h.refsHandler)
 	return mux
 }
-
 
 func (h *handlers) serveStatic(w http.ResponseWriter, r *http.Request) {
 	f := filepath.Clean(r.PathValue("file"))

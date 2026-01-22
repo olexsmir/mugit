@@ -64,12 +64,12 @@ func UploadPack(dir string, statelessRPC bool, in io.Reader, out io.Writer) erro
 	})
 }
 
-func ReceivePack(dir string, in io.Reader, out, stderr io.Writer) error {
+func ReceivePack(dir string, in io.Reader, out, errout io.Writer) error {
 	return gitCmd("receive-pack", config{
 		Dir:    dir,
 		Stdin:  in,
 		Stdout: out,
-		Stderr: stderr,
+		Stderr: errout,
 	})
 }
 

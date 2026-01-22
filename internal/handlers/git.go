@@ -2,13 +2,11 @@ package handlers
 
 import (
 	"compress/gzip"
-	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
 	"path/filepath"
 
-	"olexsmir.xyz/mugit/internal/git"
 	"olexsmir.xyz/mugit/internal/git/gitservice"
 )
 
@@ -17,7 +15,7 @@ import (
 func (h *handlers) multiplex(w http.ResponseWriter, r *http.Request) {
 	if r.URL.RawQuery == "service=git-receive-pack" {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("http pushing isn't supported"))
+		w.Write([]byte("http pushing is not supported"))
 		return
 	}
 
@@ -42,10 +40,8 @@ func (h *handlers) infoRefs(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/x-git-upload-pack-advertisement")
 	w.WriteHeader(http.StatusOK)
 
-	if err := gitservice.InfoRefs(
-		filepath.Join(h.c.Repo.Dir, name), // FIXME: use securejoin
-		w,
-	); err != nil {
+	path := filepath.Join(h.c.Repo.Dir, filepath.Clean(name))
+	if err := gitservice.InfoRefs(path, w); err != nil {
 		slog.Error("git: info/refs", "err", err)
 		return
 	}
@@ -68,6 +64,7 @@ func (h *handlers) uploadPack(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("Content-Encoding") == "gzip" {
 		gr, err := gzip.NewReader(r.Body)
 		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
 			slog.Error("git: gzip reader", "err", err)
 			return
 		}
@@ -75,34 +72,11 @@ func (h *handlers) uploadPack(w http.ResponseWriter, r *http.Request) {
 		reader = gr
 	}
 
-	if err := gitservice.UploadPack(
-		filepath.Join(h.c.Repo.Dir, name),
-		true,
-		reader,
-		newFlushWriter(w),
-	); err != nil {
+	path := filepath.Join(h.c.Repo.Dir, filepath.Clean(name))
+	if err := gitservice.UploadPack(path, true, reader, newFlushWriter(w)); err != nil {
 		slog.Error("git: upload-pack", "err", err)
 		return
 	}
-}
-
-func (h *handlers) openPublicRepo(name, ref string) (*git.Repo, error) {
-	n := filepath.Clean(name)
-	repo, err := git.Open(filepath.Join(h.c.Repo.Dir, n), ref)
-	if err != nil {
-		return nil, err
-	}
-
-	isPrivate, err := repo.IsPrivate()
-	if err != nil {
-		return nil, err
-	}
-
-	if isPrivate {
-		return nil, fmt.Errorf("repo is private")
-	}
-
-	return repo, nil
 }
 
 type flushWriter struct {
