@@ -18,7 +18,7 @@ type handlers struct {
 	t *template.Template
 }
 
-func InitRoutes(cfg *config.Config) *http.ServeMux {
+func InitRoutes(cfg *config.Config) http.Handler {
 	tmpls := template.Must(template.New("").
 		Funcs(templateFuncs).
 		ParseFS(web.TemplatesFS, "*"))
@@ -36,7 +36,9 @@ func InitRoutes(cfg *config.Config) *http.ServeMux {
 	mux.HandleFunc("GET /{name}/log/{ref}", h.logHandler)
 	mux.HandleFunc("GET /{name}/commit/{ref}", h.commitHandler)
 	mux.HandleFunc("GET /{name}/refs/{$}", h.refsHandler)
-	return mux
+
+	handler := h.recoverMiddleware(mux)
+	return h.loggingMiddleware(handler)
 }
 
 func (h *handlers) serveStatic(w http.ResponseWriter, r *http.Request) {
