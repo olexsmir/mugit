@@ -232,6 +232,11 @@ a:hover {
   min-width: 0;
 }
 
+.repo-index-side h2 {
+  font-size: 1.4rem;
+  padding: 0;
+}
+
 .repo-index-main .box {
   width: 100%;
 }

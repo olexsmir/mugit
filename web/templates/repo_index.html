@@ -25,15 +25,13 @@
           {{ end }}
         </div>
 
-        <aside class="repo-index-side">
-          <div class="box">
-            <strong>clone</strong>
-            <pre>{{- /**/ -}}
+        <div class="repo-index-side">
+          <h2>Clone urls</h2>
+          <pre>{{- /* */ -}}
 https://{{ .servername }}/{{ .name }}
 git@{{ .servername }}:{{ .name }}
-{{- /**/ -}}</pre>
-          </div>
-        </aside>
+{{- /* */ -}}</pre>
+        </div>
       </section>
 
       {{- if .readme }}
