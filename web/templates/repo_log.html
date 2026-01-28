@@ -27,12 +27,15 @@
               <span class="author-short">
                 {{ .Author.Name }} <a href="mailto:{{ .Author.Email }}" class="commit-email">{{ .Author.Email }}</a>
               </span>
-              <span class="author-tip" role="tooltip">
+              <span class="tooltip" role="tooltip">
                 <strong>{{ .Author.Name }}</strong><br>
                 <a href="mailto:{{ .Author.Email }}" class="commit-email">{{ .Author.Email }}</a>
               </span>
             </td>
-            <td class="age">{{ humanizeTime .Committer.When }}</td>
+            <td class="age">
+              <span class="age-display">{{ humanizeTime .Committer.When }}</span>
+              <span class="tooltip" role="tooltip">{{ .Committer.When }}</span>
+            </td>
           </tr>
           {{ end }}
         </tbody>
