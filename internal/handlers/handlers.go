@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"html/template"
 	"net/http"
 	"path/filepath"
@@ -49,12 +48,17 @@ func (h *handlers) serveStatic(w http.ResponseWriter, r *http.Request) {
 
 var templateFuncs = template.FuncMap{
 	"humanizeTime": func(t time.Time) string { return humanize.Time(t) },
-	"commitSummary": func(v any) string {
-		s := fmt.Sprint(v)
-		if i := strings.IndexByte(s, '\n'); i >= 0 {
-			s = strings.TrimSuffix(s[:i], "\r")
-			return s + "..."
+	"commitSummary": func(s string) string {
+		before, after, found := strings.Cut(s, "\n")
+		first := strings.TrimSuffix(before, "\r")
+		if !found {
+			return first
 		}
-		return strings.TrimSuffix(s, "\r")
+
+		if strings.Contains(after, "\n") {
+			return first + "..."
+		}
+
+		return first
 	},
 }
