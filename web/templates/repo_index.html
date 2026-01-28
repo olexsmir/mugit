@@ -36,7 +36,7 @@ git@{{ .servername }}:{{ .name }}
           <br>
           <h2>Mirror Status</h3>
             <p>
-              Last updated {{ humanizeTime .mirrorinfo.lastSync }} ago from:
+              Last updated {{ humanizeTime .mirrorinfo.lastSync }} from:
               <a href="{{ .mirrorinfo.url }}" target="_blank">{{ .mirrorinfo.url }}</a>
             </p>
             {{- end }}
