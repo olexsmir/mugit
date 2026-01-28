@@ -12,9 +12,10 @@
       <table class="log">
         <thead>
           <tr class="nohover">
-            <th class="msg">commit</th>
-            <th class="author">author</th>
-            <th class="age">age</th>
+            <th class="msg">Message</th>
+            <th class="author">Author</th>
+            <th class="hash">Hash</th>
+            <th class="age">Age</th>
           </tr>
         </thead>
         <tbody>
@@ -31,6 +32,9 @@
                 <strong>{{ .Author.Name }}</strong><br>
                 <a href="mailto:{{ .Author.Email }}" class="commit-email">{{ .Author.Email }}</a>
               </span>
+            </td>
+            <td class="">
+              <a href="/{{ $repo }}/commit/{{ .Hash.String }}">{{ slice .Hash.String 0 8 }}</a>
             </td>
             <td class="age">
               <span class="age-display">{{ humanizeTime .Committer.When }}</span>
