@@ -51,7 +51,8 @@ func Open(path string, ref string) (*Repo, error) {
 }
 
 func (g *Repo) Name() string {
-	return filepath.Base(g.path)
+	name := filepath.Base(g.path)
+	return strings.TrimSuffix(name, ".git")
 }
 
 func (g *Repo) Commits() ([]*object.Commit, error) {

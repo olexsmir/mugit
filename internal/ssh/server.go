@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"slices"
 	"strconv"
+	"strings"
 
 	securejoin "github.com/cyphar/filepath-securejoin"
 	"github.com/gliderlabs/ssh"
@@ -76,15 +77,18 @@ func (s *Server) handler(sess ssh.Session) {
 	}
 
 	gitCmd := cmd[0]
-	repoPath := cmd[1]
-	repoPath, err := securejoin.SecureJoin(s.c.Repo.Dir, repoPath)
+	rawRepoPath := cmd[1]
+	normalizedRepoName := normalizeRepoName(rawRepoPath)
+	repoPath := repoNameToPath(normalizedRepoName)
+
+	fullPath, err := securejoin.SecureJoin(s.c.Repo.Dir, repoPath)
 	if err != nil {
 		slog.Error("ssh: invalid path", "err", err)
 		s.repoNotFound(sess)
 		return
 	}
 
-	repo, err := git.Open(repoPath, "")
+	repo, err := git.Open(fullPath, "")
 	if err != nil {
 		slog.Error("ssh: failed to open repo", "err", err)
 		s.repoNotFound(sess)
@@ -104,7 +108,7 @@ func (s *Server) handler(sess ssh.Session) {
 			return
 		}
 
-		if err := gitservice.UploadPack(repoPath, false, sess, sess); err != nil {
+		if err := gitservice.UploadPack(fullPath, false, sess, sess); err != nil {
 			s.error(sess, err)
 			return
 		}
@@ -115,7 +119,7 @@ func (s *Server) handler(sess ssh.Session) {
 			return
 		}
 
-		if err := gitservice.ReceivePack(repoPath, sess, sess, sess.Stderr()); err != nil {
+		if err := gitservice.ReceivePack(fullPath, sess, sess, sess.Stderr()); err != nil {
 			s.error(sess, err)
 			return
 		}
@@ -155,4 +159,9 @@ func (s *Server) error(sess ssh.Session, err error) {
 	slog.Error("error on ssh side", "err", err)
 	gitservice.PackError(sess, "Unexpected server error.")
 	sess.Exit(1)
+}
+
+func repoNameToPath(name string) string { return name + ".git" }
+func normalizeRepoName(name string) string {
+	return strings.TrimSuffix(name, ".git")
 }

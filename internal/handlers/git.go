@@ -30,7 +30,7 @@ func (h *handlers) multiplex(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handlers) infoRefs(w http.ResponseWriter, r *http.Request) {
-	name := r.PathValue("name")
+	name := getNormalizedName(r.PathValue("name"))
 	_, err := h.openPublicRepo(name, "")
 	if err != nil {
 		h.write404(w, err)
@@ -40,7 +40,8 @@ func (h *handlers) infoRefs(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/x-git-upload-pack-advertisement")
 	w.WriteHeader(http.StatusOK)
 
-	path, err := securejoin.SecureJoin(h.c.Repo.Dir, name)
+	repoPath := repoNameToPath(name)
+	path, err := securejoin.SecureJoin(h.c.Repo.Dir, repoPath)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		slog.Error("git: info/refs", "err", err)
@@ -55,7 +56,7 @@ func (h *handlers) infoRefs(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handlers) uploadPack(w http.ResponseWriter, r *http.Request) {
-	name := r.PathValue("name")
+	name := getNormalizedName(r.PathValue("name"))
 	_, err := h.openPublicRepo(name, "")
 	if err != nil {
 		h.write404(w, err)
@@ -79,7 +80,8 @@ func (h *handlers) uploadPack(w http.ResponseWriter, r *http.Request) {
 		reader = gr
 	}
 
-	path, err := securejoin.SecureJoin(h.c.Repo.Dir, name)
+	repoPath := repoNameToPath(name)
+	path, err := securejoin.SecureJoin(h.c.Repo.Dir, repoPath)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		slog.Error("git: info/refs", "err", err)

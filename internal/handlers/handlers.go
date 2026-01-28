@@ -46,6 +46,11 @@ func (h *handlers) serveStatic(w http.ResponseWriter, r *http.Request) {
 	http.ServeFileFS(w, r, web.StaticFS, f)
 }
 
+func repoNameToPath(name string) string { return name + ".git" }
+func getNormalizedName(name string) string {
+	return strings.TrimSuffix(name, ".git")
+}
+
 var templateFuncs = template.FuncMap{
 	"humanizeTime": func(t time.Time) string { return humanize.Time(t) },
 	"commitSummary": func(s string) string {

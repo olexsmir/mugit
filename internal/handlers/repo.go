@@ -43,7 +43,7 @@ var markdown = goldmark.New(
 	))
 
 func (h *handlers) repoIndex(w http.ResponseWriter, r *http.Request) {
-	name := r.PathValue("name")
+	name := getNormalizedName(r.PathValue("name"))
 	repo, err := h.openPublicRepo(name, "")
 	if err != nil {
 		h.write404(w, err)
@@ -106,7 +106,7 @@ func (h *handlers) repoIndex(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handlers) repoTreeHandler(w http.ResponseWriter, r *http.Request) {
-	name := r.PathValue("name")
+	name := getNormalizedName(r.PathValue("name"))
 	ref := r.PathValue("ref")
 	treePath := r.PathValue("rest")
 
@@ -141,7 +141,7 @@ func (h *handlers) repoTreeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handlers) fileContentsHandler(w http.ResponseWriter, r *http.Request) {
-	name := r.PathValue("name")
+	name := getNormalizedName(r.PathValue("name"))
 	ref := r.PathValue("ref")
 	treePath := r.PathValue("rest")
 
@@ -201,7 +201,7 @@ func (h *handlers) fileContentsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handlers) logHandler(w http.ResponseWriter, r *http.Request) {
-	name := r.PathValue("name")
+	name := getNormalizedName(r.PathValue("name"))
 	ref := r.PathValue("ref")
 
 	repo, err := h.openPublicRepo(name, ref)
@@ -233,7 +233,7 @@ func (h *handlers) logHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handlers) commitHandler(w http.ResponseWriter, r *http.Request) {
-	name := r.PathValue("name")
+	name := getNormalizedName(r.PathValue("name"))
 	ref := r.PathValue("ref")
 	repo, err := h.openPublicRepo(name, ref)
 	if err != nil {
@@ -264,7 +264,7 @@ func (h *handlers) commitHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handlers) refsHandler(w http.ResponseWriter, r *http.Request) {
-	name := r.PathValue("name")
+	name := getNormalizedName(r.PathValue("name"))
 	repo, err := h.openPublicRepo(name, "")
 	if err != nil {
 		h.write404(w, err)
@@ -327,6 +327,9 @@ func countLines(r io.Reader) (int, error) {
 var errPrivateRepo = errors.New("private err")
 
 func (h *handlers) openPublicRepo(name, ref string) (*git.Repo, error) {
+	// Convert normalized name back to filesystem path with .git suffix
+	name = repoNameToPath(name)
+
 	path, err := securejoin.SecureJoin(h.c.Repo.Dir, name)
 	if err != nil {
 		return nil, err
@@ -368,7 +371,8 @@ func (h *handlers) listPublicRepos() ([]repoList, error) {
 		}
 
 		name := dir.Name()
-		repo, err := h.openPublicRepo(name, "")
+		normalizedName := getNormalizedName(name)
+		repo, err := h.openPublicRepo(normalizedName, "")
 		if err != nil {
 			if errors.Is(err, errPrivateRepo) {
 				continue
@@ -390,7 +394,7 @@ func (h *handlers) listPublicRepos() ([]repoList, error) {
 		}
 
 		repos = append(repos, repoList{
-			Name:       name,
+			Name:       normalizedName,
 			Desc:       desc,
 			LastCommit: lastComit.Author.When,
 		})
