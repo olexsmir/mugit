@@ -23,7 +23,7 @@
           {{ range .repos }}
           <tr>
             <td class="url"><a href="/{{ .Name }}">{{ .Name }}</a></td>
-            <td class="desc">{{ .Desc }}</td>
+            <td class="desc">{{- if .Desc }}{{ .Desc }}{{- else }}<span class="unset">No description set</span>{{- end }}
             <td class="idle">{{ humanizeTime .LastCommit }}</td>
           </tr>
           {{ end}}

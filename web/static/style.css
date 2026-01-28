@@ -95,6 +95,10 @@ nav ul li {
   color: var(--gray);
 }
 
+.repo-breadcrumb:before {
+  content: "<"; /* TODO: add an  arrow */
+}
+
 .repo-breadcrumb a {
   color: var(--gray);
 }
@@ -155,7 +159,9 @@ a:hover {
 
 .index .url { white-space: nowrap; }
 .index .desc { width: 100%; }
+.index .desc .unset { color: var(--gray); }
 .index .idle { white-space: nowrap; }
+
 
 .index tbody tr.nohover:hover {
   background: transparent;
@@ -404,30 +410,25 @@ a:hover {
   margin-bottom: 1rem;
 }
 
- .commit pre {
-   padding-bottom: 0;
-   white-space: pre-wrap;
- }
+.commit pre {
+  padding-bottom: 0;
+  white-space: pre-wrap;
+}
 
-  .commit-message {
-    margin-top: 0.25rem;
-    font-size: 1rem;
-    line-height: 1.35;
-    margin-bottom: 0;
-  }
+.commit-message {
+  margin-top: 0.25rem;
+  font-size: 1rem;
+  line-height: 1.35;
+  margin-bottom: 0;
+}
 
+.commit .box {
+  margin-bottom: 0.25rem;
+}
 
-  .commit .box {
-    margin-bottom: 0.25rem;
-  }
-
-
- .commit .commit-info {
-   padding-bottom: 0.25rem;
- }
-
-
-
+.commit .commit-info {
+  padding-bottom: 0.25rem;
+}
 
 .diff-add {
   color: green;
@@ -443,7 +444,7 @@ a:hover {
 
 .ref {
   font-family: var(--sans-font);
-  font-size: 14px;
+  font-size: 1rem;
   color: var(--gray);
   display: inline-block;
   padding-top: 0.7em;
@@ -478,13 +479,6 @@ a:hover {
   gap: 1rem;
   padding: 0.5rem;
   background: var(--light-gray);
-  overflow-x: auto;
-}
-
-.chroma-file-wrapper {
-  display: flex;
-  flex-direction: row;
-  grid-template-columns: 1rem minmax(0, 1fr);
   overflow-x: auto;
 }
 

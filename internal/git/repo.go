@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/go-git/go-git/v5"
@@ -149,6 +150,8 @@ func (g *Repo) Branches() ([]*plumbing.Reference, error) {
 	return branches, err
 }
 
+const defaultDescription = "Unnamed repository; edit this file 'description' to name the repository"
+
 func (g *Repo) Description() (string, error) {
 	// TODO: ??? Support both mugit.description and /description file
 	path := filepath.Join(g.path, "description")
@@ -161,7 +164,12 @@ func (g *Repo) Description() (string, error) {
 		return "", fmt.Errorf("failed to read description: %w", err)
 	}
 
-	return string(d), nil
+	desc := string(d)
+	if strings.Contains(desc, defaultDescription) {
+		return "", nil
+	}
+
+	return desc, nil
 }
 
 func (g *Repo) IsPrivate() (bool, error) {
