@@ -32,7 +32,7 @@
                 <a href="mailto:{{ .Author.Email }}" class="commit-email">{{ .Author.Email }}</a>
               </span>
             </td>
-            <td class="age">{{ humanTime .Committer.When }}</td>
+            <td class="age">{{ humanizeTime .Committer.When }}</td>
           </tr>
           {{ end }}
         </tbody>

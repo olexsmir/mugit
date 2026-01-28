@@ -48,6 +48,7 @@ func (h *handlers) serveStatic(w http.ResponseWriter, r *http.Request) {
 }
 
 var templateFuncs = template.FuncMap{
+	"humanizeTime": func(t time.Time) string { return humanize.Time(t) },
 	"commitSummary": func(v any) string {
 		s := fmt.Sprint(v)
 		if i := strings.IndexByte(s, '\n'); i >= 0 {
@@ -55,8 +56,5 @@ var templateFuncs = template.FuncMap{
 			return s + "..."
 		}
 		return strings.TrimSuffix(s, "\r")
-	},
-	"humanTime": func(t time.Time) string {
-		return humanize.Time(t)
 	},
 }

@@ -24,7 +24,7 @@
           <tr>
             <td class="url"><a href="/{{ .Name }}">{{ .Name }}</a></td>
             <td class="desc">{{ .Desc }}</td>
-            <td class="idle">{{ humanTime .LastCommit }}</td>
+            <td class="idle">{{ humanizeTime .LastCommit }}</td>
           </tr>
           {{ end}}
         </tbody>
