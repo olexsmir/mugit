@@ -31,6 +31,15 @@
 https://{{ .servername }}/{{ .name }}
 git@{{ .servername }}:{{ .name }}
 {{- /* */ -}}</pre>
+
+          {{- if .mirrorinfo.isMirror }}
+          <br>
+          <h2>Mirror Status</h3>
+            <p>
+              Last updated {{ humanizeTime .mirrorinfo.lastSync }} ago from:
+              <a href="{{ .mirrorinfo.url }}" target="_blank">{{ .mirrorinfo.url }}</a>
+            </p>
+            {{- end }}
         </div>
       </section>
 

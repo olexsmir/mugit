@@ -102,6 +102,15 @@ func (h *handlers) repoIndex(w http.ResponseWriter, r *http.Request) {
 	data["meta"] = h.c.Meta
 	data["gomod"] = repo.IsGoMod()
 
+	if mirrorInfo, err := repo.MirrorInfo(); err == nil && mirrorInfo.IsMirror {
+		lastSync, _ := repo.ReadLastSync()
+		data["mirrorinfo"] = map[string]any{
+			"isMirror": true,
+			"url":      mirrorInfo.RemoteURL,
+			"lastSync": lastSync,
+		}
+	}
+
 	h.templ(w, "repo_index", data)
 }
 
