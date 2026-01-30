@@ -18,6 +18,8 @@ import (
 
 // Thanks https://git.icyphox.sh/legit/blob/master/git/git.go
 
+var ErrEmptyRepo = errors.New("repository has no commits")
+
 type Repo struct {
 	path string
 	r    *git.Repository
@@ -37,6 +39,9 @@ func Open(path string, ref string) (*Repo, error) {
 	if ref == "" {
 		head, err := g.r.Head()
 		if err != nil {
+			if errors.Is(err, plumbing.ErrReferenceNotFound) {
+				return &g, nil
+			}
 			return nil, fmt.Errorf("getting head of %s: %w", path, err)
 		}
 		g.h = head.Hash()
@@ -50,12 +55,26 @@ func Open(path string, ref string) (*Repo, error) {
 	return &g, nil
 }
 
+func (g *Repo) IsEmpty() bool {
+	return g.h == plumbing.ZeroHash
+}
+
+// Init creates a bare repo.
+func Init(path string) error {
+	_, err := git.PlainInit(path, true)
+	return err
+}
+
 func (g *Repo) Name() string {
 	name := filepath.Base(g.path)
 	return strings.TrimSuffix(name, ".git")
 }
 
 func (g *Repo) Commits() ([]*object.Commit, error) {
+	if g.IsEmpty() {
+		return []*object.Commit{}, nil
+	}
+
 	ci, err := g.r.Log(&git.LogOptions{
 		From:  g.h,
 		Order: git.LogOrderCommitterTime,
@@ -74,6 +93,10 @@ func (g *Repo) Commits() ([]*object.Commit, error) {
 }
 
 func (g *Repo) LastCommit() (*object.Commit, error) {
+	if g.IsEmpty() {
+		return nil, ErrEmptyRepo
+	}
+
 	c, err := g.r.CommitObject(g.h)
 	if err != nil {
 		return nil, fmt.Errorf("last commit: %w", err)
@@ -189,6 +212,10 @@ func (g *Repo) IsGoMod() bool {
 }
 
 func (g *Repo) FindMasterBranch(masters []string) (string, error) {
+	if g.IsEmpty() {
+		return "", ErrEmptyRepo
+	}
+
 	for _, b := range masters {
 		if _, err := g.r.ResolveRevision(plumbing.Revision(b)); err == nil {
 			return b, nil

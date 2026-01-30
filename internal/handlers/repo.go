@@ -50,6 +50,24 @@ func (h *handlers) repoIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	desc, err := repo.Description()
+	if err != nil {
+		h.write500(w, err)
+		return
+	}
+
+	data := make(map[string]any)
+	data["name"] = name
+	data["desc"] = desc
+	data["servername"] = h.c.Meta.Host
+	data["meta"] = h.c.Meta
+
+	if repo.IsEmpty() {
+		data["empty"] = true
+		h.templ(w, "repo_index", data)
+		return
+	}
+
 	var readmeContents template.HTML
 	for _, readme := range h.c.Repo.Readmes {
 		ext := filepath.Ext(readme)
@@ -76,12 +94,6 @@ func (h *handlers) repoIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	desc, err := repo.Description()
-	if err != nil {
-		h.write500(w, err)
-		return
-	}
-
 	commits, err := repo.Commits()
 	if err != nil {
 		h.write500(w, err)
@@ -92,14 +104,9 @@ func (h *handlers) repoIndex(w http.ResponseWriter, r *http.Request) {
 		commits = commits[:3]
 	}
 
-	data := make(map[string]any)
-	data["name"] = name
 	data["ref"] = masterBranch
-	data["desc"] = desc
 	data["readme"] = readmeContents
 	data["commits"] = commits
-	data["servername"] = h.c.Meta.Host
-	data["meta"] = h.c.Meta
 	data["gomod"] = repo.IsGoMod()
 
 	if mirrorInfo, err := repo.MirrorInfo(); err == nil && mirrorInfo.IsMirror {
@@ -396,16 +403,21 @@ func (h *handlers) listPublicRepos() ([]repoList, error) {
 			continue
 		}
 
-		lastComit, err := repo.LastCommit()
+		var lastCommitTime time.Time
+		lastCommit, err := repo.LastCommit()
 		if err != nil {
-			errs = append(errs, err)
-			continue
+			if !errors.Is(err, git.ErrEmptyRepo) {
+				errs = append(errs, err)
+				continue
+			}
+		} else {
+			lastCommitTime = lastCommit.Author.When
 		}
 
 		repos = append(repos, repoList{
 			Name:       normalizedName,
 			Desc:       desc,
-			LastCommit: lastComit.Author.When,
+			LastCommit: lastCommitTime,
 		})
 	}
 

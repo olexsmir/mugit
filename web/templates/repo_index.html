@@ -10,7 +10,9 @@
 
     <main>
       {{ $repo := .name }}
-
+      {{ if .empty }}
+      <h3>Repository is empty</h3>
+      {{ else }}
       <section class="repo-index">
         <div class="repo-index-main">
           {{ range .commits }}
@@ -42,6 +44,7 @@ git@{{ .servername }}:{{ .name }}
             {{- end }}
         </div>
       </section>
+      {{ end }}
 
       {{- if .readme }}
       <article class="readme">
