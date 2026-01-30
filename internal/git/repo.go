@@ -280,36 +280,35 @@ func (g *Repo) SetLastSync(lastSync time.Time) error {
 }
 
 func (g *Repo) Fetch(remote string) error {
-	return g.FetchWithAuth(remote, "")
+	return g.fetch(remote, nil)
 }
 
-// FetchWithAuth fetches but with auth. Works only with github's auth
-func (g *Repo) FetchWithAuth(remote string, token string) error {
+func (g *Repo) FetchFromGithubWithToken(remote, token string) error {
+	return g.fetch(remote, &http.BasicAuth{
+		Username: token,
+		Password: "x-oauth-basic",
+	})
+}
+
+func (g *Repo) fetch(remote string, auth http.AuthMethod) error {
 	rmt, err := g.r.Remote(remote)
 	if err != nil {
 		return fmt.Errorf("failed to get upstream remote: %w", err)
 	}
 
-	opts := &git.FetchOptions{
-		RefSpecs: []gitconfig.RefSpec{
-			// fetch all branches
-			"+refs/heads/*:refs/heads/*",
-			"+refs/tags/*:refs/tags/*",
-		},
-		Tags:  git.AllTags,
-		Prune: true,
-		Force: true,
+	if ferr := rmt.Fetch(
+		&git.FetchOptions{
+			RefSpecs: []gitconfig.RefSpec{
+				// fetch all branches
+				"+refs/heads/*:refs/heads/*",
+				"+refs/tags/*:refs/tags/*",
+			},
+			Auth:  auth,
+			Tags:  git.AllTags,
+			Prune: true,
+			Force: true,
+		}); ferr != nil && !errors.Is(ferr, git.NoErrAlreadyUpToDate) {
+		return fmt.Errorf("fetch failed: %w", ferr)
 	}
-
-	if token != "" {
-		opts.Auth = &http.BasicAuth{
-			Username: token,
-			Password: "x-oauth-basic",
-		}
-	}
-
-	if err := rmt.Fetch(opts); err != nil && !errors.Is(err, git.NoErrAlreadyUpToDate) {
-		return fmt.Errorf("fetch failed: %w", err)
-	}
-	return nil
+	return err
 }

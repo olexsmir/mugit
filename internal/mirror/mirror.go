@@ -101,7 +101,7 @@ func (w *Worker) syncRepo(_ context.Context, repo *git.Repo) error {
 	}
 
 	if w.isRemoteGithub(mi.RemoteURL) && w.c.Mirror.GithubToken != "" {
-		if err := repo.FetchWithAuth(mi.Remote, w.c.Mirror.GithubToken); err != nil {
+		if err := repo.FetchFromGithubWithToken(mi.Remote, w.c.Mirror.GithubToken); err != nil {
 			slog.Error("mirror: fetch failed (authorized)", "repo", name, "err", err)
 			return err
 		}
