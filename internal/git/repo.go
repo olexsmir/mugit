@@ -180,12 +180,12 @@ func (g *Repo) Description() (string, error) {
 	// TODO: ??? Support both mugit.description and /description file
 	path := filepath.Join(g.path, "description")
 	if _, err := os.Stat(path); err != nil {
-		return "", fmt.Errorf("no description file found")
+		return "", nil
 	}
 
 	d, err := os.ReadFile(path)
 	if err != nil {
-		return "", fmt.Errorf("failed to read description: %w", err)
+		return "", fmt.Errorf("failed to read description file: %w", err)
 	}
 
 	desc := string(d)
