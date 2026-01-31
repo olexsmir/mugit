@@ -51,6 +51,19 @@ func (c *Cli) Run(ctx context.Context, args []string) error {
 				Usage:  "starts the server",
 				Action: c.serveAction,
 			},
+			{
+				Name: "repo",
+				Commands: []*cli.Command{
+					{
+						Name:   "new",
+						Usage:  "create new repo",
+						Action: c.repoNewAction,
+						Arguments: []cli.Argument{
+							&cli.StringArg{Name: "name"},
+						},
+					},
+				},
+			},
 		},
 	}
 	return cmd.Run(ctx, args)
