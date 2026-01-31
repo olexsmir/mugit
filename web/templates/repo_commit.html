@@ -55,7 +55,11 @@
                     {{ if .IsDelete }}<span class="diff-type diff-del">D</span>{{ end }}
                     {{ if not (or .IsNew .IsDelete) }}<span class="diff-type diff-mod">M</span>{{ end }}
                   </td>
-                  <td class="path"><a href="#{{ $path }}">{{ $path }}</a></td>
+                  <td class="path">
+                    <a href="#{{ $path }}">
+                      {{ if and .Name.Old .Name.New }}{{ .Name.Old }} &#8594; {{ .Name.New }}{{ else }}{{ $path }}{{ end }}
+                    </a>
+                  </td>
                 </tr>
                 {{ end }}
               </tbody>

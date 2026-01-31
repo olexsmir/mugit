@@ -66,7 +66,9 @@ func (g *Repo) Diff() (*NiceDiff, error) {
 	for i, d := range diffs {
 		diff := &nd.Diff[i]
 		diff.Name.New = d.NewName
-		diff.Name.Old = d.OldName
+		if d.OldName != d.NewName {
+			diff.Name.Old = d.OldName
+		}
 		diff.IsBinary = d.IsBinary
 		diff.IsNew = d.IsNew
 		diff.IsDelete = d.IsDelete
