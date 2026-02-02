@@ -19,8 +19,6 @@ func (c *Cli) repoNewAction(ctx context.Context, cmd *cli.Command) error {
 
 	name = strings.TrimRight(name, ".git") + ".git"
 
-	// TODO: check if there's already such repo
-
 	path, err := securejoin.SecureJoin(c.cfg.Repo.Dir, name)
 	if err != nil {
 		return err
@@ -30,5 +28,23 @@ func (c *Cli) repoNewAction(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("repository already exists: %s", name)
 	}
 
-	return git.Init(path)
+	if err := git.Init(path); err != nil {
+		return err
+	}
+
+	mirrorURL := cmd.String("mirror")
+	if mirrorURL != "" {
+		if !strings.HasPrefix(mirrorURL, "http") {
+			return fmt.Errorf("only http and https remotes are supported")
+		}
+		repo, err := git.Open(path, "")
+		if err != nil {
+			return fmt.Errorf("failed to open repo for mirror setup: %w", err)
+		}
+		if err := repo.SetMirrorRemote(mirrorURL); err != nil {
+			return fmt.Errorf("failed to set mirror remote: %w", err)
+		}
+	}
+
+	return nil
 }

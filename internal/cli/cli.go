@@ -61,6 +61,12 @@ func (c *Cli) Run(ctx context.Context, args []string) error {
 						Arguments: []cli.Argument{
 							&cli.StringArg{Name: "name"},
 						},
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:  "mirror",
+								Usage: "remote URL(only http/https) to mirror from",
+							},
+						},
 					},
 				},
 			},
