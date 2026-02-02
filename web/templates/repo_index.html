@@ -18,9 +18,9 @@
           {{ range .commits }}
           <div class="box">
             <div>
-              <a href="/{{ $repo }}/commit/{{ .Hash.String }}" class="commit-hash">{{ slice .Hash.String 0 8 }}</a>
-              &mdash; {{ .Author.Name }}
-              <span class="commit-date commit-info">{{ .Author.When.Format "Mon, 02 Jan 2006" }}</span>
+              <a href="/{{ $repo }}/commit/{{ .Hash }}" class="commit-hash">{{ .HashShort }}</a>
+              &mdash; {{ .AuthorName }}
+              <span class="commit-date commit-info">{{ .Committed.Format "Mon, 02 Jan 2006" }}</span>
             </div>
             <div>{{ commitSummary .Message }}</div>
           </div>

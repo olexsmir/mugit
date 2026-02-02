@@ -89,24 +89,24 @@ func (w *Worker) syncRepo(_ context.Context, repo *git.Repo) error {
 	name := repo.Name()
 	slog.Info("mirror: sync started", "repo", name)
 
-	mi, err := repo.MirrorInfo()
+	remoteURL, err := repo.RemoteURL()
 	if err != nil {
-		slog.Error("mirror: failed to get info", "repo", name, "err", err)
+		slog.Error("mirror: failed to get remote url", "repo", name, "err", err)
 		return err
 	}
 
-	if err := w.isRemoteValid(mi.RemoteURL); err != nil {
+	if err := w.isRemoteValid(remoteURL); err != nil {
 		slog.Error("mirror: remote is not valid", "repo", name, "err", err)
 		return err
 	}
 
-	if w.isRemoteGithub(mi.RemoteURL) && w.c.Mirror.GithubToken != "" {
-		if err := repo.FetchFromGithubWithToken(mi.Remote, w.c.Mirror.GithubToken); err != nil {
+	if w.isRemoteGithub(remoteURL) && w.c.Mirror.GithubToken != "" {
+		if err := repo.FetchFromGithubWithToken(w.c.Mirror.GithubToken); err != nil {
 			slog.Error("mirror: fetch failed (authorized)", "repo", name, "err", err)
 			return err
 		}
 	} else {
-		if err := repo.Fetch(mi.Remote); err != nil {
+		if err := repo.Fetch(); err != nil {
 			slog.Error("mirror: fetch failed", "repo", name, "err", err)
 			return err
 		}
@@ -139,13 +139,13 @@ func (w *Worker) findMirrorRepos() ([]*git.Repo, error) {
 			continue
 		}
 
-		mirror, err := repo.MirrorInfo()
+		isMirror, err := repo.IsMirror()
 		if err != nil {
 			slog.Debug("skipping non-mirror repo", "path", name, "err", err)
 			continue
 		}
 
-		if mirror.IsMirror {
+		if isMirror {
 			repos = append(repos, repo)
 		}
 	}

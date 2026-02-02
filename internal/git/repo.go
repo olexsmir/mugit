@@ -3,14 +3,11 @@ package git
 import (
 	"errors"
 	"fmt"
-	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 	"time"
 
 	"github.com/go-git/go-git/v5"
-	gitconfig "github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
@@ -59,7 +56,7 @@ func (g *Repo) IsEmpty() bool {
 	return g.h == plumbing.ZeroHash
 }
 
-// Init creates a bare repo.
+// Init initializes a bare repo in path.
 func Init(path string) error {
 	_, err := git.PlainInit(path, true)
 	return err
@@ -70,9 +67,18 @@ func (g *Repo) Name() string {
 	return strings.TrimSuffix(name, ".git")
 }
 
-func (g *Repo) Commits() ([]*object.Commit, error) {
+type Commit struct {
+	Message     string
+	Hash        string
+	HashShort   string
+	AuthorName  string
+	AuthorEmail string
+	Committed   time.Time
+}
+
+func (g *Repo) Commits() ([]*Commit, error) {
 	if g.IsEmpty() {
-		return []*object.Commit{}, nil
+		return []*Commit{}, nil
 	}
 
 	ci, err := g.r.Log(&git.LogOptions{
@@ -83,16 +89,23 @@ func (g *Repo) Commits() ([]*object.Commit, error) {
 		return nil, fmt.Errorf("commits from ref: %w", err)
 	}
 
-	commits := []*object.Commit{}
+	var commits []*Commit
 	ci.ForEach(func(c *object.Commit) error {
-		commits = append(commits, c)
+		commits = append(commits, &Commit{
+			AuthorEmail: c.Author.Email,
+			AuthorName:  c.Author.Name,
+			Committed:   c.Author.When,
+			Hash:        c.Hash.String(),
+			HashShort:   c.Hash.String()[:8],
+			Message:     c.Message,
+		})
 		return nil
 	})
 
 	return commits, nil
 }
 
-func (g *Repo) LastCommit() (*object.Commit, error) {
+func (g *Repo) LastCommit() (*Commit, error) {
 	if g.IsEmpty() {
 		return nil, ErrEmptyRepo
 	}
@@ -101,7 +114,15 @@ func (g *Repo) LastCommit() (*object.Commit, error) {
 	if err != nil {
 		return nil, fmt.Errorf("last commit: %w", err)
 	}
-	return c, nil
+
+	return &Commit{
+		AuthorEmail: c.Author.Email,
+		AuthorName:  c.Author.Name,
+		Committed:   c.Author.When,
+		Hash:        c.Hash.String(),
+		HashShort:   c.Hash.String()[:8],
+		Message:     c.Message,
+	}, nil
 }
 
 func (g *Repo) FileContent(path string) (string, error) {
@@ -128,82 +149,22 @@ func (g *Repo) FileContent(path string) (string, error) {
 	}
 }
 
-func (g *Repo) Tags() ([]*TagReference, error) {
-	iter, err := g.r.Tags()
-	if err != nil {
-		return nil, fmt.Errorf("tag objects: %w", err)
-	}
+type Branch struct{ Name string }
 
-	tags := make([]*TagReference, 0)
-	if err := iter.ForEach(func(ref *plumbing.Reference) error {
-		obj, err := g.r.TagObject(ref.Hash())
-		switch err {
-		case nil:
-			tags = append(tags, &TagReference{
-				ref: ref,
-				tag: obj,
-			})
-		case plumbing.ErrObjectNotFound:
-			tags = append(tags, &TagReference{
-				ref: ref,
-			})
-		default:
-			return err
-		}
-		return nil
-	}); err != nil {
-		return nil, err
-	}
-
-	tagList := &TagList{r: g.r, refs: tags}
-	sort.Sort(tagList)
-	return tags, nil
-}
-
-func (g *Repo) Branches() ([]*plumbing.Reference, error) {
+func (g *Repo) Branches() ([]*Branch, error) {
 	bi, err := g.r.Branches()
 	if err != nil {
 		return nil, fmt.Errorf("branch: %w", err)
 	}
 
-	branches := []*plumbing.Reference{}
-	err = bi.ForEach(func(ref *plumbing.Reference) error {
-		branches = append(branches, ref)
+	var branches []*Branch
+	err = bi.ForEach(func(r *plumbing.Reference) error {
+		branches = append(branches, &Branch{
+			Name: r.Name().Short(),
+		})
 		return nil
 	})
 	return branches, err
-}
-
-const defaultDescription = "Unnamed repository; edit this file 'description' to name the repository"
-
-func (g *Repo) Description() (string, error) {
-	// TODO: ??? Support both mugit.description and /description file
-	path := filepath.Join(g.path, "description")
-	if _, err := os.Stat(path); err != nil {
-		return "", nil
-	}
-
-	d, err := os.ReadFile(path)
-	if err != nil {
-		return "", fmt.Errorf("failed to read description file: %w", err)
-	}
-
-	desc := string(d)
-	if strings.Contains(desc, defaultDescription) {
-		return "", nil
-	}
-
-	return desc, nil
-}
-
-func (g *Repo) IsPrivate() (bool, error) {
-	c, err := g.r.Config()
-	if err != nil {
-		return false, fmt.Errorf("failed to read config: %w", err)
-	}
-
-	s := c.Raw.Section("mugit")
-	return s.Options.Get("private") == "true", nil
 }
 
 func (g *Repo) IsGoMod() bool {
@@ -224,91 +185,25 @@ func (g *Repo) FindMasterBranch(masters []string) (string, error) {
 	return "", fmt.Errorf("unable to find master branch")
 }
 
-type MirrorInfo struct {
-	IsMirror  bool
-	Remote    string
-	RemoteURL string
-}
+func (g *Repo) Fetch() error { return g.fetch(nil) }
 
-func (g *Repo) MirrorInfo() (MirrorInfo, error) {
-	c, err := g.r.Config()
-	if err != nil {
-		return MirrorInfo{}, fmt.Errorf("failed to read config: %w", err)
-	}
-
-	isMirror := c.Raw.Section("mugit").Options.Get("mirror") == "true"
-	for _, remote := range c.Remotes {
-		if len(remote.URLs) > 0 && (remote.Name == "upstream" || remote.Name == "origin") {
-			return MirrorInfo{
-				IsMirror:  isMirror,
-				Remote:    remote.Name,
-				RemoteURL: remote.URLs[0],
-			}, nil
-		}
-	}
-	// TODO: error if mirror opt is set, but there's no remotes
-	return MirrorInfo{}, fmt.Errorf("no mirror remote found")
-}
-
-func (g *Repo) ReadLastSync() (time.Time, error) {
-	c, err := g.r.Config()
-	if err != nil {
-		return time.Time{}, fmt.Errorf("failed to read config: %w", err)
-	}
-
-	raw := c.Raw.Section("mugit").Options.Get("last-sync")
-	if raw == "" {
-		return time.Time{}, fmt.Errorf("last-sync not set")
-	}
-
-	out, err := time.Parse(time.RFC3339, string(raw))
-	if err != nil {
-		return time.Time{}, fmt.Errorf("failed to parse time: %w", err)
-	}
-	return out, nil
-}
-
-func (g *Repo) SetLastSync(lastSync time.Time) error {
-	c, err := g.r.Config()
-	if err != nil {
-		return fmt.Errorf("failed to read config: %w", err)
-	}
-
-	c.Raw.Section("mugit").
-		SetOption("last-sync", lastSync.Format(time.RFC3339))
-	return g.r.SetConfig(c)
-}
-
-func (g *Repo) Fetch(remote string) error {
-	return g.fetch(remote, nil)
-}
-
-func (g *Repo) FetchFromGithubWithToken(remote, token string) error {
-	return g.fetch(remote, &http.BasicAuth{
+func (g *Repo) FetchFromGithubWithToken(token string) error {
+	return g.fetch(&http.BasicAuth{
 		Username: token,
 		Password: "x-oauth-basic",
 	})
 }
 
-func (g *Repo) fetch(remote string, auth http.AuthMethod) error {
-	rmt, err := g.r.Remote(remote)
+func (g *Repo) fetch(auth http.AuthMethod) error {
+	rmt, err := g.r.Remote(originRemote)
 	if err != nil {
-		return fmt.Errorf("failed to get upstream remote: %w", err)
+		return fmt.Errorf("failed to get remote: %w", err)
 	}
 
-	if ferr := rmt.Fetch(
-		&git.FetchOptions{
-			RefSpecs: []gitconfig.RefSpec{
-				// fetch all branches
-				"+refs/heads/*:refs/heads/*",
-				"+refs/tags/*:refs/tags/*",
-			},
-			Auth:  auth,
-			Tags:  git.AllTags,
-			Prune: true,
-			Force: true,
-		}); ferr != nil && !errors.Is(ferr, git.NoErrAlreadyUpToDate) {
-		return fmt.Errorf("fetch failed: %w", ferr)
-	}
-	return err
+	return rmt.Fetch(&git.FetchOptions{
+		Auth:  auth,
+		Tags:  git.AllTags,
+		Prune: true,
+		Force: true,
+	})
 }

@@ -12,9 +12,9 @@
       <div class="refs">
       {{ range .branches }}
         <div>
-        <strong>{{ .Name.Short }}</strong>
-        <a href="/{{ $name }}/tree/{{ .Name.Short }}/">browse</a>
-        <a href="/{{ $name }}/log/{{ .Name.Short }}">log</a>
+        <strong>{{ .Name }}</strong>
+        <a href="/{{ $name }}/tree/{{ .Name }}/">browse</a>
+        <a href="/{{ $name }}/log/{{ .Name }}">log</a>
         </div>
       {{ end }}
       </div>

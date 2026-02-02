@@ -1,6 +1,8 @@
 package git
 
 import (
+	"fmt"
+	"sort"
 	"time"
 
 	"github.com/go-git/go-git/v5"
@@ -30,6 +32,39 @@ func (t *TagReference) Message() string {
 		return t.tag.Message
 	}
 	return ""
+}
+
+func (g *Repo) Tags() ([]*TagReference, error) {
+	iter, err := g.r.Tags()
+	if err != nil {
+		return nil, fmt.Errorf("tag objects: %w", err)
+	}
+
+	tags := make([]*TagReference, 0)
+	if err := iter.ForEach(func(ref *plumbing.Reference) error {
+		obj, err := g.r.TagObject(ref.Hash())
+		switch err {
+		case nil:
+			tags = append(tags, &TagReference{
+				ref: ref,
+				tag: obj,
+			})
+		case plumbing.ErrObjectNotFound:
+			tags = append(tags, &TagReference{
+				ref: ref,
+			})
+		default:
+			return err
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
+	tagList := &TagList{r: g.r, refs: tags}
+	sort.Sort(tagList)
+
+	return tags, nil
 }
 
 func (t *TagList) Len() int {

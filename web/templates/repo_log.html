@@ -22,23 +22,23 @@
           {{ range .commits }}
           <tr>
             <td class="msg">
-              <a href="/{{ $repo }}/commit/{{ .Hash.String }}">{{ commitSummary .Message }}</a>
+              <a href="/{{ $repo }}/commit/{{ .Hash }}">{{ commitSummary .Message }}</a>
             </td>
             <td class="author">
               <span class="author-short">
-                {{ .Author.Name }} <a href="mailto:{{ .Author.Email }}" class="commit-email">{{ .Author.Email }}</a>
+                {{ .AuthorName }} <a href="mailto:{{ .AuthorEmail }}" class="commit-email">{{ .AuthorEmail }}</a>
               </span>
               <span class="tooltip" role="tooltip">
-                <strong>{{ .Author.Name }}</strong><br>
-                <a href="mailto:{{ .Author.Email }}" class="commit-email">{{ .Author.Email }}</a>
+                <strong>{{ .AuthorName }}</strong><br>
+                <a href="mailto:{{ .AuthorEmail }}" class="commit-email">{{ .AuthorEmail }}</a>
               </span>
             </td>
             <td class="">
-              <a href="/{{ $repo }}/commit/{{ .Hash.String }}">{{ slice .Hash.String 0 8 }}</a>
+              <a href="/{{ $repo }}/commit/{{ .Hash }}">{{ .HashShort }}</a>
             </td>
             <td class="age">
-              <span class="age-display">{{ humanizeTime .Committer.When }}</span>
-              <span class="tooltip" role="tooltip">{{ .Committer.When }}</span>
+              <span class="age-display">{{ humanizeTime .Committed }}</span>
+              <span class="tooltip" role="tooltip">{{ .Committed }}</span>
             </td>
           </tr>
           {{ end }}

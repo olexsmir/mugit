@@ -109,11 +109,12 @@ func (h *handlers) repoIndex(w http.ResponseWriter, r *http.Request) {
 	data["commits"] = commits
 	data["gomod"] = repo.IsGoMod()
 
-	if mirrorInfo, err := repo.MirrorInfo(); err == nil && mirrorInfo.IsMirror {
-		lastSync, _ := repo.ReadLastSync()
+	if isMirror, err := repo.IsMirror(); err == nil && isMirror {
+		lastSync, _ := repo.LastSync()
+		remoteURL, _ := repo.RemoteURL()
 		data["mirrorinfo"] = map[string]any{
 			"isMirror": true,
-			"url":      mirrorInfo.RemoteURL,
+			"url":      remoteURL,
 			"lastSync": lastSync,
 		}
 	}
@@ -411,7 +412,7 @@ func (h *handlers) listPublicRepos() ([]repoList, error) {
 				continue
 			}
 		} else {
-			lastCommitTime = lastCommit.Author.When
+			lastCommitTime = lastCommit.Committed
 		}
 
 		repos = append(repos, repoList{
