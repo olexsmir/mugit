@@ -36,18 +36,16 @@ func (w *Worker) Start(ctx context.Context) error {
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
-	if err := w.mirror(ctx); err != nil {
-		slog.Error("initial mirror sync failed", "err", err)
-	}
-
 	for {
 		select {
 		case <-ctx.Done():
 			return nil
-		case <-ticker.C:
+		default:
 			if err := w.mirror(ctx); err != nil {
 				slog.Error("mirror sync failed", "err", err)
 			}
+
+			<-ticker.C
 		}
 	}
 }
@@ -59,7 +57,7 @@ func (w *Worker) mirror(ctx context.Context) error {
 	}
 
 	var wg sync.WaitGroup
-	sem := semaphore.NewWeighted(5)
+	sem := semaphore.NewWeighted(10)
 	errCh := make(chan error, len(repos))
 
 	for _, repo := range repos {
@@ -75,6 +73,7 @@ func (w *Worker) mirror(ctx context.Context) error {
 			}
 		})
 	}
+
 	wg.Wait()
 	close(errCh)
 
@@ -95,14 +94,14 @@ func (w *Worker) syncRepo(_ context.Context, repo *git.Repo) error {
 		return err
 	}
 
-	if err := w.isRemoteValid(remoteURL); err != nil {
+	if err := w.isSupportedRemote(remoteURL); err != nil {
 		slog.Error("mirror: remote is not valid", "repo", name, "err", err)
 		return err
 	}
 
 	if w.isRemoteGithub(remoteURL) && w.c.Mirror.GithubToken != "" {
 		if err := repo.FetchFromGithubWithToken(w.c.Mirror.GithubToken); err != nil {
-			slog.Error("mirror: fetch failed (authorized)", "repo", name, "err", err)
+			slog.Error("mirror: fetch failed (github)", "repo", name, "err", err)
 			return err
 		}
 	} else {
@@ -133,15 +132,16 @@ func (w *Worker) findMirrorRepos() ([]*git.Repo, error) {
 		}
 
 		name := dir.Name()
-		repo, err := git.Open(filepath.Join(w.c.Repo.Dir, filepath.Clean(name)), "")
+		path := filepath.Join(w.c.Repo.Dir, filepath.Clean(name))
+		repo, err := git.Open(path, "")
 		if err != nil {
-			slog.Debug("skipping non-git directory", "path", name, "err", err)
+			slog.Debug("skipping non-git directory", "name", name, "err", err)
 			continue
 		}
 
 		isMirror, err := repo.IsMirror()
 		if err != nil {
-			slog.Debug("skipping non-mirror repo", "path", name, "err", err)
+			slog.Debug("skipping non-mirror repo", "name", name, "err", err)
 			continue
 		}
 
@@ -153,7 +153,7 @@ func (w *Worker) findMirrorRepos() ([]*git.Repo, error) {
 	return repos, nil
 }
 
-func (w *Worker) isRemoteValid(remote string) error {
+func (w *Worker) isSupportedRemote(remote string) error {
 	if !strings.HasPrefix(remote, "http") {
 		return fmt.Errorf("only http and https remotes are supported")
 	}
