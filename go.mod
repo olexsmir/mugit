@@ -12,6 +12,7 @@ require (
 	golang.org/x/crypto v0.47.0
 	golang.org/x/sync v0.19.0
 	gopkg.in/yaml.v2 v2.4.0
+	olexsmir.xyz/x v0.1.2
 )
 
 require (
