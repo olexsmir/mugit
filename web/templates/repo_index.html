@@ -20,7 +20,10 @@
             <div>
               <a href="/{{ $repo }}/commit/{{ .Hash }}" class="commit-hash">{{ .HashShort }}</a>
               &mdash; {{ .AuthorName }}
-              <span class="commit-date commit-info">{{ .Committed.Format "Mon, 02 Jan 2006" }}</span>
+              <span class="commit-date commit-info age">
+                {{ .Committed.Format "Mon, 02 Jan 2006" }}
+                <span class="tooltip" role="tooltip">{{ .Committed }}</span>
+              </span>
             </div>
             <div>{{ commitSummary .Message }}</div>
           </div>

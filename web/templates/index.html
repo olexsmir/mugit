@@ -24,7 +24,12 @@
           <tr>
             <td class="nowrap"><a href="/{{ .Name }}">{{ .Name }}</a></td>
             <td class="fill">{{- if .Desc }}{{ .Desc }}{{- else }}<span class="muted">No description set</span>{{- end }}
-            <td class="nowrap">{{ humanizeTime .LastCommit }}</td>
+            <td class="nowrap">
+              <span class="age">
+                {{- humanizeTime .LastCommit -}}
+                <span class="tooltip" role="tooltip">{{- .LastCommit -}}</span>
+              </span>
+            </td>
           </tr>
           {{ end}}
         </tbody>
