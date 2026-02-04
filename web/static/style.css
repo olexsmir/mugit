@@ -358,7 +358,7 @@ nav ul li {
 }
 
 /* readme */
-.readme { padding: 0.5rem; }
+.readme { padding: 0.6rem 0; }
 .readme pre { white-space: pre-wrap; }
 .readme ul  { padding: revert; }
 .readme img { max-width: 100%; }
