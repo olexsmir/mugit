@@ -27,10 +27,9 @@ type Diff struct {
 type NiceDiff struct {
 	Diff   []Diff
 	Commit struct {
-		Message string
-		Author  object.Signature
-		This    string
-		Parent  string
+		Commit
+		This   string
+		Parent string
 	}
 	Stat struct {
 		FilesChanged int
@@ -57,7 +56,10 @@ func (g *Repo) Diff() (*NiceDiff, error) {
 
 	nd := NiceDiff{}
 	nd.Commit.Message = c.Message
-	nd.Commit.Author = c.Author
+	nd.Commit.Hash = c.Hash.String()
+	nd.Commit.HashShort = c.Hash.String()[:8]
+	nd.Commit.AuthorEmail = c.Author.Email
+	nd.Commit.AuthorName = c.Author.Name
 	nd.Commit.This = c.Hash.String()
 	nd.Commit.Parent = getParentHash(parent)
 	nd.Stat.FilesChanged = len(diffs)

@@ -277,7 +277,7 @@ func (h *handlers) commitHandler(w http.ResponseWriter, r *http.Request) {
 	data["name"] = name
 	data["ref"] = ref
 	data["desc"] = desc
-	h.templ(w, "commit", data)
+	h.templ(w, "repo_commit", data)
 }
 
 func (h *handlers) refsHandler(w http.ResponseWriter, r *http.Request) {

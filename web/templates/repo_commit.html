@@ -1,4 +1,4 @@
-{{ define "commit" }}
+{{ define "repo_commit" }}
 <html>
   <head>
     {{ template "head" . }}
@@ -10,8 +10,8 @@
       <section class="commit">
         <div class="box">
           <div class="commit-info">
-            <span class="commit-date">{{ .commit.Author.When.Format "Mon, 02 Jan 2006 15:04:05 -0700" }}</span>
-            {{ .commit.Author.Name }} <a href="mailto:{{ .commit.Author.Email }}" class="commit-email">{{ .commit.Author.Email }}</a>
+            <span class="commit-date">{{ .commit.Committed }}</span>
+            {{ .commit.AuthorName }} <a href="mailto:{{ .commit.AuthorEmail }}" class="commit-email">{{ .commit.AuthorEmail }}</a>
           </div>
           <pre class="commit-message">{{- .commit.Message -}}</pre>
         </div>
