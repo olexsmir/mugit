@@ -9,22 +9,22 @@
     <main>
       {{ $repo := .name }}
 
-      <table class="log">
+      <table class="table log">
         <thead>
           <tr class="nohover">
-            <th class="msg">Message</th>
-            <th class="author">Author</th>
-            <th class="hash">Hash</th>
-            <th class="age">Age</th>
+            <th class="fill">Message</th>
+            <th class="author nowrap">Author</th>
+            <th>Hash</th>
+            <th class="age nowrap">Age</th>
           </tr>
         </thead>
         <tbody>
           {{ range .commits }}
           <tr>
-            <td class="msg">
+            <td class="fill">
               <a href="/{{ $repo }}/commit/{{ .Hash }}">{{ commitSummary .Message }}</a>
             </td>
-            <td class="author">
+            <td class="author nowrap">
               <span class="author-short">
                 {{ .AuthorName }} <a href="mailto:{{ .AuthorEmail }}" class="commit-email">{{ .AuthorEmail }}</a>
               </span>
@@ -36,8 +36,8 @@
             <td class="">
               <a href="/{{ $repo }}/commit/{{ .Hash }}">{{ .HashShort }}</a>
             </td>
-            <td class="age">
-              <span class="age-display">{{ humanizeTime .Committed }}</span>
+            <td class="age nowrap">
+              {{ humanizeTime .Committed }}
               <span class="tooltip" role="tooltip">{{ .Committed }}</span>
             </td>
           </tr>

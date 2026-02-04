@@ -16,17 +16,17 @@
           <pre class="commit-message">{{- .commit.Message -}}</pre>
         </div>
 
-        <table class="commit-refs">
+        <table class="table commit-refs">
           <tbody>
             <tr>
-              <td class="label"><strong>commit</strong></td>
+              <td class="label nowrap"><strong>commit</strong></td>
               <td>
                 <span class="commit-hash">{{ .commit.This }}</span>
               </td>
             </tr>
             {{ if .commit.Parent }}
             <tr>
-              <td class="label"><strong>parent</strong></td>
+              <td class="label nowrap"><strong>parent</strong></td>
               <td>
                 <span class="commit-hash">{{ .commit.Parent }}</span>
               </td>
@@ -44,7 +44,7 @@
 
           <div class="jump">
             <strong>jump to</strong>
-            <table class="jump-table">
+            <table class="table jump-table">
               <tbody>
                 {{ range .diff }}
                 {{ $path := .Name.New }}
@@ -55,7 +55,7 @@
                     {{ if .IsDelete }}<span class="diff-type diff-del">D</span>{{ end }}
                     {{ if not (or .IsNew .IsDelete) }}<span class="diff-type diff-mod">M</span>{{ end }}
                   </td>
-                  <td class="path">
+                  <td class="fill">
                     <a href="#{{ $path }}">
                       {{ if and .Name.Old .Name.New }}{{ .Name.Old }} &#8594; {{ .Name.New }}{{ else }}{{ $path }}{{ end }}
                     </a>

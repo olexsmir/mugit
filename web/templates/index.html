@@ -11,20 +11,20 @@
   </header>
   <body>
     <main>
-      <table class="index">
+      <table class="table index">
         <thead>
           <tr class="nohover">
-            <th class="url">Name</th>
-            <th class="desc">Description</th>
-            <th class="idle">Last update</th>
+            <th class="nowrap">Name</th>
+            <th class="fill">Description</th>
+            <th class="nowrap">Last update</th>
           </tr>
         </thead>
         <tbody>
           {{ range .repos }}
           <tr>
-            <td class="url"><a href="/{{ .Name }}">{{ .Name }}</a></td>
-            <td class="desc">{{- if .Desc }}{{ .Desc }}{{- else }}<span class="unset">No description set</span>{{- end }}
-            <td class="idle">{{ humanizeTime .LastCommit }}</td>
+            <td class="nowrap"><a href="/{{ .Name }}">{{ .Name }}</a></td>
+            <td class="fill">{{- if .Desc }}{{ .Desc }}{{- else }}<span class="muted">No description set</span>{{- end }}
+            <td class="nowrap">{{ humanizeTime .LastCommit }}</td>
           </tr>
           {{ end}}
         </tbody>

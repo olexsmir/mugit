@@ -11,29 +11,29 @@
       {{ $ref := .ref }}
       {{ $parent := .parent }}
 
-      <table class="tree">
+      <table class="table tree">
         <thead>
           <tr class="nohover">
-            <th class="mode">mode</th>
-            <th class="size">size</th>
-            <th class="name">name</th>
+            <th class="mode nowrap">mode</th>
+            <th class="size nowrap">size</th>
+            <th class="fill">name</th>
           </tr>
         </thead>
         <tbody>
           {{ if $parent }}
           <tr>
-            <td class="mode"></td>
-            <td class="size"></td>
-            <td class="name"><a href="/{{ $repo }}/tree/{{ $ref }}/{{ .dotdot }}">..</a></td>
+            <td class="mode nowrap"></td>
+            <td class="size nowrap"></td>
+            <td class="fill"><a href="/{{ $repo }}/tree/{{ $ref }}/{{ .dotdot }}">..</a></td>
           </tr>
           {{ end }}
 
           {{ range .files }}
           {{ if not .IsFile }}
           <tr>
-            <td class="mode">{{ .Mode }}</td>
-            <td class="size">{{ .Size }}</td>
-            <td class="name">
+            <td class="mode nowrap">{{ .Mode }}</td>
+            <td class="size nowrap">{{ .Size }}</td>
+            <td class="fill">
               {{ if $parent }}
               <a href="/{{ $repo }}/tree/{{ $ref }}/{{ $parent }}/{{ .Name }}">{{ .Name }}/</a>
               {{ else }}
@@ -47,9 +47,9 @@
           {{ range .files }}
           {{ if .IsFile }}
           <tr>
-            <td class="mode">{{ .Mode }}</td>
-            <td class="size">{{ .Size }}</td>
-            <td class="name">
+            <td class="mode nowrap">{{ .Mode }}</td>
+            <td class="size nowrap">{{ .Size }}</td>
+            <td class="fill">
               {{ if $parent }}
               <a href="/{{ $repo }}/blob/{{ $ref }}/{{ $parent }}/{{ .Name }}">{{ .Name }}</a>
               {{ else }}
