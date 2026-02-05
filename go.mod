@@ -4,7 +4,7 @@ go 1.25.3
 
 require (
 	github.com/bluekeyes/go-gitdiff v0.8.1
-	github.com/cyphar/filepath-securejoin v0.4.1
+	github.com/cyphar/filepath-securejoin v0.6.1
 	github.com/gliderlabs/ssh v0.3.8
 	github.com/go-git/go-git/v5 v5.16.4
 	github.com/urfave/cli/v3 v3.6.2
