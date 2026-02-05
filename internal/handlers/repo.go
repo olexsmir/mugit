@@ -181,6 +181,10 @@ func (h *handlers) fileContentsHandler(w http.ResponseWriter, r *http.Request) {
 
 	contents, err := repo.FileContent(treePath)
 	if err != nil {
+		if errors.Is(err, git.ErrFileNotFound) {
+			h.write404(w, err)
+			return
+		}
 		h.write500(w, err)
 		return
 	}

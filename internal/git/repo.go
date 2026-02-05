@@ -15,7 +15,10 @@ import (
 
 // Thanks https://git.icyphox.sh/legit/blob/master/git/git.go
 
-var ErrEmptyRepo = errors.New("repository has no commits")
+var (
+	ErrEmptyRepo    = errors.New("repository has no commits")
+	ErrFileNotFound = errors.New("file not found")
+)
 
 type Repo struct {
 	path string
@@ -138,6 +141,9 @@ func (g *Repo) FileContent(path string) (string, error) {
 
 	file, err := tree.File(path)
 	if err != nil {
+		if errors.Is(err, object.ErrFileNotFound) {
+			return "", ErrFileNotFound
+		}
 		return "", err
 	}
 
