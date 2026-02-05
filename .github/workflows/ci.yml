@@ -1,0 +1,22 @@
+name: ci
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.mod
+
+      - name: Build
+        run: go build .
+
+      - name: Tests
+        run: go test -v -race ./...
