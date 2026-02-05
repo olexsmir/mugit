@@ -3,6 +3,8 @@ package humanize
 import (
 	"testing"
 	"time"
+
+	"olexsmir.xyz/x/is"
 )
 
 func TestFormatDuration(t *testing.T) {
@@ -35,9 +37,6 @@ func TestFormatDuration(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		got := formatDuration(tt.d)
-		if got != tt.want {
-			t.Errorf("formatDuration(%v) = %q, want %q", tt.d, got, tt.want)
-		}
+		is.Equal(t, tt.want, formatDuration(tt.d))
 	}
 }
