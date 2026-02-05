@@ -11,17 +11,21 @@ import (
 )
 
 type Cli struct {
-	cfg *config.Config
+	cfg     *config.Config
+	version string
 }
 
-func New() *Cli {
-	return &Cli{}
+func New(version string) *Cli {
+	return &Cli{
+		version: version,
+	}
 }
 
 func (c *Cli) Run(ctx context.Context, args []string) error {
 	cmd := &cli.Command{
 		Name:                  "mugit",
 		Usage:                 "a frontend for git repos",
+		Version:               c.version,
 		EnableShellCompletion: true,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
