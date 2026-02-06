@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -16,6 +17,10 @@ func (g *Repo) IsPrivate() (bool, error) {
 		return false, err
 	}
 	return v == "true", nil
+}
+
+func (g *Repo) SetPrivate(isPrivate bool) error {
+	return g.setOption("private", strconv.FormatBool(isPrivate))
 }
 
 const originRemote = "origin"
