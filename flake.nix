@@ -118,7 +118,7 @@
               default = { };
               description = ''
                 Configuration for mugit. See documentation for available options.
-                https://github.com/olexsmir/mugit/blob/main/docs.md
+                https://github.com/olexsmir/mugit/blob/main/README.md
               '';
               example = literalExpression ''
                 {
