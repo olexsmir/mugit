@@ -45,9 +45,10 @@ func (h *handlers) loggingMiddleware(next http.Handler) http.Handler {
 
 		slog.Info("http request",
 			"method", r.Method,
-			"path", r.URL.Path,
 			"status", wrapped.status,
+			"path", r.URL.Path,
 			"latency", time.Since(start).String(),
+			"ua", r.UserAgent(),
 		)
 	})
 }
