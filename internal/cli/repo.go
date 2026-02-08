@@ -38,7 +38,7 @@ func (c *Cli) repoNewAction(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("failed to open repo: %w", err)
 	}
 
-	if err := repo.SetPrivate(true); err != nil {
+	if err := repo.SetPrivate(cmd.Bool("private")); err != nil {
 		return fmt.Errorf("failed to set private status: %w", err)
 	}
 
