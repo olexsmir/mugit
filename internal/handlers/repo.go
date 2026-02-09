@@ -298,6 +298,12 @@ func (h *handlers) refsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	masterBranch, err := repo.FindMasterBranch(h.c.Repo.Masters)
+	if err != nil {
+		h.write500(w, err)
+		return
+	}
+
 	branches, err := repo.Branches()
 	if err != nil {
 		h.write500(w, err)
@@ -314,6 +320,7 @@ func (h *handlers) refsHandler(w http.ResponseWriter, r *http.Request) {
 	data["meta"] = h.c.Meta
 	data["name"] = name
 	data["desc"] = desc
+	data["ref"] = masterBranch
 	data["branches"] = branches
 	data["tags"] = tags
 	h.templ(w, "repo_refs", data)
