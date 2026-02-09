@@ -97,7 +97,7 @@ func (g *Repo) Commits() ([]*Commit, error) {
 		commits = append(commits, &Commit{
 			AuthorEmail: c.Author.Email,
 			AuthorName:  c.Author.Name,
-			Committed:   c.Author.When,
+			Committed:   c.Committer.When,
 			Hash:        c.Hash.String(),
 			HashShort:   c.Hash.String()[:8],
 			Message:     c.Message,
@@ -121,7 +121,7 @@ func (g *Repo) LastCommit() (*Commit, error) {
 	return &Commit{
 		AuthorEmail: c.Author.Email,
 		AuthorName:  c.Author.Name,
-		Committed:   c.Author.When,
+		Committed:   c.Committer.When,
 		Hash:        c.Hash.String(),
 		HashShort:   c.Hash.String()[:8],
 		Message:     c.Message,
