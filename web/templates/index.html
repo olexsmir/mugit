@@ -23,7 +23,11 @@
           {{- range .repos }}
           <tr>
             <td class="nowrap"><a href="/{{ .Name }}">{{ .Name }}</a></td>
-            <td class="fill">{{- if .Desc }}{{ .Desc }}{{- else }}<span class="muted">No description set</span>{{- end }}
+            <td class="fill">
+              <a href="/{{ .Name }}">
+                {{- if .Desc }}{{- .Desc -}}
+                {{- else }}<span class="muted">No description set</span>{{- end -}}
+              </a>
             <td class="nowrap">
               <span class="age">
                 {{- humanizeTime .LastCommit -}}
