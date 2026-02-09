@@ -79,6 +79,17 @@ type Commit struct {
 	Committed   time.Time
 }
 
+func newCommit(c *object.Commit) *Commit {
+	return &Commit{
+		AuthorEmail: c.Author.Email,
+		AuthorName:  c.Author.Name,
+		Committed:   c.Committer.When,
+		Hash:        c.Hash.String(),
+		HashShort:   c.Hash.String()[:8],
+		Message:     c.Message,
+	}
+}
+
 func (g *Repo) Commits() ([]*Commit, error) {
 	if g.IsEmpty() {
 		return []*Commit{}, nil
@@ -94,14 +105,7 @@ func (g *Repo) Commits() ([]*Commit, error) {
 
 	var commits []*Commit
 	ci.ForEach(func(c *object.Commit) error {
-		commits = append(commits, &Commit{
-			AuthorEmail: c.Author.Email,
-			AuthorName:  c.Author.Name,
-			Committed:   c.Committer.When,
-			Hash:        c.Hash.String(),
-			HashShort:   c.Hash.String()[:8],
-			Message:     c.Message,
-		})
+		commits = append(commits, newCommit(c))
 		return nil
 	})
 
@@ -118,14 +122,7 @@ func (g *Repo) LastCommit() (*Commit, error) {
 		return nil, fmt.Errorf("last commit: %w", err)
 	}
 
-	return &Commit{
-		AuthorEmail: c.Author.Email,
-		AuthorName:  c.Author.Name,
-		Committed:   c.Committer.When,
-		Hash:        c.Hash.String(),
-		HashShort:   c.Hash.String()[:8],
-		Message:     c.Message,
-	}, nil
+	return newCommit(c), nil
 }
 
 func (g *Repo) FileContent(path string) (string, error) {

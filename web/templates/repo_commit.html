@@ -2,10 +2,10 @@
 <html>
   <head>
     {{ template "head" . }}
-    <title>{{ .name }}: {{ .commit.This }}</title>
+    <title>{{ .name }}: {{ .commit.HashShort }}</title>
   </head>
-  {{ template "repo_header" . }}
   <body>
+    {{ template "repo_header" . }}
     <main>
       <section class="commit">
         <div class="box">
@@ -21,14 +21,14 @@
             <tr>
               <td class="label nowrap"><strong>commit</strong></td>
               <td>
-                <span class="commit-hash">{{ .commit.This }}</span>
+                <span class="commit-hash">{{ .commit.HashShort }}</span>
               </td>
             </tr>
-            {{ if .commit.Parent }}
+            {{ if .parent }}
             <tr>
               <td class="label nowrap"><strong>parent</strong></td>
               <td>
-                <span class="commit-hash">{{ .commit.Parent }}</span>
+                <span class="commit-hash">{{ .parent.HashShort }}</span>
               </td>
             </tr>
             {{ end }}
@@ -69,8 +69,8 @@
       </section>
       <section>
         {{ $repo := .name }}
-        {{ $this := .commit.This }}
-        {{ $parent := .commit.Parent }}
+        {{ $this := .commit }}
+        {{ $parent := .parent }}
         {{ range .diff }}
           {{ $path := .Name.New }}
           {{ if not $path }}{{ $path = .Name.Old }}{{ end }}

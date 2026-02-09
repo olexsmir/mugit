@@ -26,12 +26,9 @@ type Diff struct {
 
 type NiceDiff struct {
 	Diff   []Diff
-	Commit struct {
-		Commit
-		This   string
-		Parent string
-	}
-	Stat struct {
+	Commit *Commit
+	Parent *Commit
+	Stat   struct {
 		FilesChanged int
 		Insertions   int
 		Deletions    int
@@ -55,15 +52,9 @@ func (g *Repo) Diff() (*NiceDiff, error) {
 	}
 
 	nd := NiceDiff{}
-	nd.Commit.Message = c.Message
-	nd.Commit.Hash = c.Hash.String()
-	nd.Commit.HashShort = c.Hash.String()[:8]
-	nd.Commit.AuthorEmail = c.Author.Email
-	nd.Commit.AuthorName = c.Author.Name
-	nd.Commit.This = c.Hash.String()
-	nd.Commit.Parent = getParentHash(parent)
+	nd.Commit = newCommit(c)
+	nd.Parent = newCommit(parent)
 	nd.Stat.FilesChanged = len(diffs)
-
 	nd.Diff = make([]Diff, len(diffs))
 	for i, d := range diffs {
 		diff := &nd.Diff[i]
@@ -121,11 +112,4 @@ func (g *Repo) getPatch(c *object.Commit) (*object.Patch, *object.Commit, error)
 	}
 
 	return patch, parent, nil
-}
-
-func getParentHash(parent *object.Commit) string {
-	if parent == nil || parent.Hash.IsZero() {
-		return ""
-	}
-	return parent.Hash.String()
 }
