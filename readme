@@ -8,7 +8,7 @@ FEATURES
 - Git Smart HTTP - clone over https (use ssh for pushing)
 - Git over SSH - push and clone over ssh
 - Private repositories - repositories that are only accessible via ssh
-- Mirroring a Automatically mirror repositories (supports github auth)
+- Mirroring - Automatically mirror repositories (supports github auth)
 - CLI - for managing your repos
 
 INSTALL
