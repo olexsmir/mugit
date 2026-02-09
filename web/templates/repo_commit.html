@@ -8,71 +8,62 @@
     {{ template "repo_header" . }}
     <main>
       <section class="commit">
-        <div class="box">
-          <div class="commit-info">
-            <span class="commit-date">{{ .commit.Committed }}</span>
-            {{ .commit.AuthorName }} <a href="mailto:{{ .commit.AuthorEmail }}" class="commit-email">{{ .commit.AuthorEmail }}</a>
-          </div>
-          <pre class="commit-message">{{- .commit.Message -}}</pre>
-        </div>
-
-        <table class="table commit-refs">
-          <tbody>
-            <tr>
-              <td class="label nowrap"><strong>commit</strong></td>
-              <td>
-                <span class="commit-hash">{{ .commit.HashShort }}</span>
-              </td>
-            </tr>
-            {{ if .parent }}
-            <tr>
-              <td class="label nowrap"><strong>parent</strong></td>
-              <td>
-                <span class="commit-hash">{{ .parent.HashShort }}</span>
-              </td>
-            </tr>
-            {{ end }}
-          </tbody>
-        </table>
-
-        <div class="diff-stat">
-          <div>
+        <div class="commit-refs">
           {{ .stat.FilesChanged }} files changed,
           {{ .stat.Insertions }} insertions(+),
           {{ .stat.Deletions }} deletions(-)
-          </div>
-
-          {{ if gt (len .diff) 1}}
-          <div class="jump">
-            <strong>jump to</strong>
-            <table class="table jump-table">
-              <tbody>
-                {{ range .diff }}
-                {{ $path := .Name.New }}
-                {{ if not $path }}{{ $path = .Name.Old }}{{ end }}
-                <tr>
-                  <td class="diff-type">
-                    {{ if .IsNew }}<span class="diff-type diff-add">A</span>{{ end }}
-                    {{ if .IsDelete }}<span class="diff-type diff-del">D</span>{{ end }}
-                    {{ if not (or .IsNew .IsDelete) }}<span class="diff-type diff-mod">M</span>{{ end }}
-                  </td>
-                  <td class="fill">
-                    <a href="#{{ $path }}">
-                      {{ if and .Name.Old .Name.New }}{{ .Name.Old }} &#8594; {{ .Name.New }}{{ else }}{{ $path }}{{ end }}
-                    </a>
-                  </td>
-                </tr>
-                {{ end }}
-              </tbody>
-            </table>
-          </div>
-          {{ end }}
         </div>
+
+        <div class="box">
+          <pre class="commit-message">{{ .commit.Message }}</pre>
+          <div>
+            <strong>Author:</strong>
+            {{ .commit.AuthorName }}
+            <a href="mailto:{{ .AuthorEmail }}" class="commit-email">{{ .commit.AuthorEmail }}</a>
+          </div>
+          <div>
+            <strong>Committed at:</strong>
+            {{ .commit.Committed }}
+          </div>
+          <div>
+            <strong>Parent:</strong>
+            {{ range $i, $p := .parents -}}
+            {{ if $i }}, {{ end -}}
+            <a href="/{{ $.name }}/commit/{{ $p }}">{{ $p }}</a>
+            {{- end }}
+          </div>
+        </div>
+
+        {{ if gt (len .diff) 1 -}}
+        <div class="jump">
+          <strong>jump to</strong>
+          <table class="table jump-table">
+            <tbody>
+              {{ range .diff }}
+              {{ $path := .Name.New }}
+              {{ if not $path }}{{ $path = .Name.Old }}{{ end }}
+              <tr>
+                <td class="diff-type">
+                  {{ if .IsNew }}<span class="diff-type diff-add">A</span>{{ end }}
+                  {{ if .IsDelete }}<span class="diff-type diff-del">D</span>{{ end }}
+                  {{ if not (or .IsNew .IsDelete) }}<span class="diff-type diff-mod">M</span>{{ end }}
+                </td>
+                <td class="fill">
+                  <a href="#{{ $path }}">
+                    {{ if and .Name.Old .Name.New }}{{ .Name.Old }} &#8594; {{ .Name.New }}{{ else }}{{ $path }}{{ end }}
+                  </a>
+                </td>
+              </tr>
+              {{ end }}
+            </tbody>
+          </table>
+        </div>
+        {{ end }}
       </section>
       <section>
         {{ $repo := .name }}
-        {{ $this := .commit }}
-        {{ $parent := .parent }}
+        {{ $this := .commit.Hash }}
+        {{ $parent := index .parents 0 }}
         {{ range .diff }}
           {{ $path := .Name.New }}
           {{ if not $path }}{{ $path = .Name.Old }}{{ end }}
@@ -90,7 +81,7 @@
           {{ if .Name.Old }}
           <a href="/{{ $repo }}/blob/{{ $parent }}/{{ .Name.Old }}">{{ .Name.Old }}</a>
           {{ if .Name.New }}
-            &#8594; 
+            &#8594;
             <a href="/{{ $repo }}/blob/{{ $this }}/{{ .Name.New }}">{{ .Name.New }}</a>
           {{ end }}
           {{ else }}

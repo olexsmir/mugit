@@ -79,13 +79,14 @@ type Commit struct {
 	Committed   time.Time
 }
 
+func newShortHash(h plumbing.Hash) string { return h.String()[:7] }
 func newCommit(c *object.Commit) *Commit {
 	return &Commit{
 		AuthorEmail: c.Author.Email,
 		AuthorName:  c.Author.Name,
 		Committed:   c.Committer.When,
 		Hash:        c.Hash.String(),
-		HashShort:   c.Hash.String()[:8],
+		HashShort:   newShortHash(c.Hash),
 		Message:     c.Message,
 	}
 }

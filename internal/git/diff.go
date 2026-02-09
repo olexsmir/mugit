@@ -25,10 +25,10 @@ type Diff struct {
 }
 
 type NiceDiff struct {
-	Diff   []Diff
-	Commit *Commit
-	Parent *Commit
-	Stat   struct {
+	Diff    []Diff
+	Commit  *Commit
+	Parents []string // list of short hashes
+	Stat    struct {
 		FilesChanged int
 		Insertions   int
 		Deletions    int
@@ -41,7 +41,7 @@ func (g *Repo) Diff() (*NiceDiff, error) {
 		return nil, fmt.Errorf("commit object: %w", err)
 	}
 
-	patch, parent, err := g.getPatch(c)
+	patch, parents, err := g.getPatch(c)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func (g *Repo) Diff() (*NiceDiff, error) {
 
 	nd := NiceDiff{}
 	nd.Commit = newCommit(c)
-	nd.Parent = newCommit(parent)
+	nd.Parents = parents
 	nd.Stat.FilesChanged = len(diffs)
 	nd.Diff = make([]Diff, len(diffs))
 	for i, d := range diffs {
@@ -84,26 +84,21 @@ func (g *Repo) Diff() (*NiceDiff, error) {
 	return &nd, nil
 }
 
-func (g *Repo) getPatch(c *object.Commit) (*object.Patch, *object.Commit, error) {
+func (g *Repo) getPatch(c *object.Commit) (*object.Patch, []string, error) {
 	commitTree, err := c.Tree()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	var parentTree *object.Tree
-	var parent *object.Commit
-
-	if c.NumParents() != 0 {
-		parent, err = c.Parents().Next()
-		if err != nil {
+	parentTree := &object.Tree{}
+	if c.NumParents() > 0 {
+		parent, perr := c.Parents().Next()
+		if perr != nil {
+			return nil, nil, perr
+		}
+		if parentTree, err = parent.Tree(); err != nil {
 			return nil, nil, err
 		}
-		parentTree, err = parent.Tree()
-		if err != nil {
-			return nil, nil, err
-		}
-	} else {
-		parentTree = &object.Tree{}
 	}
 
 	patch, err := parentTree.Patch(commitTree)
@@ -111,5 +106,10 @@ func (g *Repo) getPatch(c *object.Commit) (*object.Patch, *object.Commit, error)
 		return nil, nil, fmt.Errorf("patch: %w", err)
 	}
 
-	return patch, parent, nil
+	parents := make([]string, len(c.ParentHashes))
+	for i, h := range c.ParentHashes {
+		parents[i] = newShortHash(h)
+	}
+
+	return patch, parents, nil
 }

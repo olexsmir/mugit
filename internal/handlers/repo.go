@@ -277,7 +277,7 @@ func (h *handlers) commitHandler(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]any)
 	data["diff"] = diff.Diff
 	data["commit"] = diff.Commit
-	data["parent"] = diff.Parent
+	data["parents"] = diff.Parents
 	data["stat"] = diff.Stat
 	data["name"] = name
 	data["ref"] = ref
