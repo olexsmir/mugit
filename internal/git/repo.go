@@ -72,22 +72,32 @@ func (g *Repo) Name() string {
 
 type Commit struct {
 	Message     string
+	AuthorEmail string
+	AuthorName  string
+	ChangeID    string
+	Committed   time.Time
 	Hash        string
 	HashShort   string
-	AuthorName  string
-	AuthorEmail string
-	Committed   time.Time
 }
 
 func newShortHash(h plumbing.Hash) string { return h.String()[:7] }
 func newCommit(c *object.Commit) *Commit {
+	var changeID string
+	for _, header := range c.ExtraHeaders {
+		if header.Key == "change-id" {
+			changeID = header.Value
+			break
+		}
+	}
+
 	return &Commit{
+		Message:     c.Message,
 		AuthorEmail: c.Author.Email,
 		AuthorName:  c.Author.Name,
+		ChangeID:    changeID,
 		Committed:   c.Committer.When,
 		Hash:        c.Hash.String(),
 		HashShort:   newShortHash(c.Hash),
-		Message:     c.Message,
 	}
 }
 

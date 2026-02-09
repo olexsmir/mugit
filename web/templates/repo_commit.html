@@ -25,6 +25,12 @@
             <strong>Committed at:</strong>
             {{ .commit.Committed }}
           </div>
+          {{ if .commit.ChangeID -}}
+          <div>
+            <strong>Change ID:</strong>
+            {{ .commit.ChangeID }}
+          </div>
+          {{- end }}
           <div>
             <strong>Parent:</strong>
             {{ range $i, $p := .parents -}}
