@@ -67,6 +67,8 @@ a:hover {
 pre {
   font-family: var(--mono-font);
   overflow-x: auto;
+  tab-size: 4;
+  -moz-tab-size: 4;
 }
 
 main, footer {
