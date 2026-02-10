@@ -8,7 +8,7 @@
   <body>
     <header>
       <h1>{{ .meta.Title }}</h1>
-      <h2>{{ .meta.Description }}</h2>
+      {{ if .meta.Description }}<h2>{{ .meta.Description }}</h2>{{ end }}
     </header>
     <main>
       <table class="table index">
