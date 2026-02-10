@@ -29,10 +29,14 @@
                 {{- else }}<span class="muted">No description set</span>{{- end -}}
               </a>
             <td class="nowrap">
+              {{ if not .LastCommit.IsZero }}
               <span class="age">
                 {{- humanizeTime .LastCommit -}}
                 <span class="tooltip" role="tooltip">{{- .LastCommit -}}</span>
               </span>
+              {{ else }}
+              <span class="muted">n/a</span>
+              {{ end }}
             </td>
           </tr>
           {{ end }}
