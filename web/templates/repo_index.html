@@ -18,7 +18,7 @@
           {{ range .commits }}
           <div class="box">
             <div>
-              <a href="/{{ $repo }}/commit/{{ .Hash }}" class="commit-hash">{{ .HashShort }}</a>
+              <a href="/{{ $repo }}/commit/{{ .Hash }}" class="commit-hash link">{{ .HashShort }}</a>
               &mdash; {{ .AuthorName }}
               <span class="commit-date commit-info age">
                 {{ .Committed.Format "Mon, 02 Jan 2006" }}

@@ -35,7 +35,7 @@
             <strong>Parent:</strong>
             {{ range $i, $p := .parents -}}
             {{ if $i }}, {{ end -}}
-            <a href="/{{ $.name }}/commit/{{ $p }}">{{ $p }}</a>
+            <a class="link" href="/{{ $.name }}/commit/{{ $p }}">{{ $p }}</a>
             {{- end }}
           </div>
         </div>

@@ -60,9 +60,8 @@ a {
   border-bottom: 0;
 }
 
-a:hover {
-  border-bottom: 1.5px solid var(--gray);
-}
+a:hover { border-bottom: 1.5px solid var(--gray); }
+.link { border-bottom: 1.5px solid var(--medium-gray); }
 
 pre {
   font-family: var(--mono-font);
