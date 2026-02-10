@@ -403,10 +403,7 @@ func (h *handlers) listPublicRepos() ([]repoList, error) {
 		normalizedName := getNormalizedName(name)
 		repo, err := h.openPublicRepo(normalizedName, "")
 		if err != nil {
-			if errors.Is(err, errPrivateRepo) {
-				continue
-			}
-			errs = append(errs, err)
+			// if it's not git repo, just ignore it
 			continue
 		}
 
@@ -416,21 +413,16 @@ func (h *handlers) listPublicRepos() ([]repoList, error) {
 			continue
 		}
 
-		var lastCommitTime time.Time
 		lastCommit, err := repo.LastCommit()
 		if err != nil {
-			if !errors.Is(err, git.ErrEmptyRepo) {
-				errs = append(errs, err)
-				continue
-			}
-		} else {
-			lastCommitTime = lastCommit.Committed
+			errs = append(errs, err)
+			continue
 		}
 
 		repos = append(repos, repoList{
 			Name:       normalizedName,
 			Desc:       desc,
-			LastCommit: lastCommitTime,
+			LastCommit: lastCommit.Committed,
 		})
 	}
 

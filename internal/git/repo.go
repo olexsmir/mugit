@@ -125,7 +125,7 @@ func (g *Repo) Commits() ([]*Commit, error) {
 
 func (g *Repo) LastCommit() (*Commit, error) {
 	if g.IsEmpty() {
-		return nil, ErrEmptyRepo
+		return &Commit{}, nil
 	}
 
 	c, err := g.r.CommitObject(g.h)
