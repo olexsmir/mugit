@@ -10,6 +10,7 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 )
 
@@ -61,8 +62,10 @@ func (g *Repo) IsEmpty() bool {
 
 // Init initializes a bare repo in path.
 func Init(path string) error {
-	_, err := git.PlainInit(path, true)
-	return err
+	if _, err := git.PlainInit(path, true); err != nil {
+		return fmt.Errorf("failed to initialize repo: %w", err)
+	}
+	return nil
 }
 
 func (g *Repo) Name() string {
@@ -203,21 +206,46 @@ func (g *Repo) Fetch() error { return g.fetch(nil) }
 
 func (g *Repo) FetchFromGithubWithToken(token string) error {
 	return g.fetch(&http.BasicAuth{
-		Username: token,
-		Password: "x-oauth-basic",
+		Username: "x-access-token", // this can be anything but empty
+		Password: token,
 	})
 }
 
-func (g *Repo) fetch(auth http.AuthMethod) error {
+func (g *Repo) fetch(auth transport.AuthMethod) error {
 	rmt, err := g.r.Remote(originRemote)
 	if err != nil {
 		return fmt.Errorf("failed to get remote: %w", err)
 	}
 
-	return rmt.Fetch(&git.FetchOptions{
+	if err = rmt.Fetch(&git.FetchOptions{
 		Auth:  auth,
 		Tags:  git.AllTags,
 		Prune: true,
 		Force: true,
-	})
+	}); err != nil && !errors.Is(err, git.NoErrAlreadyUpToDate) {
+		return fmt.Errorf("failed to fetch: %w", err)
+	}
+
+	// for some reason fetch doesn't change head for empty repos
+	if !g.IsEmpty() {
+		return nil
+	}
+
+	refs, err := rmt.List(&git.ListOptions{Auth: auth})
+	if err != nil {
+		return fmt.Errorf("failed to list references: %w", err)
+	}
+
+	for _, ref := range refs {
+		if ref.Name() == plumbing.HEAD {
+			if err := g.r.Storer.SetReference(
+				plumbing.NewSymbolicReference(plumbing.HEAD, ref.Target()),
+			); err != nil {
+				return fmt.Errorf("failed to set HEAD: %w", err)
+			}
+			break
+		}
+	}
+
+	return nil
 }
