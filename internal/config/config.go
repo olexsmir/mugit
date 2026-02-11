@@ -75,11 +75,48 @@ func Load(fpath string) (*Config, error) {
 		return nil, err
 	}
 
+	config.ensureDefaults()
+
 	if verr := config.validate(); verr != nil {
 		return nil, verr
 	}
 
 	return &config, nil
+}
+
+func (c *Config) ensureDefaults() {
+	// ports
+	if c.Server.Port == 0 {
+		c.Server.Port = 8080
+	}
+
+	if c.SSH.Port == 0 {
+		c.SSH.Port = 2222
+	}
+
+	// meta
+	if c.Meta.Title == "" {
+		c.Meta.Title = "my cgit"
+	}
+
+	// repos
+	if len(c.Repo.Masters) == 0 {
+		c.Repo.Masters = []string{"master", "main"}
+	}
+
+	if len(c.Repo.Readmes) == 0 {
+		c.Repo.Readmes = []string{
+			"README.md", "readme.md",
+			"README.html", "readme.html",
+			"README.txt", "readme.txt",
+			"readme",
+		}
+	}
+
+	// mirroring
+	if c.Mirror.Interval == "" {
+		c.Mirror.Interval = "8h"
+	}
 }
 
 func (c Config) validate() error {
