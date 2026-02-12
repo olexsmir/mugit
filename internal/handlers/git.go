@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	securejoin "github.com/cyphar/filepath-securejoin"
-	"olexsmir.xyz/mugit/internal/git/gitservice"
+	"olexsmir.xyz/mugit/internal/git/gitx"
 )
 
 // multiplex, check if the request smells like gitprotocol-http(5), if so, it
@@ -37,9 +37,6 @@ func (h *handlers) infoRefs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("content-type", "application/x-git-upload-pack-advertisement")
-	w.WriteHeader(http.StatusOK)
-
 	repoPath := repoNameToPath(name)
 	path, err := securejoin.SecureJoin(h.c.Repo.Dir, repoPath)
 	if err != nil {
@@ -48,7 +45,9 @@ func (h *handlers) infoRefs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := gitservice.InfoRefs(path, w); err != nil {
+	w.Header().Set("content-type", "application/x-git-upload-pack-advertisement")
+	w.WriteHeader(http.StatusOK)
+	if err := gitx.InfoRefs(r.Context(), path, w); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		slog.Error("git: info/refs", "err", err)
 		return
@@ -63,16 +62,11 @@ func (h *handlers) uploadPack(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("content-type", "application/x-git-upload-pack-result")
-	w.Header().Set("Connection", "Keep-Alive")
-	w.Header().Set("Transfer-Encoding", "chunked")
-	w.WriteHeader(http.StatusOK)
-
 	reader := io.Reader(r.Body)
 	if r.Header.Get("Content-Encoding") == "gzip" {
 		gr, gerr := gzip.NewReader(r.Body)
 		if gerr != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+			http.Error(w, "invalid gzip encoding", http.StatusBadRequest)
 			slog.Error("git: gzip reader", "err", gerr)
 			return
 		}
@@ -83,13 +77,18 @@ func (h *handlers) uploadPack(w http.ResponseWriter, r *http.Request) {
 	repoPath := repoNameToPath(name)
 	path, err := securejoin.SecureJoin(h.c.Repo.Dir, repoPath)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		slog.Error("git: info/refs", "err", err)
+		http.Error(w, "invalid path", http.StatusBadRequest)
+		slog.Error("git: upload-pack path", "err", err)
 		return
 	}
 
-	if err := gitservice.UploadPack(path, true, reader, newFlushWriter(w)); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+	w.Header().Set("content-type", "application/x-git-upload-pack-result")
+	w.Header().Set("Connection", "Keep-Alive")
+	w.Header().Set("Transfer-Encoding", "chunked")
+	w.WriteHeader(http.StatusOK)
+
+	if err := gitx.UploadPack(r.Context(), path, true, reader, newFlushWriter(w)); err != nil {
+		// Don't call w.WriteHeader here - connection already started!
 		slog.Error("git: upload-pack", "err", err)
 		return
 	}

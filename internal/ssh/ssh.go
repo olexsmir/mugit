@@ -11,7 +11,7 @@ import (
 	"github.com/gliderlabs/ssh"
 	"olexsmir.xyz/mugit/internal/config"
 	"olexsmir.xyz/mugit/internal/git"
-	"olexsmir.xyz/mugit/internal/git/gitservice"
+	"olexsmir.xyz/mugit/internal/git/gitx"
 
 	gossh "golang.org/x/crypto/ssh"
 )
@@ -67,6 +67,7 @@ func (s *Server) authhandler(ctx ssh.Context, key ssh.PublicKey) bool {
 }
 
 func (s *Server) handler(sess ssh.Session) {
+	ctx := sess.Context()
 	authorized := sess.Context().Value(authorizedKey).(bool)
 
 	cmd := sess.Command()
@@ -108,7 +109,7 @@ func (s *Server) handler(sess ssh.Session) {
 			return
 		}
 
-		if err := gitservice.UploadPack(fullPath, false, sess, sess); err != nil {
+		if err := gitx.UploadPack(ctx, fullPath, false, sess, sess); err != nil {
 			s.error(sess, err)
 			return
 		}
@@ -119,7 +120,7 @@ func (s *Server) handler(sess ssh.Session) {
 			return
 		}
 
-		if err := gitservice.ReceivePack(fullPath, sess, sess, sess.Stderr()); err != nil {
+		if err := gitx.ReceivePack(ctx, fullPath, sess, sess, sess.Stderr()); err != nil {
 			s.error(sess, err)
 			return
 		}
@@ -127,7 +128,7 @@ func (s *Server) handler(sess ssh.Session) {
 
 	default:
 		slog.Error("ssh unsupported command", "cmd", cmd)
-		gitservice.PackError(sess, "Unsupported command.")
+		gitx.PackError(sess, "Unsupported command.")
 		sess.Exit(1)
 	}
 }
@@ -146,18 +147,18 @@ func (s *Server) parseAuthKeys() error {
 }
 
 func (s *Server) repoNotFound(sess ssh.Session) {
-	gitservice.PackError(sess, "Repository not found.")
+	gitx.PackError(sess, "Repository not found.")
 	sess.Exit(1)
 }
 
 func (s *Server) unauthorized(sess ssh.Session) {
-	gitservice.PackError(sess, "You are not authorized to push to this repository.")
+	gitx.PackError(sess, "You are not authorized to push to this repository.")
 	sess.Exit(1)
 }
 
 func (s *Server) error(sess ssh.Session, err error) {
 	slog.Error("error on ssh side", "err", err)
-	gitservice.PackError(sess, "Unexpected server error.")
+	gitx.PackError(sess, "Unexpected server error.")
 	sess.Exit(1)
 }
 
