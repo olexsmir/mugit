@@ -8,6 +8,45 @@ import (
 	"olexsmir.xyz/x/is"
 )
 
+func TestConfig_parseValue(t *testing.T) {
+	def := "qwerty123"
+
+	t.Run("string", func(t *testing.T) {
+		r, err := parseValue(def)
+		is.Err(t, err, nil)
+		is.Equal(t, r, def)
+	})
+
+	t.Run("env var", func(t *testing.T) {
+		t.Setenv("secret_value", "123")
+		r, err := parseValue("$env:secret_value")
+		is.Err(t, err, nil)
+		is.Equal(t, r, "123")
+	})
+
+	t.Run("unset env var", func(t *testing.T) {
+		_, err := parseValue("$env:secret_password")
+		is.Err(t, err, ErrUnsetEnv)
+	})
+
+	t.Run("file", func(t *testing.T) {
+		fpath, _ := filepath.Abs("./testdata/file_value")
+		r, err := parseValue("$file:" + fpath)
+		is.Err(t, err, nil)
+		is.Equal(t, r, def)
+	})
+
+	t.Run("non existing file", func(t *testing.T) {
+		_, err := parseValue("$file:/not/exists")
+		is.Err(t, err, ErrFileNotFound)
+	})
+
+	t.Run("file, not set path", func(t *testing.T) {
+		_, err := parseValue("$file:")
+		is.Err(t, err, ErrFileNotFound)
+	})
+}
+
 func TestPathOrDefaultWithCandidates(t *testing.T) {
 	first := candidateFile(t, "first.yaml")
 	second := candidateFile(t, "second.yaml")

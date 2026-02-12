@@ -5,11 +5,16 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"gopkg.in/yaml.v2"
 )
 
-var ErrConfigNotFound = errors.New("no config file found")
+var (
+	ErrConfigNotFound = errors.New("no config file found")
+	ErrUnsetEnv       = errors.New("environment variable is not set")
+	ErrFileNotFound   = errors.New("provided file path is invalid")
+)
 
 type ServerConfig struct {
 	Host string `yaml:"host"`
@@ -65,6 +70,10 @@ func Load(fpath string) (*Config, error) {
 	}
 
 	config.ensureDefaults()
+
+	if perr := config.parseValues(); perr != nil {
+		return nil, perr
+	}
 
 	if verr := config.validate(); verr != nil {
 		return nil, verr
@@ -131,6 +140,49 @@ func (c *Config) ensureDefaults() {
 	// mirroring
 	if c.Mirror.Interval == "" {
 		c.Mirror.Interval = "8h"
+	}
+}
+
+func (c *Config) parseValues() error {
+	if c.Mirror.Enable {
+		ghToken, err := parseValue(c.Mirror.GithubToken)
+		if err != nil {
+			return err
+		}
+		c.Mirror.GithubToken = ghToken
+	}
+	return nil
+}
+
+func parseValue(value string) (string, error) {
+	envPrefix := "$env:"
+	filePrefix := "$file:"
+
+	switch {
+	case strings.HasPrefix(value, envPrefix):
+		env := os.Getenv(os.ExpandEnv(value[len(envPrefix):]))
+		if env == "" {
+			return "", ErrUnsetEnv
+		}
+		return env, nil
+
+	case strings.HasPrefix(value, filePrefix):
+		// supports only absolute paths
+
+		fpath := value[len(filePrefix):]
+		if !isFileExists(fpath) {
+			return "", ErrFileNotFound
+		}
+
+		data, err := os.ReadFile(fpath)
+		if err != nil {
+			return "", err
+		}
+
+		return strings.TrimSpace(string(data)), nil
+
+	default:
+		return value, nil
 	}
 }
 
