@@ -13,9 +13,9 @@
       {{ range .branches }}
         <div>
         <strong>{{ .Name }}</strong>
-        <a href="/{{ $name }}/tree/{{ .Name }}/">browse</a>
-        <a href="/{{ $name }}/log/{{ .Name }}">log</a>
-        <a href="/{{ $name }}/archive/{{ .Name }}">tar.gz</a>
+        <a class="link" href="/{{ $name }}/tree/{{ .Name }}/">browse</a>
+        <a class="link" href="/{{ $name }}/log/{{ .Name }}">log</a>
+        <a class="link" href="/{{ $name }}/archive/{{ .Name }}">tar.gz</a>
         </div>
       {{ end }}
       </div>
@@ -25,9 +25,9 @@
       {{ range .tags }}
       <div>
       <strong>{{ .Name }}</strong>
-      <a href="/{{ $name }}/tree/{{ .Name }}/">browse</a>
-      <a href="/{{ $name }}/log/{{ .Name }}">log</a>
-      <a href="/{{ $name }}/archive/{{ .Name }}">tar.gz</a>
+      <a class="link" href="/{{ $name }}/tree/{{ .Name }}/">browse</a>
+      <a class="link" href="/{{ $name }}/log/{{ .Name }}">log</a>
+      <a class="link" href="/{{ $name }}/archive/{{ .Name }}">tar.gz</a>
       {{ if .Message }}
       <pre>{{ .Message }}</pre>
       </div>
