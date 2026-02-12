@@ -49,18 +49,8 @@ type Config struct {
 	Mirror MirrorConfig `yaml:"mirror"`
 }
 
-// Load loads configuration with the following priority:
-// 1. User provided fpath (if provided and exists)
-// 2. /var/lib/mugit/config.yaml
-// 3. $XDG_CONFIG_HOME/mugit/config.yaml or $HOME/.config/mugit/config.yaml
 func Load(fpath string) (*Config, error) {
-	// 4. /etc/mugit/config.yaml
-	configPath, err := findConfigFile(fpath)
-	if err != nil {
-		return nil, err
-	}
-
-	configBytes, err := os.ReadFile(configPath)
+	configBytes, err := os.ReadFile(fpath)
 	if err != nil {
 		return nil, err
 	}
@@ -81,6 +71,32 @@ func Load(fpath string) (*Config, error) {
 	}
 
 	return &config, nil
+}
+
+// PathOrDefault uses userPath, if it's "", or invalid path, will default to one of those(in priority order)
+// 1. ./config.yaml
+// 2. /etc/mugit.yaml
+// 3. /var/lib/mugit/config.yaml
+func PathOrDefault(userPath string) string {
+	return pathOrDefaultWithCandidates(userPath, []string{
+		"./config.yaml",
+		"/etc/mugit.yaml",
+		"/var/lib/mugit/config.yaml",
+	})
+}
+
+func pathOrDefaultWithCandidates(path string, candidates []string) string {
+	if isFileExists(path) {
+		return path
+	}
+
+	for _, fpath := range candidates {
+		if isFileExists(fpath) {
+			return fpath
+		}
+	}
+
+	return ""
 }
 
 func (c *Config) ensureDefaults() {
@@ -116,33 +132,6 @@ func (c *Config) ensureDefaults() {
 	if c.Mirror.Interval == "" {
 		c.Mirror.Interval = "8h"
 	}
-}
-
-func findConfigFile(userPath string) (string, error) {
-	if userPath != "" {
-		if _, err := os.Stat(userPath); err == nil {
-			return userPath, nil
-		}
-	}
-
-	path := "/var/lib/mugit/config.yaml"
-	if _, err := os.Stat(path); err == nil {
-		return path, nil
-	}
-
-	if configDir, err := os.UserConfigDir(); err == nil {
-		p := filepath.Join(configDir, "mugit", "config.yaml")
-		if _, err := os.Stat(p); err == nil {
-			return p, nil
-		}
-	}
-
-	path = "/etc/mugit/config.yaml"
-	if _, err := os.Stat(path); err == nil {
-		return path, nil
-	}
-
-	return "", ErrConfigNotFound
 }
 
 func isFileExists(path string) bool {

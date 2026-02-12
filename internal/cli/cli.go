@@ -35,7 +35,8 @@ func (c *Cli) Run(ctx context.Context, args []string) error {
 			},
 		},
 		Before: func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
-			loadedCfg, err := config.Load(cmd.String("config"))
+			loadedCfg, err := config.Load(
+				config.PathOrDefault(cmd.String("config")))
 			if err != nil {
 				return ctx, err
 			}
