@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"compress/gzip"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -90,6 +91,34 @@ func (h *handlers) uploadPack(w http.ResponseWriter, r *http.Request) {
 	if err := gitx.UploadPack(r.Context(), path, true, reader, newFlushWriter(w)); err != nil {
 		// Don't call w.WriteHeader here - connection already started!
 		slog.Error("git: upload-pack", "err", err)
+		return
+	}
+}
+
+func (h *handlers) archiveHandler(w http.ResponseWriter, r *http.Request) {
+	name := getNormalizedName(r.PathValue("name"))
+	ref := r.PathValue("ref")
+
+	path, err := securejoin.SecureJoin(h.c.Repo.Dir, repoNameToPath(name))
+	if err != nil {
+		http.Error(w, "invalid path", http.StatusBadRequest)
+		slog.Error("git: upload-pack path", "err", err)
+		return
+	}
+
+	_, err = h.openPublicRepo(name, ref)
+	if err != nil {
+		h.write404(w, err)
+		return
+	}
+
+	filename := fmt.Sprintf("%s-%s.tar.gz", name, ref)
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", filename))
+	w.Header().Set("Content-Type", "application/gzip")
+	w.WriteHeader(http.StatusOK)
+
+	if err := gitx.ArchiveTar(r.Context(), path, ref, w); err != nil {
+		slog.Error("git: archive", "ref", ref, "err", err)
 		return
 	}
 }

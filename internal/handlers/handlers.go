@@ -35,6 +35,8 @@ func InitRoutes(cfg *config.Config) http.Handler {
 	mux.HandleFunc("GET /{name}/log/{ref}", h.logHandler)
 	mux.HandleFunc("GET /{name}/commit/{ref}", h.commitHandler)
 	mux.HandleFunc("GET /{name}/refs/{$}", h.refsHandler)
+	mux.HandleFunc("GET /{name}/archive/{ref}", h.archiveHandler)
+
 
 	handler := h.recoverMiddleware(mux)
 	return h.loggingMiddleware(handler)
