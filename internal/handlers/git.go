@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"compress/gzip"
 	"fmt"
 	"io"
 	"log/slog"
@@ -31,18 +30,9 @@ func (h *handlers) multiplex(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handlers) infoRefs(w http.ResponseWriter, r *http.Request) {
-	name := getNormalizedName(r.PathValue("name"))
-	_, err := h.openPublicRepo(name, "")
+	path, err := h.checkRepoPublicityAndGetPath(r.PathValue("name"))
 	if err != nil {
 		h.write404(w, err)
-		return
-	}
-
-	repoPath := repoNameToPath(name)
-	path, err := securejoin.SecureJoin(h.c.Repo.Dir, repoPath)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		slog.Error("git: info/refs", "err", err)
 		return
 	}
 
@@ -56,57 +46,26 @@ func (h *handlers) infoRefs(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handlers) uploadPack(w http.ResponseWriter, r *http.Request) {
-	name := getNormalizedName(r.PathValue("name"))
-	_, err := h.openPublicRepo(name, "")
+	path, err := h.checkRepoPublicityAndGetPath(r.PathValue("name"))
 	if err != nil {
 		h.write404(w, err)
 		return
 	}
 
-	reader := io.Reader(r.Body)
-	if r.Header.Get("Content-Encoding") == "gzip" {
-		gr, gerr := gzip.NewReader(r.Body)
-		if gerr != nil {
-			http.Error(w, "invalid gzip encoding", http.StatusBadRequest)
-			slog.Error("git: gzip reader", "err", gerr)
-			return
-		}
-		defer gr.Close()
-		reader = gr
-	}
-
-	repoPath := repoNameToPath(name)
-	path, err := securejoin.SecureJoin(h.c.Repo.Dir, repoPath)
-	if err != nil {
-		http.Error(w, "invalid path", http.StatusBadRequest)
-		slog.Error("git: upload-pack path", "err", err)
-		return
-	}
-
-	w.Header().Set("content-type", "application/x-git-upload-pack-result")
-	w.Header().Set("Connection", "Keep-Alive")
-	w.Header().Set("Transfer-Encoding", "chunked")
+	w.Header().Set("Content-Type", "application/x-git-upload-pack-result")
+	w.Header().Set("Cache-Control", "no-cache")
 	w.WriteHeader(http.StatusOK)
 
-	if err := gitx.UploadPack(r.Context(), path, true, reader, newFlushWriter(w)); err != nil {
-		// Don't call w.WriteHeader here - connection already started!
+	if err := gitx.UploadPack(r.Context(), path, true, r.Body, newFlushWriter(w)); err != nil {
 		slog.Error("git: upload-pack", "err", err)
 		return
 	}
 }
 
 func (h *handlers) archiveHandler(w http.ResponseWriter, r *http.Request) {
-	name := getNormalizedName(r.PathValue("name"))
 	ref := r.PathValue("ref")
-
-	path, err := securejoin.SecureJoin(h.c.Repo.Dir, repoNameToPath(name))
-	if err != nil {
-		http.Error(w, "invalid path", http.StatusBadRequest)
-		slog.Error("git: upload-pack path", "err", err)
-		return
-	}
-
-	_, err = h.openPublicRepo(name, ref)
+	name := r.PathValue("name")
+	path, err := h.checkRepoPublicityAndGetPath(name)
 	if err != nil {
 		h.write404(w, err)
 		return
@@ -121,6 +80,21 @@ func (h *handlers) archiveHandler(w http.ResponseWriter, r *http.Request) {
 		slog.Error("git: archive", "ref", ref, "err", err)
 		return
 	}
+}
+
+func (h *handlers) checkRepoPublicityAndGetPath(name string) (string, error) {
+	repoPath := repoNameToPath(name)
+	_, err := h.openPublicRepo(name, "")
+	if err != nil {
+		return "", err
+	}
+
+	path, err := securejoin.SecureJoin(h.c.Repo.Dir, repoPath)
+	if err != nil {
+		return "", err
+	}
+
+	return path, nil
 }
 
 type flushWriter struct {
