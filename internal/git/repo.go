@@ -1,6 +1,7 @@
 package git
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -202,22 +203,24 @@ func (g *Repo) FindMasterBranch(masters []string) (string, error) {
 	return "", fmt.Errorf("unable to find master branch")
 }
 
-func (g *Repo) Fetch() error { return g.fetch(nil) }
+func (g *Repo) Fetch(ctx context.Context) error {
+	return g.fetch(ctx, nil)
+}
 
-func (g *Repo) FetchFromGithubWithToken(token string) error {
-	return g.fetch(&http.BasicAuth{
+func (g *Repo) FetchFromGithubWithToken(ctx context.Context, token string) error {
+	return g.fetch(ctx, &http.BasicAuth{
 		Username: "x-access-token", // this can be anything but empty
 		Password: token,
 	})
 }
 
-func (g *Repo) fetch(auth transport.AuthMethod) error {
+func (g *Repo) fetch(ctx context.Context, auth transport.AuthMethod) error {
 	rmt, err := g.r.Remote(originRemote)
 	if err != nil {
 		return fmt.Errorf("failed to get remote: %w", err)
 	}
 
-	if err = rmt.Fetch(&git.FetchOptions{
+	if err = rmt.FetchContext(ctx, &git.FetchOptions{
 		Auth:  auth,
 		Tags:  git.AllTags,
 		Prune: true,
