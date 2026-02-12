@@ -13,6 +13,7 @@
   <div class="desc muted">{{ .desc }}</div>
   {{- end }}
 
+  {{- if not .empty }}
   <nav class="repo-nav">
     <ul>
       <li><a href="/{{ .name }}">summary</a></li>
@@ -21,5 +22,6 @@
       <li><a href="/{{ .name }}/log/{{ .ref }}">log</a></li>
     </ul>
   </nav>
+  {{- end }}
 </header>
 {{ end }}
