@@ -7,8 +7,7 @@ import (
 )
 
 func (h *handlers) repoFeedHandler(w http.ResponseWriter, r *http.Request) {
-	name := getNormalizedName(r.PathValue("name"))
-	repo, err := h.openPublicRepo(name, "")
+	repo, err := h.openPublicRepo(r.PathValue("name"), "")
 	if err != nil {
 		h.write404(w, err)
 		return

@@ -26,7 +26,7 @@ func InitRoutes(cfg *config.Config) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /", h.indexHandler)
 	mux.HandleFunc("GET /index.xml", h.indexFeedHandler)
-	mux.HandleFunc("GET /static/{file}", h.serveStatic)
+	mux.HandleFunc("GET /static/{file}", h.serveStaticHandler)
 	mux.HandleFunc("GET /{name}", h.multiplex)
 	mux.HandleFunc("POST /{name}", h.multiplex)
 	mux.HandleFunc("GET /{name}/{rest...}", h.multiplex)
@@ -43,14 +43,9 @@ func InitRoutes(cfg *config.Config) http.Handler {
 	return h.loggingMiddleware(handler)
 }
 
-func (h *handlers) serveStatic(w http.ResponseWriter, r *http.Request) {
+func (h *handlers) serveStaticHandler(w http.ResponseWriter, r *http.Request) {
 	f := filepath.Clean(r.PathValue("file"))
 	http.ServeFileFS(w, r, web.StaticFS, f)
-}
-
-func repoNameToPath(name string) string { return name + ".git" }
-func getNormalizedName(name string) string {
-	return strings.TrimSuffix(name, ".git")
 }
 
 var templateFuncs = template.FuncMap{

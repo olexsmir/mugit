@@ -20,6 +20,7 @@ import (
 var (
 	ErrEmptyRepo    = errors.New("repository has no commits")
 	ErrFileNotFound = errors.New("file not found")
+	ErrPrivate      = errors.New("repository is private")
 )
 
 type Repo struct {
@@ -29,7 +30,7 @@ type Repo struct {
 }
 
 // Open opens a git repository at path. If ref is empty, HEAD is used.
-func Open(path string, ref string) (*Repo, error) {
+func Open(path, ref string) (*Repo, error) {
 	var err error
 	g := Repo{}
 	g.path = path
@@ -55,6 +56,25 @@ func Open(path string, ref string) (*Repo, error) {
 		g.h = *hash
 	}
 	return &g, nil
+}
+
+// OpenPublic opens a repository, returns [ErrPrivate] if it's private.
+func OpenPublic(path, ref string) (*Repo, error) {
+	r, err := Open(path, ref)
+	if err != nil {
+		return nil, err
+	}
+
+	isPrivate, err := r.IsPrivate()
+	if err != nil {
+		return nil, err
+	}
+
+	if isPrivate {
+		return nil, ErrPrivate
+	}
+
+	return r, nil
 }
 
 func (g *Repo) IsEmpty() bool {

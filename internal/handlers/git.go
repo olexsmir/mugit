@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	securejoin "github.com/cyphar/filepath-securejoin"
+	"olexsmir.xyz/mugit/internal/git"
 	"olexsmir.xyz/mugit/internal/git/gitx"
 )
 
@@ -83,18 +83,26 @@ func (h *handlers) archiveHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handlers) checkRepoPublicityAndGetPath(name string) (string, error) {
-	repoPath := repoNameToPath(name)
-	_, err := h.openPublicRepo(name, "")
+	name = git.ResolveName(name)
+	path, err := git.ResolvePath(h.c.Repo.Dir, name)
 	if err != nil {
 		return "", err
 	}
 
-	path, err := securejoin.SecureJoin(h.c.Repo.Dir, repoPath)
-	if err != nil {
+	if _, err := git.OpenPublic(path, ""); err != nil {
 		return "", err
 	}
 
-	return path, nil
+	return path, err
+}
+
+func (h *handlers) openPublicRepo(name, ref string) (*git.Repo, error) {
+	name = git.ResolveName(name)
+	path, err := git.ResolvePath(h.c.Repo.Dir, name)
+	if err != nil {
+		return nil, err
+	}
+	return git.OpenPublic(path, ref)
 }
 
 type flushWriter struct {
