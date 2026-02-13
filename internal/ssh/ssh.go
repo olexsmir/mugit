@@ -5,9 +5,7 @@ import (
 	"log/slog"
 	"slices"
 	"strconv"
-	"strings"
 
-	securejoin "github.com/cyphar/filepath-securejoin"
 	"github.com/gliderlabs/ssh"
 	"olexsmir.xyz/mugit/internal/config"
 	"olexsmir.xyz/mugit/internal/git"
@@ -53,46 +51,39 @@ func (s *Server) Start() error {
 
 func (s *Server) authhandler(ctx ssh.Context, key ssh.PublicKey) bool {
 	fingerprint := gossh.FingerprintSHA256(key)
+
 	if ctx.User() != "git" {
 		slog.Info("non git ssh request", "user", ctx.User(), "fingerprint", fingerprint)
 		return false
 	}
 
 	slog.Info("ssh request", "fingerprint", fingerprint)
-	authorized := slices.ContainsFunc(s.authKeys, func(i gossh.PublicKey) bool {
-		return ssh.KeysEqual(key, i)
-	})
-	ctx.SetValue(authorizedKey, authorized)
+
+	ctx.SetValue(authorizedKey, s.isAuthorized(key))
 	return true
 }
 
 func (s *Server) handler(sess ssh.Session) {
 	ctx := sess.Context()
-	authorized := sess.Context().Value(authorizedKey).(bool)
+	authorized := ctx.Value(authorizedKey).(bool)
 
 	cmd := sess.Command()
 	if len(cmd) < 2 {
-		fmt.Fprintln(sess, "No command provided")
-		sess.Exit(1)
+		s.error(sess, badRequestErrMsg, nil)
 		return
 	}
 
 	gitCmd := cmd[0]
-	rawRepoPath := cmd[1]
-	normalizedRepoName := normalizeRepoName(rawRepoPath)
-	repoPath := repoNameToPath(normalizedRepoName)
-
-	fullPath, err := securejoin.SecureJoin(s.c.Repo.Dir, repoPath)
+	userProvidedRepoName := cmd[1]
+	repoPath, err := git.ResolvePath(s.c.Repo.Dir, git.ResolveName(userProvidedRepoName))
 	if err != nil {
-		slog.Error("ssh: invalid path", "err", err)
-		s.repoNotFound(sess)
+		s.error(sess, internalServerErrMsg, err)
 		return
 	}
 
-	repo, err := git.Open(fullPath, "")
+	repo, err := git.Open(repoPath, "")
 	if err != nil {
-		slog.Error("ssh: failed to open repo", "err", err)
-		s.repoNotFound(sess)
+		s.gitError(sess, repoNotFoundErrMsg, err)
 		return
 	}
 
@@ -100,37 +91,45 @@ func (s *Server) handler(sess ssh.Session) {
 	case "git-upload-pack":
 		isPrivate, err := repo.IsPrivate()
 		if err != nil {
-			s.error(sess, err)
+			s.gitError(sess, badRequestErrMsg, nil)
 			return
 		}
 
 		if isPrivate && !authorized {
-			s.repoNotFound(sess)
+			s.gitError(sess, badRequestErrMsg, nil)
 			return
 		}
 
-		if err := gitx.UploadPack(ctx, fullPath, false, sess, sess); err != nil {
-			s.error(sess, err)
+		if err := gitx.UploadPack(ctx, repoPath, false, sess, sess); err != nil {
+			s.gitError(sess, internalServerErrMsg, err)
 			return
 		}
+
 		sess.Exit(0)
+
 	case "git-receive-pack":
 		if !authorized {
-			s.unauthorized(sess)
+			s.gitError(sess, unauthorizedErrMsg, nil)
 			return
 		}
 
-		if err := gitx.ReceivePack(ctx, fullPath, sess, sess, sess.Stderr()); err != nil {
-			s.error(sess, err)
+		if err := gitx.ReceivePack(ctx, repoPath, sess, sess, sess.Stderr()); err != nil {
+			s.gitError(sess, internalServerErrMsg, err)
 			return
 		}
+
 		sess.Exit(0)
 
 	default:
-		slog.Error("ssh unsupported command", "cmd", cmd)
-		gitx.PackError(sess, "Unsupported command.")
-		sess.Exit(1)
+		s.error(sess, badRequestErrMsg, nil)
+		return
 	}
+}
+
+func (s *Server) isAuthorized(iden gossh.PublicKey) bool {
+	return slices.ContainsFunc(s.authKeys, func(i gossh.PublicKey) bool {
+		return ssh.KeysEqual(iden, i)
+	})
 }
 
 func (s *Server) parseAuthKeys() error {
@@ -146,23 +145,22 @@ func (s *Server) parseAuthKeys() error {
 	return nil
 }
 
-func (s *Server) repoNotFound(sess ssh.Session) {
-	gitx.PackError(sess, "Repository not found.")
+const (
+	internalServerErrMsg = "internal server error\n"
+	badRequestErrMsg     = "bad request\n"
+	unauthorizedErrMsg   = "pushing only allowed to authorized users\n"
+	repoNotFoundErrMsg   = "repository not found\n"
+)
+
+func (s *Server) error(sess ssh.Session, msg string, err error) {
+	slog.Error("ssh error", "msg", msg, "err", err)
+	fmt.Fprintf(sess.Stderr(), "%s", msg)
 	sess.Exit(1)
 }
 
-func (s *Server) unauthorized(sess ssh.Session) {
-	gitx.PackError(sess, "You are not authorized to push to this repository.")
+func (s *Server) gitError(sess ssh.Session, msg string, err error) {
+	slog.Error("ssh git error", "msg", msg, "err", err)
+	gitx.PackError(sess, msg)
+	gitx.PackFlush(sess)
 	sess.Exit(1)
-}
-
-func (s *Server) error(sess ssh.Session, err error) {
-	slog.Error("error on ssh side", "err", err)
-	gitx.PackError(sess, "Unexpected server error.")
-	sess.Exit(1)
-}
-
-func repoNameToPath(name string) string { return name + ".git" }
-func normalizeRepoName(name string) string {
-	return strings.TrimSuffix(name, ".git")
 }
