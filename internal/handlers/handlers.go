@@ -39,14 +39,12 @@ func InitRoutes(cfg *config.Config) http.Handler {
 	mux.HandleFunc("GET /{name}/refs/{$}", h.refsHandler)
 	mux.HandleFunc("GET /{name}/archive/{ref}", h.archiveHandler)
 
-
 	handler := h.recoverMiddleware(mux)
 	return h.loggingMiddleware(handler)
 }
 
 func (h *handlers) serveStatic(w http.ResponseWriter, r *http.Request) {
 	f := filepath.Clean(r.PathValue("file"))
-	// TODO: check if files exists
 	http.ServeFileFS(w, r, web.StaticFS, f)
 }
 
