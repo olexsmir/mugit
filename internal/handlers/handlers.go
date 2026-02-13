@@ -25,11 +25,13 @@ func InitRoutes(cfg *config.Config) http.Handler {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /", h.indexHandler)
+	mux.HandleFunc("GET /index.xml", h.indexFeedHandler)
 	mux.HandleFunc("GET /static/{file}", h.serveStatic)
 	mux.HandleFunc("GET /{name}", h.multiplex)
 	mux.HandleFunc("POST /{name}", h.multiplex)
 	mux.HandleFunc("GET /{name}/{rest...}", h.multiplex)
 	mux.HandleFunc("POST /{name}/{rest...}", h.multiplex)
+	mux.HandleFunc("GET /{name}/feed/{$}", h.repoFeedHandler)
 	mux.HandleFunc("GET /{name}/tree/{ref}/{rest...}", h.repoTreeHandler)
 	mux.HandleFunc("GET /{name}/blob/{ref}/{rest...}", h.fileContentsHandler)
 	mux.HandleFunc("GET /{name}/log/{ref}", h.logHandler)

@@ -6,4 +6,9 @@
   {{ if and .servername .gomod }}
   <meta name="go-import" content="{{ .servername}}/{{ .name }} git https://{{ .servername }}/{{ .name }}">
   {{ end }}
+  {{ if and .servername .name }}
+  <link rel="alternate" type="application/rss" href="{{ .servername }}/{{ .name }}/feed">
+  {{ else }}
+  <link rel="alternate" type="application/rss" href="{{ .servername }}/index.xml">
+  {{ end }}
 {{ end }}

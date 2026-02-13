@@ -167,7 +167,10 @@ func (g *Repo) FileContent(path string) (string, error) {
 	}
 }
 
-type Branch struct{ Name string }
+type Branch struct {
+	Name       string
+	LastUpdate time.Time
+}
 
 func (g *Repo) Branches() ([]*Branch, error) {
 	bi, err := g.r.Branches()
@@ -177,8 +180,14 @@ func (g *Repo) Branches() ([]*Branch, error) {
 
 	var branches []*Branch
 	err = bi.ForEach(func(r *plumbing.Reference) error {
+		cmt, cerr := g.r.CommitObject(r.Hash())
+		if cerr != nil {
+			return cerr
+		}
+
 		branches = append(branches, &Branch{
-			Name: r.Name().Short(),
+			Name:       r.Name().Short(),
+			LastUpdate: cmt.Committer.When,
 		})
 		return nil
 	})

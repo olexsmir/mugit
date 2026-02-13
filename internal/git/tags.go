@@ -19,8 +19,9 @@ type TagList struct {
 // Lightweight tags contain only a reference.
 // Annotated tags contain both a reference and tag metadata.
 type TagReference struct {
-	ref *plumbing.Reference
-	tag *object.Tag
+	ref  *plumbing.Reference
+	tag  *object.Tag
+	when time.Time
 }
 
 func (t *TagReference) Name() string {
@@ -32,6 +33,10 @@ func (t *TagReference) Message() string {
 		return t.tag.Message
 	}
 	return ""
+}
+
+func (t *TagReference) When() time.Time {
+	return t.when
 }
 
 func (g *Repo) Tags() ([]*TagReference, error) {
@@ -46,17 +51,27 @@ func (g *Repo) Tags() ([]*TagReference, error) {
 		switch err {
 		case nil:
 			tags = append(tags, &TagReference{
-				ref: ref,
-				tag: obj,
+				ref:  ref,
+				tag:  obj,
+				when: obj.Tagger.When,
 			})
+			return nil
+
 		case plumbing.ErrObjectNotFound:
+			commit, cerr := g.r.CommitObject(ref.Hash())
+			if cerr != nil {
+				return cerr
+			}
+
 			tags = append(tags, &TagReference{
-				ref: ref,
+				ref:  ref,
+				when: commit.Committer.When,
 			})
+			return nil
+
 		default:
 			return err
 		}
-		return nil
 	}); err != nil {
 		return nil, err
 	}
