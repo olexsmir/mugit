@@ -198,8 +198,8 @@ func (h *handlers) fileContentsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if raw {
-		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", fc.Mime)
+		w.WriteHeader(http.StatusOK)
 		w.Write(fc.Content)
 		return
 	}
