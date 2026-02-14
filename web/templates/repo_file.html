@@ -1,15 +1,27 @@
 {{ define "repo_file" }}
 <html>
   <head>
-  {{ template "head" . }}
+    {{ template "head" . }}
   </head>
   {{ template "repo_header" . }}
   <body>
     <main>
-      <p>{{ .path }} (<a style="color: gray" href="?raw=true">view raw</a>)</p>
+      <p>{{ .path }} (<a class="muted" href="?raw=true">view raw</a>)</p>
       <div class="file-wrapper">
-      <table>
-        <tbody><tr>
+        {{ if .is_image }}
+        <div class="image-viewer">
+          <p>{{.mime_type}} • {{.size}} bytes</p>
+          <img src="?raw=true" alt="{{- .path -}}">
+        </div>
+        {{ else if .is_binary }}
+        <div class="binary-viewer">
+          <p>Binary file ({{.mime_type}})</p>
+          <p>Size: {{.size}} bytes</p>
+          <a class="link" href="?raw=true" download>[ Download ]</a>
+        </div>
+        {{ else }}
+        <table>
+          <tbody><tr>
             <td class="line-numbers">
               <pre>{{- range .linecount }}
 <a id="L{{ . }}" href="#L{{ . }}">{{ . }}</a>
@@ -18,8 +30,9 @@
             <td class="file-content">
               <pre>{{- .content -}}</pre>
             </td>
-        </tbody></tr>
-      </table>
+          </tbody></tr>
+        </table>
+        {{ end }}
       </div>
     </main>
   </body>

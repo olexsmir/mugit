@@ -160,33 +160,6 @@ func (g *Repo) LastCommit() (*Commit, error) {
 	return newCommit(c), nil
 }
 
-func (g *Repo) FileContent(path string) (string, error) {
-	c, err := g.r.CommitObject(g.h)
-	if err != nil {
-		return "", fmt.Errorf("commit object: %w", err)
-	}
-
-	tree, err := c.Tree()
-	if err != nil {
-		return "", fmt.Errorf("file tree: %w", err)
-	}
-
-	file, err := tree.File(path)
-	if err != nil {
-		if errors.Is(err, object.ErrFileNotFound) {
-			return "", ErrFileNotFound
-		}
-		return "", err
-	}
-
-	isbin, _ := file.IsBinary()
-	if !isbin {
-		return file.Contents()
-	} else {
-		return "Not displaying binary file", nil
-	}
-}
-
 type Branch struct {
 	Name       string
 	LastUpdate time.Time

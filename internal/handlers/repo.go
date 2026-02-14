@@ -69,8 +69,17 @@ func (h *handlers) repoIndex(w http.ResponseWriter, r *http.Request) {
 
 	var readmeContents template.HTML
 	for _, readme := range h.c.Repo.Readmes {
+		fc, ferr := repo.FileContent(readme)
+		if ferr != nil {
+			continue
+		}
+
+		if fc.IsBinary {
+			continue
+		}
+
 		ext := filepath.Ext(readme)
-		content, _ := repo.FileContent(readme)
+		content := fc.String()
 		if len(content) > 0 {
 			switch ext {
 			case ".md", ".markdown", ".mkd":
@@ -178,7 +187,7 @@ func (h *handlers) fileContentsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	contents, err := repo.FileContent(treePath)
+	fc, err := repo.FileContent(treePath)
 	if err != nil {
 		if errors.Is(err, git.ErrFileNotFound) {
 			h.write404(w, err)
@@ -190,8 +199,23 @@ func (h *handlers) fileContentsHandler(w http.ResponseWriter, r *http.Request) {
 
 	if raw {
 		w.WriteHeader(http.StatusOK)
-		w.Header().Set("Content-Type", "text/plain")
-		w.Write([]byte(contents))
+		w.Header().Set("Content-Type", fc.Mime)
+		w.Write(fc.Content)
+		return
+	}
+
+	if fc.IsImage() || fc.IsBinary {
+		data := make(map[string]any)
+		data["name"] = name
+		data["ref"] = ref
+		data["desc"] = desc
+		data["path"] = treePath
+		data["is_image"] = fc.IsImage()
+		data["is_binary"] = fc.IsBinary
+		data["mime_type"] = fc.Mime
+		data["size"] = fc.Size
+		data["meta"] = h.c.Meta
+		h.templ(w, "repo_file", data)
 		return
 	}
 
@@ -201,7 +225,8 @@ func (h *handlers) fileContentsHandler(w http.ResponseWriter, r *http.Request) {
 	data["desc"] = desc
 	data["path"] = treePath
 
-	lc, err := countLines(strings.NewReader(contents))
+	contentStr := fc.String()
+	lc, err := countLines(strings.NewReader(contentStr))
 	if err != nil {
 		slog.Error("failed to count line numbers", "err", err)
 	}
@@ -214,7 +239,7 @@ func (h *handlers) fileContentsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data["linecount"] = lines
-	data["content"] = contents
+	data["content"] = contentStr
 	data["meta"] = h.c.Meta
 
 	h.templ(w, "repo_file", data)

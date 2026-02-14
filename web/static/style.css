@@ -265,6 +265,11 @@ nav ul li {
   overflow-y: hidden;
   overflow-x: auto;
 }
+.image-viewer, .binary-viewer { padding: 1rem 0; }
+.image-viewer img {
+  max-width: 100%;
+  height: auto;
+}
 
 .line-numbers pre,
 .file-content pre {
