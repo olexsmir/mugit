@@ -4,11 +4,10 @@
     {{ template "head" . }}
   <title>{{ .name }}: log</title>
   </head>
-  {{ template "repo_header" . }}
   <body>
+    {{ template "repo_header" . }}
     <main>
       {{ $repo := .name }}
-
       <table class="table log">
         <thead>
           <tr class="nohover">

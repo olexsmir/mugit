@@ -2,9 +2,10 @@
 <html>
   <head>
     {{ template "head" . }}
+    <title>{{ .name }}: {{ .path }} ({{ .ref }})</title>
   </head>
-  {{ template "repo_header" . }}
   <body>
+    {{ template "repo_header" . }}
     <main>
       <p>{{ .path }} (<a class="muted" href="?raw=true">view raw</a>)</p>
       <div class="file-wrapper">

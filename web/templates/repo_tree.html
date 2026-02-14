@@ -4,8 +4,8 @@
     {{ template "head" . }}
     <title>{{ .name }}: tree ({{ .ref }})</title>
   </head>
-  {{ template "repo_header" . }}
   <body>
+    {{ template "repo_header" . }}
     <main>
       {{ $repo := .name }}
       {{ $ref := .ref }}
