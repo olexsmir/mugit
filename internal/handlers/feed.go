@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"net/url"
 
 	"github.com/gorilla/feeds"
 )
@@ -20,9 +21,16 @@ func (h *handlers) repoFeedHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	repoName := repo.Name()
+
+	feedLink, err := url.JoinPath("http://", h.c.Meta.Host, repoName)
+	if err != nil {
+		h.write500(w, err)
+		return
+	}
+
 	feed := &feeds.Feed{
 		Title:       repoName,
-		Link:        &feeds.Link{Href: h.c.Meta.Host + "/" + repoName},
+		Link:        &feeds.Link{Href: feedLink},
 		Description: desc,
 	}
 
@@ -34,10 +42,11 @@ func (h *handlers) repoFeedHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, branch := range branches {
+		href, _ := url.JoinPath("http://", h.c.Meta.Host, repoName, "tree", branch.Name)
 		feed.Items = append(feed.Items, &feeds.Item{
 			Id:      "b:" + branch.Name,
 			Title:   "branch: " + branch.Name,
-			Link:    &feeds.Link{Href: h.c.Meta.Host + "/tree/" + branch.Name},
+			Link:    &feeds.Link{Href: href},
 			Updated: branch.LastUpdate,
 		})
 	}
@@ -49,10 +58,11 @@ func (h *handlers) repoFeedHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, tag := range tags {
+		href, _ := url.JoinPath("http://", h.c.Meta.Host, repoName, "tree", tag.Name())
 		feed.Items = append(feed.Items, &feeds.Item{
 			Id:          "t:" + tag.Name(),
 			Title:       "tag: " + tag.Name(),
-			Link:        &feeds.Link{Href: h.c.Meta.Host + "/tree/" + tag.Name()},
+			Link:        &feeds.Link{Href: href},
 			Description: desc,
 			Updated:     tag.When(),
 			Content:     tag.Message(),
@@ -76,16 +86,23 @@ func (h *handlers) indexFeedHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	feedLink, err := url.JoinPath("http://", h.c.Meta.Host)
+	if err != nil {
+		h.write500(w, err)
+		return
+	}
+
 	feed := &feeds.Feed{
 		Title:       h.c.Meta.Host,
-		Link:        &feeds.Link{Href: h.c.Meta.Host},
+		Link:        &feeds.Link{Href: feedLink},
 		Description: h.c.Meta.Description,
 	}
 
 	for _, repo := range repos {
+		href, _ := url.JoinPath("http://", h.c.Meta.Host, repo.Name)
 		feed.Items = append(feed.Items, &feeds.Item{
 			Title:       repo.Name,
-			Link:        &feeds.Link{Href: h.c.Meta.Host + "/" + repo.Name},
+			Link:        &feeds.Link{Href: href},
 			Description: repo.Desc,
 			Id:          repo.Name,
 			Updated:     repo.LastCommit,

@@ -7,8 +7,9 @@
   <meta name="go-import" content="{{ .servername}}/{{ .name }} git https://{{ .servername }}/{{ .name }}">
   {{ end }}
   {{ if and .servername .name }}
-  <link rel="alternate" type="application/rss" href="{{ .servername }}/{{ .name }}/feed">
-  {{ else }}
-  <link rel="alternate" type="application/rss" href="{{ .servername }}/index.xml">
+  <link rel="alternate" type="application/rss" href="https://{{ .servername }}/{{ .name }}/feed">
+  {{ end }}
+  {{ if .servername }}
+  <link rel="alternate" type="application/rss" href="https://{{ .servername }}/index.xml">
   {{ end }}
 {{ end }}

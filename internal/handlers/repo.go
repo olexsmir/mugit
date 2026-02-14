@@ -31,6 +31,7 @@ func (h *handlers) indexHandler(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]any)
 	data["meta"] = h.c.Meta
 	data["repos"] = repos
+	data["servername"] = h.c.Meta.Host
 	h.templ(w, "index", data)
 }
 
