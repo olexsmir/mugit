@@ -42,9 +42,17 @@ func TestConfig_Validate(t *testing.T) {
 			},
 		},
 		{
-			name: "invalid meta.host",
-			expected: "meta.host",
+			name:     "not set meta.host",
+			expected: "meta.host is required",
 			c: Config{
+				Repo: RepoConfig{Dir: t.TempDir()},
+			},
+		},
+		{
+			name:     "invalid meta.host",
+			expected: "meta.host shouldn't include protocol",
+			c: Config{
+				Meta: MetaConfig{Host: "https://example.com"},
 				Repo: RepoConfig{Dir: t.TempDir()},
 			},
 		},

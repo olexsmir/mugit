@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -12,6 +13,10 @@ func (c Config) validate() error {
 	if c.Meta.Host == "" {
 		// TODO: actually it should be a warning, host only used for go-import tag
 		errs = append(errs, errors.New("meta.host is required"))
+	}
+
+	if strings.HasPrefix(c.Meta.Host, "http") {
+		errs = append(errs, errors.New("meta.host shouldn't include protocol"))
 	}
 
 	if !isDirExists(c.Repo.Dir) {
