@@ -19,6 +19,7 @@ import (
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/renderer/html"
 	"olexsmir.xyz/mugit/internal/git"
+	"olexsmir.xyz/mugit/internal/mdx"
 )
 
 func (h *handlers) indexHandler(w http.ResponseWriter, r *http.Request) {
@@ -408,10 +409,12 @@ var markdown = goldmark.New(
 	goldmark.WithExtensions(
 		extension.GFM,
 		extension.Linkify,
+		mdx.RelativeLink,
 	))
 
 func (h *handlers) renderReadme(r *git.Repo) (template.HTML, error) {
-	if v, found := h.readmeCache.Get(r.Name()); found {
+	name := r.Name()
+	if v, found := h.readmeCache.Get(name); found {
 		return v, nil
 	}
 
@@ -432,7 +435,8 @@ func (h *handlers) renderReadme(r *git.Repo) (template.HTML, error) {
 			switch ext {
 			case ".md", ".markdown", ".mkd":
 				var buf bytes.Buffer
-				if cerr := markdown.Convert([]byte(content), &buf); cerr != nil {
+				if cerr := markdown.Convert([]byte(content), &buf,
+					mdx.NewRelativeLinkCtx(name, readme)); cerr != nil {
 					return "", cerr
 				}
 				readmeContents = template.HTML(buf.String())
@@ -443,6 +447,6 @@ func (h *handlers) renderReadme(r *git.Repo) (template.HTML, error) {
 		}
 	}
 
-	h.readmeCache.Set(r.Name(), readmeContents)
+	h.readmeCache.Set(name, readmeContents)
 	return readmeContents, nil
 }
