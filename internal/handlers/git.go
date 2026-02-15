@@ -24,8 +24,10 @@ func (h *handlers) multiplex(w http.ResponseWriter, r *http.Request) {
 		h.infoRefs(w, r)
 	} else if path == "git-upload-pack" && r.Method == "POST" {
 		h.uploadPack(w, r)
-	} else if r.Method == "GET" {
+	} else if r.Method == "GET" && path == "" {
 		h.repoIndex(w, r)
+	} else {
+		h.write404(w, nil)
 	}
 }
 
