@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"gopkg.in/yaml.v2"
 )
@@ -41,9 +42,10 @@ type SSHConfig struct {
 }
 
 type MirrorConfig struct {
-	Enable      bool   `yaml:"enable"`
-	Interval    string `yaml:"interval"`
-	GithubToken string `yaml:"github_token"`
+	Enable      bool          `yaml:"enable"`
+	Interval    time.Duration `yaml:"interval"`
+	GithubToken string        `yaml:"github_token"`
+}
 }
 
 type Config struct {
@@ -138,8 +140,8 @@ func (c *Config) ensureDefaults() {
 	}
 
 	// mirroring
-	if c.Mirror.Interval == "" {
-		c.Mirror.Interval = "8h"
+	if c.Mirror.Interval == 0 {
+		c.Mirror.Interval = 8 * time.Hour
 	}
 }
 

@@ -4,14 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 )
 
 func (c Config) validate() error {
 	var errs []error
 
 	if c.Meta.Host == "" {
-		// TODO: actually it should be a warning, host only used for go-import tag
 		errs = append(errs, errors.New("meta.host is required"))
 	}
 
@@ -38,12 +36,6 @@ func (c Config) validate() error {
 
 		if !isFileExists(c.SSH.HostKey) {
 			errs = append(errs, fmt.Errorf("ssh.host_key seems to be an invalid path"))
-		}
-	}
-
-	if c.Mirror.Enable {
-		if _, err := time.ParseDuration(c.Mirror.Interval); err != nil {
-			errs = append(errs, fmt.Errorf("mirror.interval: invalid duration format: %w", err))
 		}
 	}
 

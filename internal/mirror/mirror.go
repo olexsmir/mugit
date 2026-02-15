@@ -27,13 +27,7 @@ func NewWorker(cfg *config.Config) *Worker {
 }
 
 func (w *Worker) Start(ctx context.Context) error {
-	interval, err := time.ParseDuration(w.c.Mirror.Interval)
-	if err != nil {
-		slog.Error("couldn't parse interval time", "err", err)
-		return err
-	}
-
-	ticker := time.NewTicker(interval)
+	ticker := time.NewTicker(w.c.Mirror.Interval)
 	defer ticker.Stop()
 
 	for {

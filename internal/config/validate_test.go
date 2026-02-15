@@ -108,18 +108,6 @@ func TestConfig_Validate(t *testing.T) {
 				},
 			},
 		},
-		{
-			name:     "invalid mirror.interval duration format",
-			expected: "mirror.interval: invalid duration",
-			c: Config{
-				Meta: MetaConfig{Host: "example.com"},
-				Repo: RepoConfig{Dir: t.TempDir()},
-				Mirror: MirrorConfig{
-					Enable:   true,
-					Interval: "asdf",
-				},
-			},
-		},
 	}
 
 	for _, tt := range tests {
