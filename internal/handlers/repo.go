@@ -35,13 +35,6 @@ func (h *handlers) indexHandler(w http.ResponseWriter, r *http.Request) {
 	h.templ(w, "index", data)
 }
 
-var markdown = goldmark.New(
-	goldmark.WithRendererOptions(html.WithUnsafe()),
-	goldmark.WithExtensions(
-		extension.GFM,
-		extension.Linkify,
-	))
-
 func (h *handlers) repoIndex(w http.ResponseWriter, r *http.Request) {
 	repo, err := h.openPublicRepo(r.PathValue("name"), "")
 	if err != nil {
@@ -67,36 +60,13 @@ func (h *handlers) repoIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var readmeContents template.HTML
-	for _, readme := range h.c.Repo.Readmes {
-		fc, ferr := repo.FileContent(readme)
-		if ferr != nil {
-			continue
-		}
-
-		if fc.IsBinary {
-			continue
-		}
-
-		ext := filepath.Ext(readme)
-		content := fc.String()
-		if len(content) > 0 {
-			switch ext {
-			case ".md", ".markdown", ".mkd":
-				var buf bytes.Buffer
-				if cerr := markdown.Convert([]byte(content), &buf); cerr != nil {
-					h.write500(w, cerr)
-					return
-				}
-				readmeContents = template.HTML(buf.String())
-			default:
-				readmeContents = template.HTML(fmt.Sprintf(`<pre>%s</pre>`, content))
-			}
-			break
-		}
+	masterBranch, err := repo.FindMasterBranch(h.c.Repo.Masters)
+	if err != nil {
+		h.write500(w, err)
+		return
 	}
 
-	masterBranch, err := repo.FindMasterBranch(h.c.Repo.Masters)
+	readme, err := h.renderReadme(repo)
 	if err != nil {
 		h.write500(w, err)
 		return
@@ -113,7 +83,7 @@ func (h *handlers) repoIndex(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data["ref"] = masterBranch
-	data["readme"] = readmeContents
+	data["readme"] = readme
 	data["commits"] = commits
 	data["gomod"] = repo.IsGoMod()
 
@@ -383,6 +353,10 @@ type repoList struct {
 }
 
 func (h *handlers) listPublicRepos() ([]repoList, error) {
+	if v, found := h.repoListCache.Get("repo_list"); found {
+		return v, nil
+	}
+
 	dirs, err := os.ReadDir(h.c.Repo.Dir)
 	if err != nil {
 		return nil, err
@@ -425,5 +399,50 @@ func (h *handlers) listPublicRepos() ([]repoList, error) {
 		return repos[j].LastCommit.Before(repos[i].LastCommit)
 	})
 
+	h.repoListCache.Set("repo_list", repos)
 	return repos, errors.Join(errs...)
+}
+
+var markdown = goldmark.New(
+	goldmark.WithRendererOptions(html.WithUnsafe()),
+	goldmark.WithExtensions(
+		extension.GFM,
+		extension.Linkify,
+	))
+
+func (h *handlers) renderReadme(r *git.Repo) (template.HTML, error) {
+	if v, found := h.readmeCache.Get(r.Name()); found {
+		return v, nil
+	}
+
+	var readmeContents template.HTML
+	for _, readme := range h.c.Repo.Readmes {
+		fc, ferr := r.FileContent(readme)
+		if ferr != nil {
+			continue
+		}
+
+		if fc.IsBinary {
+			continue
+		}
+
+		ext := filepath.Ext(readme)
+		content := fc.String()
+		if len(content) > 0 {
+			switch ext {
+			case ".md", ".markdown", ".mkd":
+				var buf bytes.Buffer
+				if cerr := markdown.Convert([]byte(content), &buf); cerr != nil {
+					return "", cerr
+				}
+				readmeContents = template.HTML(buf.String())
+			default:
+				readmeContents = template.HTML(fmt.Sprintf(`<pre>%s</pre>`, content))
+			}
+			break
+		}
+	}
+
+	h.readmeCache.Set(r.Name(), readmeContents)
+	return readmeContents, nil
 }

@@ -46,6 +46,10 @@ type MirrorConfig struct {
 	Interval    time.Duration `yaml:"interval"`
 	GithubToken string        `yaml:"github_token"`
 }
+
+type CacheConfig struct {
+	HomePage time.Duration `yaml:"home_page"`
+	Readme   time.Duration `yaml:"readme"`
 }
 
 type Config struct {
@@ -54,6 +58,7 @@ type Config struct {
 	Repo   RepoConfig   `yaml:"repo"`
 	SSH    SSHConfig    `yaml:"ssh"`
 	Mirror MirrorConfig `yaml:"mirror"`
+	Cache  CacheConfig  `yaml:"cache"`
 }
 
 func Load(fpath string) (*Config, error) {
@@ -142,6 +147,15 @@ func (c *Config) ensureDefaults() {
 	// mirroring
 	if c.Mirror.Interval == 0 {
 		c.Mirror.Interval = 8 * time.Hour
+	}
+
+	// cache
+	if c.Cache.HomePage == 0 {
+		c.Cache.HomePage = 5 * time.Minute
+	}
+
+	if c.Cache.Readme == 0 {
+		c.Cache.Readme = 1 * time.Minute
 	}
 }
 

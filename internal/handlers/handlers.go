@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"olexsmir.xyz/mugit/internal/cache"
 	"olexsmir.xyz/mugit/internal/config"
 	"olexsmir.xyz/mugit/internal/humanize"
 	"olexsmir.xyz/mugit/web"
@@ -15,13 +16,20 @@ import (
 type handlers struct {
 	c *config.Config
 	t *template.Template
+
+	repoListCache cache.Cacher[[]repoList]
+	readmeCache   cache.Cacher[template.HTML]
 }
 
 func InitRoutes(cfg *config.Config) http.Handler {
 	tmpls := template.Must(template.New("").
 		Funcs(templateFuncs).
 		ParseFS(web.TemplatesFS, "*"))
-	h := handlers{cfg, tmpls}
+	h := handlers{
+		cfg, tmpls,
+		cache.NewInMemory[[]repoList](cfg.Cache.HomePage),
+		cache.NewInMemory[template.HTML](cfg.Cache.Readme),
+	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /", h.indexHandler)
