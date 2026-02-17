@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/yuin/goldmark"
+	emoji "github.com/yuin/goldmark-emoji"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/renderer/html"
 	"olexsmir.xyz/mugit/internal/git"
@@ -409,6 +410,7 @@ var markdown = goldmark.New(
 	goldmark.WithExtensions(
 		extension.GFM,
 		extension.Linkify,
+		emoji.Emoji,
 		mdx.RelativeLink,
 	))
 
