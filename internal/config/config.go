@@ -127,7 +127,7 @@ func (c *Config) ensureDefaults() {
 
 	// meta
 	if c.Meta.Title == "" {
-		c.Meta.Title = "my cgit"
+		c.Meta.Title = "my mugit"
 	}
 
 	// repos

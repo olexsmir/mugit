@@ -49,34 +49,7 @@
         let
           cfg = config.services.mugit;
           format = pkgs.formats.yaml { };
-          configFile =
-            if cfg.configFile != null then cfg.configFile else format.generate "config.yaml" cfg.config;
-
-          mugitWrapper = pkgs.symlinkJoin {
-            name = "mugit";
-            paths = [ cfg.package ];
-            buildInputs = [ pkgs.makeWrapper ];
-            postBuild = ''
-              wrapProgram $out/bin/mugit \
-                --add-flags "--config ${configFile}"
-            '';
-          };
-
-          mugitWithCompletions = pkgs.stdenv.mkDerivation {
-            pname = "mugit";
-            version = cfg.package.version;
-            src = mugitWrapper;
-            nativeBuildInputs = [ pkgs.installShellFiles ];
-            installPhase = ''
-              mkdir -p $out/bin
-              cp -r $src/bin/* $out/bin/
-
-              installShellCompletion --cmd mugit \
-                --bash <($out/bin/mugit completion bash) \
-                --zsh <($out/bin/mugit completion zsh) \
-                --fish <($out/bin/mugit completion fish)
-            '';
-          };
+          configFile = format.generate "config.yaml" cfg.config;
         in
         {
           options.services.mugit = {
@@ -95,37 +68,10 @@
               description = "Whether to open the firewall for mugit. Can only be used with `config`, not `configFile`.";
             };
 
-            exposeCli = mkOption {
-              type = types.bool;
-              default = true;
-              description = "Whether to expose the mugit CLI to all users with the service configuration.";
-            };
-
-            dataDir = mkOption {
-              type = types.path;
-              default = "/var/lib/mugit";
-              description = "Directory where mugit stores its data.";
-            };
-
             configFile = mkOption {
               type = types.nullOr types.path;
               default = null;
               description = "Path to an existing mugit configuration file. Mutually exclusive with `config`.";
-            };
-
-            config = mkOption {
-              type = format.type;
-              default = { };
-              description = ''
-                Configuration for mugit. See documentation for available options.
-                https://github.com/olexsmir/mugit/blob/main/README.md
-              '';
-              example = literalExpression ''
-                {
-                  server.port = 8080;
-                  repo.dir = "/var/lib/mugit";
-                }
-              '';
             };
 
             user = mkOption {
@@ -140,22 +86,126 @@
               description = "Group under which mugit runs.";
             };
 
+            config = mkOption {
+              default = {};
+              description = ''
+                The primary mugit configuration.
+                See [docs](https://github.com/olexsmir/mugit) for possible values.
+              '';
+              example = literalExpression ''
+                {
+                  meta.host = "git.example.org";
+                  repo.dir = "/var/lib/mugit";
+                  ssh = {
+                    enable = true;
+                    host_key = "/var/lib/mugit/key";
+                  };
+                }
+              '';
+              type = types.submodule {
+                options.meta = {
+                  title = mkOption {
+                    type = types.str;
+                    default = "mugit";
+                    description = "Website title";
+                  };
+                  description = mkOption {
+                    type = types.str;
+                    default = "";
+                    description = "Website description";
+                  };
+                  host = mkOption {
+                    type = types.str;
+                    default = "";
+                    description = "Website CNAME (required)";
+                  };
+                };
+                options.server = {
+                  host = mkOption {
+                    type = types.str;
+                    default = "";
+                    description = "Host address";
+                  };
+                  port = mkOption {
+                    type = types.port;
+                    default = 8080;
+                    description = "Website port";
+                  };
+                };
+                options.repo = {
+                  dir = mkOption {
+                    type = types.str;
+                    default = "";
+                    description = "Directory which mugit will scan for repositories (required)";
+                  };
+                  masters = mkOption {
+                    type = types.listOf types.str;
+                    default = ["master" "main"];
+                    description = "Master branch to look for";
+                  };
+                  readmes = mkOption {
+                    type = types.listOf types.str;
+                    default = ["README.md" "readme.md" "README.html" "readme.html" "README.txt" "readme.txt" "readme"];
+                    description = "Readme files to look for";
+                  };
+                };
+                options.ssh = {
+                  enable = mkOption {
+                    type = types.bool;
+                    default = false;
+                    description = "Wharever to run ssh server";
+                  };
+                  port = mkOption {
+                    type = types.port;
+                    default = 2222;
+                    description = "Website port";
+                  };
+                  host_key = mkOption {
+                    type = types.str;
+                    default = "";
+                    description = "Path to ssh private key (required if ssh enabled)";
+                  };
+                  keys = mkOption {
+                    type = types.listOf types.str;
+                    default = [];
+                    description = "List of public ssh keys which are allows to do git pushes, and access private repositories";
+                  };
+                };
+                options.mirror = {
+                  enable = mkOption {
+                    type = types.bool;
+                    default = false;
+                    description = "Wharever to run mirroring worker";
+                  };
+                  interval = mkOption {
+                    type = types.str;
+                    default = "8h";
+                    description = "Interval in which mirroring will happen";
+                  };
+                  github_token = mkOption {
+                    type = types.str;
+                    default = "";
+                    description = "Github token for pulling from github repos";
+                  };
+                };
+                options.cache = {
+                  home_page = mkOption {
+                    type = types.str;
+                    default = "5m";
+                    description = "For how long index page is cached";
+                  };
+                  readme = mkOption {
+                    type = types.str;
+                    default = "1m";
+                    description = "For how long repos readme is cached";
+                  };
+                };
+              };
+            };
           };
 
+
           config = mkIf cfg.enable {
-            assertions = [
-              {
-                assertion = !(cfg.config != { } && cfg.configFile != null);
-                message = "services.mugit: `config` and `configFile` are mutually exclusive. Only one can be set.";
-              }
-              {
-                assertion = !(cfg.openFirewall && cfg.configFile != null);
-                message = "services.mugit: `openFirewall` cannot be used with `configFile`. Set firewall rules manually or use `config` instead.";
-              }
-            ];
-
-            environment.systemPackages = mkIf cfg.exposeCli [ mugitWithCompletions ];
-
             networking.firewall = mkIf cfg.openFirewall {
               allowedTCPPorts =
                 let
@@ -169,7 +219,7 @@
             users.users.${cfg.user} = {
               isSystemUser = true;
               group = cfg.group;
-              home = cfg.dataDir;
+              home = cfg.config.repo.dir;
               createHome = true;
               description = "mugit service user";
             };
@@ -193,7 +243,7 @@
                   Type = "simple";
                   User = cfg.user;
                   Group = cfg.group;
-                  WorkingDirectory = cfg.dataDir;
+                  WorkingDirectory = cfg.config.repo.dir;
                   StateDirectory = "mugit";
                   ExecStart = "${cfg.package}/bin/mugit serve --config ${configFile}";
                   Restart = "on-failure";
@@ -202,7 +252,7 @@
                   PrivateTmp = true;
                   ProtectSystem = "strict";
                   ProtectHome = true;
-                  ReadWritePaths = [ cfg.dataDir ];
+                  ReadWritePaths = [ cfg.config.repo.dir ];
                   ProtectKernelTunables = true;
                   ProtectKernelModules = true;
                   ProtectControlGroups = true;
