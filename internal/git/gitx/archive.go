@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os/exec"
 	"regexp"
 	"strings"
 )
@@ -15,23 +14,22 @@ func ArchiveTar(ctx context.Context, repoDir, ref string, out io.Writer) error {
 		return fmt.Errorf("invalid ref: %s", ref)
 	}
 
-	cmd := exec.CommandContext(ctx, "git", "archive", "--format=tar.gz", ref)
-	cmd.Dir = repoDir
-	cmd.Env = gitEnv
-	cmd.Stdout = out
-	cmd.Stderr = io.Discard
-
-	if err := cmd.Run(); err != nil {
+	if err := gitCmd(ctx, cmdOpts{
+		Cmd:     []string{"archive", "--format=tar.gz", ref},
+		RepoDir: repoDir,
+		Stdout:  out,
+	}); err != nil {
 		return fmt.Errorf("git archive %s: %w", ref, err)
 	}
 
 	return nil
 }
 
+var isValidRefRe = regexp.MustCompile(`^[a-zA-Z0-9._/-]+$`)
+
 func isValidRef(ref string) bool {
 	if ref == "" || strings.Contains(ref, "..") {
 		return false
 	}
-	matched, _ := regexp.MatchString(`^[a-zA-Z0-9._/-]+$`, ref)
-	return matched
+	return isValidRefRe.MatchString(ref)
 }
