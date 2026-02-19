@@ -24,7 +24,10 @@
                 <span class="tooltip" role="tooltip">{{ .Committed }}</span>
               </span>
             </div>
-            <div>{{ commitSummary .Message }}</div>
+            <div>
+              {{- if .Message }}{{- commitSummary .Message -}}
+              {{- else -}}<span class="muted">Empty message</span>{{- end -}}
+            </div>
           </div>
           {{ end }}
         </div>

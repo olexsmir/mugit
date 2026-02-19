@@ -15,7 +15,10 @@
         </div>
 
         <div class="box">
-          <pre class="commit-message">{{ .commit.Message }}</pre>
+          <pre class="commit-message">
+            {{- if .commit.Message }}{{- .commit.Message -}}
+            {{- else -}}<span class="muted">Empty message</span>{{- end -}}
+          </pre>
           <div>
             <strong>Author:</strong>
             {{ .commit.AuthorName }}

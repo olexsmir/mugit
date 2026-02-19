@@ -21,7 +21,10 @@
           {{ range .commits }}
           <tr>
             <td class="fill">
-              <a href="/{{ $repo }}/commit/{{ .Hash }}">{{ commitSummary .Message }}</a>
+              <a href="/{{ $repo }}/commit/{{ .Hash }}">
+                {{- if .Message }}{{- commitSummary .Message -}}
+                {{- else -}}<span class="muted">Empty message</span>{{- end -}}
+             </a>
             </td>
             <td class="author nowrap">
               <span class="author-short">
