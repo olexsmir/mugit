@@ -88,7 +88,7 @@ func (h *handlers) repoIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	p.Readme, err = h.renderReadme(repo)
+	p.Readme, err = h.renderReadme(repo, p.Ref, "")
 	if err != nil {
 		h.write500(w, err)
 		return
@@ -145,14 +145,19 @@ func (h *handlers) repoTreeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	readme, err := h.renderReadme(repo, ref, treePath)
+	if err != nil {
+		h.write500(w, err)
+		return
+	}
+
 	h.templ(w, "repo_tree", h.pageData(repo, RepoTree{
 		Desc:       desc,
 		Ref:        ref,
 		Tree:       tree,
 		ParentPath: treePath,
 		DotDot:     filepath.Dir(treePath),
-		// TODO: return the readme
-		Readme: "",
+		Readme:     readme,
 	}))
 }
 
@@ -437,15 +442,17 @@ var markdown = goldmark.New(
 		mdx.RelativeLink,
 	))
 
-func (h *handlers) renderReadme(r *git.Repo) (template.HTML, error) {
+func (h *handlers) renderReadme(r *git.Repo, ref, treePath string) (template.HTML, error) {
 	name := r.Name()
-	if v, found := h.readmeCache.Get(name); found {
+	cacheKey := fmt.Sprintf("%s:%s:%s", name, ref, treePath)
+	if v, found := h.readmeCache.Get(cacheKey); found {
 		return v, nil
 	}
 
 	var readmeContents template.HTML
 	for _, readme := range h.c.Repo.Readmes {
-		fc, ferr := r.FileContent(readme)
+		fullPath := filepath.Join(treePath, readme)
+		fc, ferr := r.FileContent(fullPath)
 		if ferr != nil {
 			continue
 		}
@@ -461,7 +468,7 @@ func (h *handlers) renderReadme(r *git.Repo) (template.HTML, error) {
 			case ".md", ".markdown", ".mkd":
 				var buf bytes.Buffer
 				if cerr := markdown.Convert([]byte(content), &buf,
-					mdx.NewRelativeLinkCtx(name, readme)); cerr != nil {
+					mdx.NewRelativeLinkCtx(name, fullPath)); cerr != nil {
 					return "", cerr
 				}
 				readmeContents = template.HTML(buf.String())
@@ -472,7 +479,7 @@ func (h *handlers) renderReadme(r *git.Repo) (template.HTML, error) {
 		}
 	}
 
-	h.readmeCache.Set(name, readmeContents)
+	h.readmeCache.Set(cacheKey, readmeContents)
 	return readmeContents, nil
 }
 
