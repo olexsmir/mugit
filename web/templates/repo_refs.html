@@ -1,38 +1,41 @@
 {{ define "repo_refs" }}
+{{ $repo := .RepoName }}
 <html>
   <head>
     {{ template "head" . }}
-    <title>{{ .name }}: refs</title>
+    <title>{{ $repo }}: refs</title>
   </head>
   <body>
     {{ template "repo_header" . }}
     <main>
-      {{ $name := .name }}
       <h3>branches</h3>
       <div class="refs">
-      {{ range .branches }}
+        {{ range .P.Branches }}
         <div>
-        <strong>{{ .Name }}</strong>
-        <a class="link" href="/{{ $name }}/tree/{{ .Name }}/">browse</a>
-        <a class="link" href="/{{ $name }}/log/{{ .Name }}">log</a>
-        <a class="link" href="/{{ $name }}/archive/{{ .Name }}">tar.gz</a>
+          <strong>{{ .Name }}</strong>
+          <a class="link" href="/{{ $repo }}/tree/{{ .Name }}/">browse</a>
+          <a class="link" href="/{{ $repo }}/log/{{ .Name }}">log</a>
+          <a class="link" href="/{{ $repo }}/archive/{{ .Name }}">tar.gz</a>
         </div>
-      {{ end }}
+        {{ end }}
       </div>
-      {{ if .tags }}
+      {{ if .P.Tags }}
       <h3>tags</h3>
       <div class="refs">
-      {{ range .tags }}
-      <div>
-      <strong>{{ .Name }}</strong>
-      <a class="link" href="/{{ $name }}/tree/{{ .Name }}/">browse</a>
-      <a class="link" href="/{{ $name }}/log/{{ .Name }}">log</a>
-      <a class="link" href="/{{ $name }}/archive/{{ .Name }}">tar.gz</a>
-      {{ if .Message }}
-      <pre>{{ .Message }}</pre>
-      </div>
-      {{ end }}
-      {{ end }}
+        {{ range .P.Tags }}
+        <div>
+          <strong>{{ .Name }}</strong>
+          <a class="link" href="/{{ $repo }}/tree/{{ .Name }}/">browse</a>
+          <a class="link" href="/{{ $repo }}/log/{{ .Name }}">log</a>
+          <a class="link" href="/{{ $repo }}/archive/{{ .Name }}">tar.gz</a>
+          {{ if .Message }}
+          <details>
+            <summary>message</summary>
+            <pre>{{ .Message }}</pre>
+          </details>
+          {{ end }}
+        </div>
+        {{ end }}
       </div>
       {{ end }}
     </main>

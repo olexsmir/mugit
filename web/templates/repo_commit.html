@@ -1,54 +1,58 @@
 {{ define "repo_commit" }}
+{{ $commit := .P.Diff.Commit }}
+{{ $diff := .P.Diff.Diff }}
+{{ $stat := .P.Diff.Stat }}
+{{ $parents := .P.Diff.Parents }}
 <html>
   <head>
     {{ template "head" . }}
-    <title>{{ .name }}: {{ .commit.HashShort }}</title>
+    <title>{{ .RepoName }}: {{ $commit.HashShort }}</title>
   </head>
   <body>
     {{ template "repo_header" . }}
     <main>
       <section class="commit">
         <div class="commit-refs">
-          {{ .stat.FilesChanged }} files changed,
-          {{ .stat.Insertions }} insertions(+),
-          {{ .stat.Deletions }} deletions(-)
+          {{ $stat.FilesChanged }} files changed,
+          {{ $stat.Insertions }} insertions(+),
+          {{ $stat.Deletions }} deletions(-)
         </div>
 
         <div class="box">
           <pre class="commit-message">
-            {{- if .commit.Message }}{{- .commit.Message -}}
+            {{- if $commit.Message }}{{- $commit.Message -}}
             {{- else -}}<span class="muted">Empty message</span>{{- end -}}
           </pre>
           <div>
             <strong>Author:</strong>
-            {{ .commit.AuthorName }}
-            <a href="mailto:{{ .AuthorEmail }}" class="commit-email">{{ .commit.AuthorEmail }}</a>
+            {{ $commit.AuthorName }}
+            <a href="mailto:{{ $commit.AuthorEmail }}" class="commit-email">{{ $commit.AuthorEmail }}</a>
           </div>
           <div>
             <strong>Committed at:</strong>
-            {{ .commit.Committed }}
+            {{ $commit.Committed }}
           </div>
-          {{ if .commit.ChangeID -}}
+          {{ if $commit.ChangeID -}}
           <div>
             <strong>Change ID:</strong>
-            {{ .commit.ChangeID }}
+            {{ $commit.ChangeID }}
           </div>
           {{- end }}
           <div>
             <strong>Parent:</strong>
-            {{ range $i, $p := .parents -}}
+            {{ range $i, $p := $parents -}}
             {{ if $i }}, {{ end -}}
-            <a class="link" href="/{{ $.name }}/commit/{{ $p }}">{{ $p }}</a>
+            <a class="link" href="/{{$.RepoName}}/commit/{{ $p }}">{{ $p }}</a>
             {{- end }}
           </div>
         </div>
 
-        {{ if gt (len .diff) 1 -}}
+        {{ if gt (len $diff) 1 -}}
         <div class="jump">
           <strong>jump to</strong>
           <table class="table jump-table">
             <tbody>
-              {{ range .diff }}
+              {{ range $diff }}
               {{ $path := .Name.New }}
               {{ if not $path }}{{ $path = .Name.Old }}{{ end }}
               <tr>
@@ -70,10 +74,9 @@
         {{ end }}
       </section>
       <section>
-        {{ $repo := .name }}
-        {{ $this := .commit.Hash }}
-        {{ $parent := index .parents 0 }}
-        {{ range .diff }}
+        {{ $this := $commit.Hash }}
+        {{ $parent := index $parents 0 }}
+        {{ range $diff }}
         {{ $path := .Name.New }}
         {{ if not $path }}{{ $path = .Name.Old }}{{ end }}
         <div id="{{ $path }}">
@@ -88,13 +91,13 @@
             <span class="diff-type diff-mod">M</span>
             {{ end }}
             {{ if .Name.Old }}
-            <a href="/{{ $repo }}/blob/{{ $parent }}/{{ .Name.Old }}">{{ .Name.Old }}</a>
+            <a href="/{{$.RepoName}}/blob/{{ $parent }}/{{ .Name.Old }}">{{ .Name.Old }}</a>
             {{ if .Name.New }}
             &#8594;
-            <a href="/{{ $repo }}/blob/{{ $this }}/{{ .Name.New }}">{{ .Name.New }}</a>
+            <a href="/{{$.RepoName}}/blob/{{ $this }}/{{ .Name.New }}">{{ .Name.New }}</a>
             {{ end }}
             {{ else }}
-            <a href="/{{ $repo }}/blob/{{ $this }}/{{ .Name.New }}">{{ .Name.New }}</a>
+            <a href="/{{$.RepoName}}/blob/{{ $this }}/{{ .Name.New }}">{{ .Name.New }}</a>
             {{- end -}}
             {{ if .IsBinary }}
             <p>Not showing binary file.</p>

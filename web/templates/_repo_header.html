@@ -4,22 +4,22 @@
     <a href="/">all repos</a>
   </div>
   <h1 class="repo-name">
-    {{ .name }}
-    {{- if .ref }}
-    <span class="ref">@ {{ .ref }}</span>
+    {{ .RepoName }}
+    {{- if .P.Ref }}
+    <span class="ref">@ {{ .P.Ref }}</span>
     {{- end }}
   </h1>
-  {{- if .desc }}
-  <div class="desc muted">{{ .desc }}</div>
+  {{- if .P.Desc }}
+  <div class="desc muted">{{ .P.Desc }}</div>
   {{- end }}
 
-  {{- if not .empty }}
+  {{- if not .Meta.IsEmpty }}
   <nav class="repo-nav">
     <ul>
-      <li><a href="/{{ .name }}">summary</a></li>
-      <li><a href="/{{ .name }}/refs">refs</a></li>
-      <li><a href="/{{ .name }}/tree/{{ .ref }}/">tree</a></li>
-      <li><a href="/{{ .name }}/log/{{ .ref }}">log</a></li>
+      <li><a href="/{{ .RepoName }}">summary</a></li>
+      <li><a href="/{{ .RepoName }}/refs">refs</a></li>
+      <li><a href="/{{ .RepoName }}/tree/{{ .P.Ref }}/">tree</a></li>
+      <li><a href="/{{ .RepoName }}/log/{{ .P.Ref }}">log</a></li>
     </ul>
   </nav>
   {{- end }}

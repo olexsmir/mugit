@@ -1,13 +1,13 @@
 {{ define "repo_log" }}
+{{ $repo := .RepoName }}
 <html>
   <head>
     {{ template "head" . }}
-  <title>{{ .name }}: log</title>
+    <title>{{ $repo }}: log</title>
   </head>
   <body>
     {{ template "repo_header" . }}
     <main>
-      {{ $repo := .name }}
       <table class="table log">
         <thead>
           <tr class="nohover">
@@ -18,13 +18,13 @@
           </tr>
         </thead>
         <tbody>
-          {{ range .commits }}
+          {{ range .P.Commits }}
           <tr>
             <td class="fill">
               <a href="/{{ $repo }}/commit/{{ .Hash }}">
                 {{- if .Message }}{{- commitSummary .Message -}}
                 {{- else -}}<span class="muted">Empty message</span>{{- end -}}
-             </a>
+              </a>
             </td>
             <td class="author nowrap">
               <span class="author-short">

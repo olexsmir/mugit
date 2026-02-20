@@ -1,15 +1,15 @@
 {{ define "repo_tree" }}
+{{ $name := .RepoName }}
+{{ $ref := .P.Ref }}
 <html>
   <head>
     {{ template "head" . }}
-    <title>{{ .name }}: tree ({{ .ref }})</title>
+    <title>{{ $name }}: tree ({{ $ref }})</title>
   </head>
   <body>
     {{ template "repo_header" . }}
     <main>
-      {{ $repo := .name }}
-      {{ $ref := .ref }}
-      {{ $parent := .parent }}
+      {{ $parent := .P.ParentPath }}
 
       <table class="table tree">
         <thead>
@@ -24,36 +24,36 @@
           <tr>
             <td class="mode nowrap"></td>
             <td class="size nowrap"></td>
-            <td class="fill"><a href="/{{ $repo }}/tree/{{ $ref }}/{{ .dotdot }}">..</a></td>
+            <td class="fill"><a href="/{{ $name }}/tree/{{ $ref }}/{{ .P.DotDot }}">..</a></td>
           </tr>
           {{ end }}
 
-          {{ range .files }}
+          {{ range .P.Tree }}
           {{ if not .IsFile }}
           <tr>
             <td class="mode nowrap">{{ .Mode }}</td>
             <td class="size nowrap">{{ .Size }}</td>
             <td class="fill">
               {{ if $parent }}
-              <a href="/{{ $repo }}/tree/{{ $ref }}/{{ $parent }}/{{ .Name }}">{{ .Name }}/</a>
+              <a href="/{{ $name}}/tree/{{ $ref }}/{{ $parent }}/{{ .Name }}">{{ .Name }}/</a>
               {{ else }}
-              <a href="/{{ $repo }}/tree/{{ $ref }}/{{ .Name }}">{{ .Name }}/</a>
+              <a href="/{{ $name }}/tree/{{ $ref }}/{{ .Name }}">{{ .Name }}/</a>
               {{ end }}
             </td>
           </tr>
           {{ end }}
           {{ end }}
 
-          {{ range .files }}
+          {{ range .P.Tree }}
           {{ if .IsFile }}
           <tr>
             <td class="mode nowrap">{{ .Mode }}</td>
             <td class="size nowrap">{{ .Size }}</td>
             <td class="fill">
               {{ if $parent }}
-              <a href="/{{ $repo }}/blob/{{ $ref }}/{{ $parent }}/{{ .Name }}">{{ .Name }}</a>
+              <a href="/{{ $name }}/blob/{{ $ref }}/{{ $parent }}/{{ .Name }}">{{ .Name }}</a>
               {{ else }}
-              <a href="/{{ $repo }}/blob/{{ $ref }}/{{ .Name }}">{{ .Name }}</a>
+              <a href="/{{ $name }}/blob/{{ $ref }}/{{ .Name }}">{{ .Name }}</a>
               {{ end }}
             </td>
           </tr>
@@ -63,9 +63,7 @@
       </table>
 
       <article>
-        <pre>
-          {{- if .readme }}{{ .readme }}{{- end -}}
-        </pre>
+        <pre>{{- if .P.Readme }}{{ .P.Readme }}{{- end -}}</pre>
       </article>
     </main>
   </body>

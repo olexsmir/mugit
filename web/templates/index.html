@@ -3,12 +3,12 @@
 <html>
   <head>
     {{ template "head" . }}
-    <title>{{ .meta.Title }}</title>
+    <title>{{ .Meta.Title }}</title>
   </head>
   <body>
     <header>
-      <h1>{{ .meta.Title }}</h1>
-      {{ if .meta.Description }}<h2>{{ .meta.Description }}</h2>{{ end }}
+      <h1>{{ .Meta.Title }}</h1>
+      {{ if .Meta.Description }}<h2>{{ .Meta.Description }}</h2>{{ end }}
     </header>
     <main>
       <table class="table index">
@@ -20,7 +20,7 @@
           </tr>
         </thead>
         <tbody>
-          {{- range .repos }}
+          {{- range .P }}
           <tr>
             <td class="nowrap"><a href="/{{ .Name }}">{{ .Name }}</a></td>
             <td class="fill">

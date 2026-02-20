@@ -3,13 +3,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/static/style.css" type="text/css">
   <link rel="icon" href="/static/favicon.svg">
-  {{ if and .servername .gomod }}
-  <meta name="go-import" content="{{ .servername}}/{{ .name }} git https://{{ .servername }}/{{ .name }}">
+
+  {{ if .Meta.GoMod }}
+  <meta name="go-import" content="{{.Meta.Host}}/{{.RepoName}} git https://{{.Meta.Host}}/{{.RepoName}}">
   {{ end }}
-  {{ if and .servername .name }}
-  <link rel="alternate" type="application/rss" href="https://{{ .servername }}/{{ .name }}/feed">
-  {{ end }}
-  {{ if .servername }}
-  <link rel="alternate" type="application/rss" href="https://{{ .servername }}/index.xml">
+
+  <link ref="alternate" type="application/rss" href="https://{{.Meta.Host}}/index.xml">
+  {{ if .RepoName }}
+  <link ref="alternate" type="application/rss" href="https://{{.Meta.Host}}/{{.RepoName}}/feed">
   {{ end }}
 {{ end }}

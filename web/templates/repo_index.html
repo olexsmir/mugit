@@ -3,18 +3,18 @@
 <html>
   <head>
     {{ template "head" . }}
-    <title>{{ .name }} &mdash; {{ .meta.Title }}</title>
+    <title>{{ .RepoName}} &mdash; {{ .Meta.Title }}</title>
   </head>
   <body>
     {{ template "repo_header" . }}
     <main>
-      {{ $repo := .name }}
-      {{ if .empty }}
+      {{ if .P.IsEmpty }}
       <h3>Repository is empty</h3>
       {{ else }}
       <section class="repo-index">
         <div class="repo-index-main">
-          {{ range .commits }}
+          {{ $repo := .RepoName }}
+          {{ range .P.Commits }}
           <div class="box">
             <div>
               <a href="/{{ $repo }}/commit/{{ .Hash }}" class="commit-hash link">{{ .HashShort }}</a>
@@ -34,27 +34,22 @@
 
         <div class="repo-index-side">
           <h2>Clone urls</h2>
-          <pre>{{- /* */ -}}
-https://{{ .servername }}/{{ .name }}
-git@{{ .servername }}:{{ .name }}
-{{- /* */ -}}</pre>
-
-          {{- if .mirrorinfo.isMirror }}
+          <pre>https://{{.Meta.Host}}/{{.RepoName}}</pre>
+          {{ if .Meta.SSHEnabled }}<pre>git@{{.Meta.Host}}:{{.RepoName}}</pre>{{end}}
+          {{- if .P.IsMirror -}}
           <br>
-          <h2>Mirror Status</h3>
-            <p>
-              Last updated {{ humanizeTime .mirrorinfo.lastSync }} from:
-              <a href="{{ .mirrorinfo.url }}" target="_blank">{{ .mirrorinfo.url }}</a>
-            </p>
-            {{- end }}
+          <h2>Mirror status</h2>
+          <p>
+            Last updated {{ humanizeTime .P.MirrorLastSync }} from:
+            <a href="{{.P.MirrorURL}}" target="_blank">{{.P.MirrorURL}}</a>
+          </p>
+          {{- end}}
         </div>
       </section>
       {{ end }}
 
-      {{- if .readme }}
-      <article class="readme">
-        {{- .readme -}}
-      </article>
+      {{- if .P.Readme }}
+      <article class="readme">{{- .P.Readme -}}</article>
       {{- end -}}
     </main>
   </body>

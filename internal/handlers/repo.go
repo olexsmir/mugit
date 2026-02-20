@@ -23,18 +23,44 @@ import (
 	"olexsmir.xyz/mugit/internal/mdx"
 )
 
+type Meta struct {
+	Title       string
+	Description string
+	Host        string
+	IsEmpty     bool
+	GoMod       bool
+	SSHEnabled  bool
+}
+
+type RepoBase struct {
+	Ref  string
+	Desc string
+}
+
+type PageData[T any] struct {
+	Meta     Meta
+	RepoName string // empty for non-repo pages, needed for _head.html to  compile
+	P        T
+}
+
 func (h *handlers) indexHandler(w http.ResponseWriter, r *http.Request) {
 	repos, err := h.listPublicRepos()
 	if err != nil {
 		h.write500(w, err)
 		return
 	}
+	h.templ(w, "index", h.pageData(nil, repos))
+}
 
-	data := make(map[string]any)
-	data["meta"] = h.c.Meta
-	data["repos"] = repos
-	data["servername"] = h.c.Meta.Host
-	h.templ(w, "index", data)
+type RepoIndex struct {
+	Desc           string
+	IsEmpty        bool
+	Readme         template.HTML
+	Ref            string
+	Commits        []*git.Commit
+	IsMirror       bool
+	MirrorURL      string
+	MirrorLastSync time.Time
 }
 
 func (h *handlers) repoIndex(w http.ResponseWriter, r *http.Request) {
@@ -50,56 +76,50 @@ func (h *handlers) repoIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := make(map[string]any)
-	data["name"] = repo.Name()
-	data["desc"] = desc
-	data["servername"] = h.c.Meta.Host
-	data["meta"] = h.c.Meta
-
-	if repo.IsEmpty() {
-		data["empty"] = true
-		h.templ(w, "repo_index", data)
+	p := RepoIndex{Desc: desc, IsEmpty: repo.IsEmpty()}
+	if p.IsEmpty {
+		h.templ(w, "repo_index", h.pageData(repo, p))
 		return
 	}
 
-	masterBranch, err := repo.FindMasterBranch(h.c.Repo.Masters)
+	p.Ref, err = repo.FindMasterBranch(h.c.Repo.Masters)
 	if err != nil {
 		h.write500(w, err)
 		return
 	}
 
-	readme, err := h.renderReadme(repo)
+	p.Readme, err = h.renderReadme(repo)
 	if err != nil {
 		h.write500(w, err)
 		return
 	}
 
-	commits, err := repo.Commits()
+	p.Commits, err = repo.Commits()
 	if err != nil {
 		h.write500(w, err)
 		return
 	}
 
-	if len(commits) >= 4 {
-		commits = commits[:3]
+	if len(p.Commits) >= 3 {
+		p.Commits = p.Commits[:3]
 	}
 
-	data["ref"] = masterBranch
-	data["readme"] = readme
-	data["commits"] = commits
-	data["gomod"] = repo.IsGoMod()
-
-	if isMirror, err := repo.IsMirror(); err == nil && isMirror {
-		lastSync, _ := repo.LastSync()
-		remoteURL, _ := repo.RemoteURL()
-		data["mirrorinfo"] = map[string]any{
-			"isMirror": true,
-			"url":      remoteURL,
-			"lastSync": lastSync,
-		}
+	if isMirror, err := repo.IsMirror(); isMirror && err == nil {
+		p.IsMirror = true
+		p.MirrorURL, _ = repo.RemoteURL()
+		p.MirrorLastSync, _ = repo.LastSync()
 	}
 
-	h.templ(w, "repo_index", data)
+	h.templ(w, "repo_index", h.pageData(repo, p))
+}
+
+type RepoTree struct {
+	Desc       string
+	Ref        string
+	Tree       []git.NiceTree
+	ParentPath string
+	DotDot     string
+	Readme     template.HTML
 }
 
 func (h *handlers) repoTreeHandler(w http.ResponseWriter, r *http.Request) {
@@ -119,22 +139,33 @@ func (h *handlers) repoTreeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	files, err := repo.FileTree(treePath)
+	tree, err := repo.FileTree(treePath)
 	if err != nil {
 		h.write500(w, err)
 		return
 	}
 
-	data := make(map[string]any)
-	data["name"] = name
-	data["ref"] = ref
-	data["parent"] = treePath
-	data["dotdot"] = filepath.Dir(treePath)
-	data["desc"] = desc
-	data["meta"] = h.c.Meta
-	data["files"] = files
+	h.templ(w, "repo_tree", h.pageData(repo, RepoTree{
+		Desc:       desc,
+		Ref:        ref,
+		Tree:       tree,
+		ParentPath: treePath,
+		DotDot:     filepath.Dir(treePath),
+		// TODO: return the readme
+		Readme: "",
+	}))
+}
 
-	h.templ(w, "repo_tree", data)
+type RepoFile struct {
+	Ref       string
+	Desc      string
+	LineCount []int
+	Path      string
+	IsImage   bool
+	IsBinary  bool
+	Content   string
+	Mime      string
+	Size      int64
 }
 
 func (h *handlers) fileContentsHandler(w http.ResponseWriter, r *http.Request) {
@@ -150,12 +181,6 @@ func (h *handlers) fileContentsHandler(w http.ResponseWriter, r *http.Request) {
 	repo, err := h.openPublicRepo(name, ref)
 	if err != nil {
 		h.write404(w, err)
-		return
-	}
-
-	desc, err := repo.Description()
-	if err != nil {
-		h.write500(w, err)
 		return
 	}
 
@@ -176,45 +201,42 @@ func (h *handlers) fileContentsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if fc.IsImage() || fc.IsBinary {
-		data := make(map[string]any)
-		data["name"] = name
-		data["ref"] = ref
-		data["desc"] = desc
-		data["path"] = treePath
-		data["is_image"] = fc.IsImage()
-		data["is_binary"] = fc.IsBinary
-		data["mime_type"] = fc.Mime
-		data["size"] = fc.Size
-		data["meta"] = h.c.Meta
-		h.templ(w, "repo_file", data)
+	p := RepoFile{
+		Ref:      ref,
+		Path:     treePath,
+		IsImage:  fc.IsImage(),
+		IsBinary: fc.IsBinary,
+		Mime:     fc.Mime,
+		Size:     fc.Size,
+	}
+
+	p.Desc, err = repo.Description()
+	if err != nil {
+		h.write500(w, err)
 		return
 	}
 
-	data := make(map[string]any)
-	data["name"] = name
-	data["ref"] = ref
-	data["desc"] = desc
-	data["path"] = treePath
-
-	contentStr := fc.String()
-	lc, err := countLines(strings.NewReader(contentStr))
-	if err != nil {
-		slog.Error("failed to count line numbers", "err", err)
-	}
-
-	lines := make([]int, lc)
-	if lc > 0 {
+	if !fc.IsImage() && !fc.IsBinary {
+		contentStr := fc.String()
+		lc, err := countLines(strings.NewReader(contentStr))
+		if err != nil {
+			slog.Error("failed to count line numbers", "err", err)
+		}
+		lines := make([]int, lc)
 		for i := range lines {
 			lines[i] = i + 1
 		}
+		p.Content = contentStr
+		p.LineCount = lines
 	}
 
-	data["linecount"] = lines
-	data["content"] = contentStr
-	data["meta"] = h.c.Meta
+	h.templ(w, "repo_file", h.pageData(repo, p))
+}
 
-	h.templ(w, "repo_file", data)
+type RepoLog struct {
+	Desc    string
+	Commits []*git.Commit
+	Ref     string
 }
 
 func (h *handlers) logHandler(w http.ResponseWriter, r *http.Request) {
@@ -239,14 +261,17 @@ func (h *handlers) logHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := make(map[string]any)
-	data["name"] = name
-	data["ref"] = ref
-	data["desc"] = desc
-	data["meta"] = h.c.Meta
-	data["log"] = true
-	data["commits"] = commits
-	h.templ(w, "repo_log", data)
+	h.templ(w, "repo_log", h.pageData(repo, RepoLog{
+		Desc:    desc,
+		Commits: commits,
+		Ref:     ref,
+	}))
+}
+
+type RepoCommit struct {
+	Diff *git.NiceDiff
+	Ref  string
+	Desc string
 }
 
 func (h *handlers) commitHandler(w http.ResponseWriter, r *http.Request) {
@@ -270,15 +295,18 @@ func (h *handlers) commitHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := make(map[string]any)
-	data["diff"] = diff.Diff
-	data["commit"] = diff.Commit
-	data["parents"] = diff.Parents
-	data["stat"] = diff.Stat
-	data["name"] = name
-	data["ref"] = ref
-	data["desc"] = desc
-	h.templ(w, "repo_commit", data)
+	h.templ(w, "repo_commit", h.pageData(repo, RepoCommit{
+		Desc: desc,
+		Ref:  ref,
+		Diff: diff,
+	}))
+}
+
+type RepoRefs struct {
+	Desc     string
+	Ref      string
+	Branches []*git.Branch
+	Tags     []*git.TagReference
 }
 
 func (h *handlers) refsHandler(w http.ResponseWriter, r *http.Request) {
@@ -294,7 +322,7 @@ func (h *handlers) refsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	masterBranch, err := repo.FindMasterBranch(h.c.Repo.Masters)
+	master, err := repo.FindMasterBranch(h.c.Repo.Masters)
 	if err != nil {
 		h.write500(w, err)
 		return
@@ -306,20 +334,15 @@ func (h *handlers) refsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tags, err := repo.Tags()
-	if err != nil {
-		// repo should have at least one branch, tags are *optional*
-		slog.Error("couldn't fetch repo tags", "err", err)
-	}
+	// repo should have at least one branch, tags are *optional*
+	tags, _ := repo.Tags()
 
-	data := make(map[string]any)
-	data["meta"] = h.c.Meta
-	data["name"] = repo.Name()
-	data["desc"] = desc
-	data["ref"] = masterBranch
-	data["branches"] = branches
-	data["tags"] = tags
-	h.templ(w, "repo_refs", data)
+	h.templ(w, "repo_refs", h.pageData(repo, RepoRefs{
+		Desc:     desc,
+		Ref:      master,
+		Tags:     tags,
+		Branches: branches,
+	}))
 }
 
 func countLines(r io.Reader) (int, error) {
@@ -451,4 +474,27 @@ func (h *handlers) renderReadme(r *git.Repo) (template.HTML, error) {
 
 	h.readmeCache.Set(name, readmeContents)
 	return readmeContents, nil
+}
+
+func (h handlers) pageData(repo *git.Repo, p any) PageData[any] {
+	var name string
+	var gomod, empty bool
+	if repo != nil {
+		gomod = repo.IsGoMod()
+		empty = repo.IsEmpty()
+		name = repo.Name()
+	}
+
+	return PageData[any]{
+		P:        p,
+		RepoName: name,
+		Meta: Meta{
+			Title:       h.c.Meta.Title,
+			Description: h.c.Meta.Description,
+			Host:        h.c.Meta.Host,
+			GoMod:       gomod,
+			SSHEnabled:  h.c.SSH.Enable,
+			IsEmpty:     empty,
+		},
+	}
 }

@@ -2,36 +2,38 @@
 <html>
   <head>
     {{ template "head" . }}
-    <title>{{ .name }}: {{ .path }} ({{ .ref }})</title>
+    <title>{{ .RepoName }}: {{ .P.Path }} ({{ .P.Ref }})</title>
   </head>
   <body>
     {{ template "repo_header" . }}
     <main>
-      <p>{{ .path }} (<a class="muted" href="?raw=true">view raw</a>)</p>
+      <p>{{ .P.Path }} (<a class="muted" href="?raw=true">view raw</a>)</p>
       <div class="file-wrapper">
-        {{ if .is_image }}
+        {{ if .P.IsImage }}
         <div class="image-viewer">
-          <p>{{.mime_type}} • {{.size}} bytes</p>
-          <img src="?raw=true" alt="{{- .path -}}">
+          <p>{{ .P.Mime }} • {{ .P.Size }} bytes</p>
+          <img src="?raw=true" alt="{{- .P.Path -}}">
         </div>
-        {{ else if .is_binary }}
+        {{ else if .P.IsBinary }}
         <div class="binary-viewer">
-          <p>Binary file ({{.mime_type}})</p>
-          <p>Size: {{.size}} bytes</p>
+          <p>Binary file ({{ .P.Mime }})</p>
+          <p>Size: {{ .P.Size }} bytes</p>
           <a class="link" href="?raw=true" download>[ Download ]</a>
         </div>
         {{ else }}
         <table>
-          <tbody><tr>
-            <td class="line-numbers">
-              <pre>{{- range .linecount }}
+          <tbody>
+            <tr>
+              <td class="line-numbers">
+<pre>{{- range .P.LineCount }}
 <a id="L{{ . }}" href="#L{{ . }}">{{ . }}</a>
 {{- end -}}</pre>
-            </td>
-            <td class="file-content">
-              <pre>{{- .content -}}</pre>
-            </td>
-          </tbody></tr>
+              </td>
+              <td class="file-content">
+                <pre>{{- .P.Content -}}</pre>
+              </td>
+            </tr>
+          </tbody>
         </table>
         {{ end }}
       </div>
