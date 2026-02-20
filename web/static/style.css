@@ -234,9 +234,7 @@ nav ul li {
 }
 
 /* tree */
-.tree,
-.log,
-.repo-index {
+.tree, .log, .repo-index {
   margin-bottom: 2em;
 }
 
@@ -361,6 +359,12 @@ nav ul li {
 
 .refs strong {
   padding-right: 1em;
+}
+
+.tag-message { margin-left: 0.5rem; }
+.tag-message summary {
+  cursor: pointer;
+  color: var(--gray);
 }
 
 /* readme */

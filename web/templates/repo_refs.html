@@ -29,8 +29,8 @@
           <a class="link" href="/{{ $repo }}/log/{{ .Name }}">log</a>
           <a class="link" href="/{{ $repo }}/archive/{{ .Name }}">tar.gz</a>
           {{ if .Message }}
-          <details>
-            <summary>message</summary>
+          <details class="tag-message">
+            <summary>{{ .Name }} message </summary>
             <pre>{{ .Message }}</pre>
           </details>
           {{ end }}
