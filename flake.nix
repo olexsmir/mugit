@@ -23,7 +23,7 @@
             pname = "mugit";
             version = version;
             src = ./.;
-            vendorHash = "sha256-uV7C72iS8nFSjuAq24gBc2yPBxI10Gqzo3RQJlpx6Bo=";
+            vendorHash = "sha256-xF8IRS0Ne1zp4u6uolKFpKEZObSM6VhV95JUj2krXPY=";
             ldflags = [
               "-s"
               "-w"
