@@ -9,6 +9,7 @@ import (
 
 	"olexsmir.xyz/mugit/internal/cache"
 	"olexsmir.xyz/mugit/internal/config"
+	"olexsmir.xyz/mugit/internal/git"
 	"olexsmir.xyz/mugit/internal/humanize"
 	"olexsmir.xyz/mugit/web"
 )
@@ -19,6 +20,7 @@ type handlers struct {
 
 	repoListCache cache.Cacher[[]repoList]
 	readmeCache   cache.Cacher[template.HTML]
+	diffCache     cache.Cacher[*git.NiceDiff]
 }
 
 func InitRoutes(cfg *config.Config) http.Handler {
@@ -29,6 +31,7 @@ func InitRoutes(cfg *config.Config) http.Handler {
 		cfg, tmpls,
 		cache.NewInMemory[[]repoList](cfg.Cache.HomePage),
 		cache.NewInMemory[template.HTML](cfg.Cache.Readme),
+		cache.NewInMemory[*git.NiceDiff](cfg.Cache.Diff),
 	}
 
 	mux := http.NewServeMux()

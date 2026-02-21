@@ -50,6 +50,7 @@ type MirrorConfig struct {
 type CacheConfig struct {
 	HomePage time.Duration `yaml:"home_page"`
 	Readme   time.Duration `yaml:"readme"`
+	Diff     time.Duration `yaml:"duration"`
 }
 
 type Config struct {
@@ -156,6 +157,10 @@ func (c *Config) ensureDefaults() {
 
 	if c.Cache.Readme == 0 {
 		c.Cache.Readme = 1 * time.Minute
+	}
+
+	if c.Cache.Diff == 0 {
+		c.Cache.Diff = 15 * time.Minute
 	}
 }
 

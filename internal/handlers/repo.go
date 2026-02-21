@@ -288,7 +288,7 @@ func (h *handlers) commitHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	diff, err := repo.Diff()
+	diff, err := h.getDiff(repo, ref)
 	if err != nil {
 		h.write500(w, err)
 		return
@@ -431,6 +431,21 @@ func (h *handlers) listPublicRepos() ([]repoList, error) {
 
 	h.repoListCache.Set("repo_list", repos)
 	return repos, errors.Join(errs...)
+}
+
+func (h handlers) getDiff(r *git.Repo, ref string) (*git.NiceDiff, error) {
+	cacheKey := fmt.Sprintf("%s:%s", r.Name(), ref)
+	if v, found := h.diffCache.Get(cacheKey); found {
+		return v, nil
+	}
+
+	diff, err := r.Diff()
+	if err != nil {
+		return nil, err
+	}
+
+	h.diffCache.Set(cacheKey, diff)
+	return diff, nil
 }
 
 var markdown = goldmark.New(
