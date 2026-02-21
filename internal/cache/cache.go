@@ -52,7 +52,7 @@ func (m *InMemory[T]) Get(key string) (T, bool) {
 	defer m.mu.Unlock()
 
 	val, found := m.data[key]
-	if !found {
+	if !found || val.isExpired() {
 		var t T
 		return t, false
 	}
