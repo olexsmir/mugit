@@ -102,13 +102,9 @@ nav ul li {
 
 .size { text-align: right; }
 
-.mode,
-.size,
-.commit-hash,
-.commit-email,
-.diff-type {
-  font-family: var(--mono-font);
-}
+.mode, .size,
+.commit-hash, .commit-email,
+.diff-type { font-family: var(--mono-font); }
 
 /* tables */
 .table {
