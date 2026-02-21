@@ -13,9 +13,9 @@
     <main>
       <section class="commit">
         <div class="commit-refs">
-          {{ $stat.FilesChanged }} files changed,
-          {{ $stat.Insertions }} insertions(+),
-          {{ $stat.Deletions }} deletions(-)
+          <span class="diff-mod">{{ $stat.FilesChanged }} files changed</span>,
+          <span class="diff-add">{{ $stat.Insertions }} insertions(+)</span>,
+          <span class="diff-del">{{ $stat.Deletions }} deletions(-)</span>
         </div>
 
         <div class="box">
