@@ -31,8 +31,8 @@
             <td class="nowrap">
               {{ if not .LastCommit.IsZero }}
               <span class="age">
-                {{- humanizeTime .LastCommit -}}
-                <span class="tooltip" role="tooltip">{{- .LastCommit -}}</span>
+                {{- humanizeRelTime .LastCommit -}}
+                <span class="tooltip" role="tooltip">{{- humanizeTime .LastCommit -}}</span>
               </span>
               {{ else }}
               <span class="muted">n/a</span>

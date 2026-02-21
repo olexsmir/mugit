@@ -21,7 +21,7 @@
               &mdash; {{ .AuthorName }}
               <span class="commit-date commit-info age">
                 {{ .Committed.Format "Mon, 02 Jan 2006" }}
-                <span class="tooltip" role="tooltip">{{ .Committed }}</span>
+                <span class="tooltip" role="tooltip">{{ humanizeTime .Committed }}</span>
               </span>
             </div>
             <div>
@@ -40,7 +40,7 @@
           <br>
           <h2>Mirror status</h2>
           <p>
-            Last updated {{ humanizeTime .P.MirrorLastSync }} from:
+            Last updated {{ humanizeRelTime .P.MirrorLastSync }} from:
             <a href="{{.P.MirrorURL}}" target="_blank">{{.P.MirrorURL}}</a>
           </p>
           {{- end}}

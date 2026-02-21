@@ -60,7 +60,8 @@ func (h *handlers) serveStaticHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 var templateFuncs = template.FuncMap{
-	"humanizeTime": func(t time.Time) string { return humanize.Time(t) },
+	"humanizeRelTime": func(t time.Time) string { return humanize.Time(t) },
+	"humanizeTime":    func(t time.Time) string { return t.Format("2006-01-02 15:04:05 MST") },
 	"commitSummary": func(s string) string {
 		before, after, found := strings.Cut(s, "\n")
 		first := strings.TrimSuffix(before, "\r")

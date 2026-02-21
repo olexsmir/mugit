@@ -30,7 +30,7 @@
           </div>
           <div>
             <strong>Committed at:</strong>
-            {{ $commit.Committed }}
+            {{ humanizeTime $commit.Committed }}
           </div>
           {{ if $commit.ChangeID -}}
           <div>

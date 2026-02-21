@@ -39,8 +39,8 @@
               <a href="/{{ $repo }}/commit/{{ .Hash }}">{{ .HashShort }}</a>
             </td>
             <td class="age nowrap">
-              {{ humanizeTime .Committed }}
-              <span class="tooltip" role="tooltip">{{ .Committed }}</span>
+              {{ humanizeRelTime .Committed }}
+              <span class="tooltip" role="tooltip">{{ humanizeTime .Committed }}</span>
             </td>
           </tr>
           {{ end }}
