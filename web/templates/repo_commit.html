@@ -28,6 +28,13 @@
             {{ $commit.AuthorName }}
             <a href="mailto:{{ $commit.AuthorEmail }}" class="commit-email">{{ $commit.AuthorEmail }}</a>
           </div>
+          {{ if ne $commit.AuthorEmail $commit.CommitterEmail }}
+          <div>
+            <strong>Committed by:</strong>
+            {{ $commit.CommitterName }}
+            <a href="mailto:{{ $commit.CommitterEmail }}" class="commit-email">{{ $commit.CommitterEmail }}</a>
+          </div>
+          {{ end }}
           <div>
             <strong>Committed at:</strong>
             {{ humanizeTime $commit.Committed }}

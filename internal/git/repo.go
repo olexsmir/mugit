@@ -95,13 +95,15 @@ func (g *Repo) Name() string {
 }
 
 type Commit struct {
-	Message     string
-	AuthorEmail string
-	AuthorName  string
-	ChangeID    string
-	Committed   time.Time
-	Hash        string
-	HashShort   string
+	Message        string
+	AuthorEmail    string
+	AuthorName     string
+	CommitterName  string
+	CommitterEmail string
+	Committed      time.Time
+	ChangeID       string
+	Hash           string
+	HashShort      string
 }
 
 func newShortHash(h plumbing.Hash) string { return h.String()[:7] }
@@ -115,13 +117,15 @@ func newCommit(c *object.Commit) *Commit {
 	}
 
 	return &Commit{
-		Message:     c.Message,
-		AuthorEmail: c.Author.Email,
-		AuthorName:  c.Author.Name,
-		ChangeID:    changeID,
-		Committed:   c.Committer.When,
-		Hash:        c.Hash.String(),
-		HashShort:   newShortHash(c.Hash),
+		Message:        c.Message,
+		AuthorEmail:    c.Author.Email,
+		AuthorName:     c.Author.Name,
+		CommitterName:  c.Committer.Name,
+		CommitterEmail: c.Committer.Email,
+		Committed:      c.Committer.When,
+		ChangeID:       changeID,
+		Hash:           c.Hash.String(),
+		HashShort:      newShortHash(c.Hash),
 	}
 }
 

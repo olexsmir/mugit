@@ -101,7 +101,7 @@ func (h *handlers) repoIndex(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(p.Commits) >= 3 {
-		p.Commits = p.Commits[:3]
+		p.Commits = p.Commits[:3:3]
 	}
 
 	if isMirror, err := repo.IsMirror(); isMirror && err == nil {
