@@ -232,6 +232,17 @@
 
             users.groups.${cfg.group} = { };
 
+            environment.systemPackages = lib.mkIf cfg.exposeCli [
+              (pkgs.runCommandLocal "mugit-completions" {} ''
+                mkdir -p $out/share/bash-completion/completions
+                mkdir -p $out/share/zsh/site-functions
+                mkdir -p $out/share/fish/vendor_completions.d
+                ${cfg.package}/bin/mugit completion bash > $out/share/bash-completion/completions/mugit
+                ${cfg.package}/bin/mugit completion zsh  > $out/share/zsh/site-functions/_mugit
+                ${cfg.package}/bin/mugit completion fish > $out/share/fish/vendor_completions.d/mugit.fish
+              '')
+            ];
+
             security.wrappers = lib.mkIf cfg.exposeCli {
               mugit = {
                 source =
