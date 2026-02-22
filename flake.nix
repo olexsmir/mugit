@@ -68,6 +68,12 @@
               description = "Whether to open the firewall for mugit. Can only be used with `config`, not `configFile`.";
             };
 
+            exposeCli = mkOption {
+              type = types.bool;
+              default = false;
+              description = "Whether to expose a mugit CLI wrapper to all system users, runs as the mugit user/group.";
+            };
+
             configFile = mkOption {
               type = types.nullOr types.path;
               default = null;
@@ -225,6 +231,25 @@
             };
 
             users.groups.${cfg.group} = { };
+
+            security.wrappers = lib.mkIf cfg.exposeCli {
+              mugit = {
+                source =
+                  let
+                    resolvedConfig = if cfg.configFile != null then cfg.configFile else configFile;
+                    mugitWrapped = pkgs.writeScriptBin "mugit" ''
+                      #!${pkgs.bash}/bin/bash
+                      exec ${cfg.package}/bin/mugit --config ${resolvedConfig} "$@"
+                    '';
+                  in
+                    "${mugitWrapped}/bin/mugit";
+                owner = cfg.user;
+                group = cfg.group;
+                setuid = true;
+                setgid = true;
+                permissions = "u+rx,g+rx,o+rx";
+              };
+            };
 
             systemd.services.mugit = {
               description = "mugit service";
