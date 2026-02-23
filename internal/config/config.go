@@ -50,7 +50,7 @@ type MirrorConfig struct {
 type CacheConfig struct {
 	HomePage time.Duration `yaml:"home_page"`
 	Readme   time.Duration `yaml:"readme"`
-	Diff     time.Duration `yaml:"duration"`
+	Diff     time.Duration `yaml:"diff"`
 }
 
 type Config struct {
