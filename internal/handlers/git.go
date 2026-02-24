@@ -32,7 +32,7 @@ func (h *handlers) multiplex(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handlers) infoRefs(w http.ResponseWriter, r *http.Request) {
-	path, err := h.checkRepoPublicityAndGetPath(r.PathValue("name"))
+	path, err := h.checkRepoPublicityAndGetPath(r.PathValue("name"), "")
 	if err != nil {
 		h.write404(w, err)
 		return
@@ -48,7 +48,7 @@ func (h *handlers) infoRefs(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handlers) uploadPack(w http.ResponseWriter, r *http.Request) {
-	path, err := h.checkRepoPublicityAndGetPath(r.PathValue("name"))
+	path, err := h.checkRepoPublicityAndGetPath(r.PathValue("name"), "")
 	if err != nil {
 		h.write404(w, err)
 		return
@@ -65,9 +65,10 @@ func (h *handlers) uploadPack(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handlers) archiveHandler(w http.ResponseWriter, r *http.Request) {
-	ref := h.parseRef(r.PathValue("ref"))
 	name := r.PathValue("name")
-	path, err := h.checkRepoPublicityAndGetPath(name)
+	ref := h.parseRef(r.PathValue("ref"))
+
+	path, err := h.checkRepoPublicityAndGetPath(name, ref)
 	if err != nil {
 		h.write404(w, err)
 		return
@@ -84,15 +85,15 @@ func (h *handlers) archiveHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *handlers) checkRepoPublicityAndGetPath(name string) (string, error) {
+func (h *handlers) checkRepoPublicityAndGetPath(name string, ref string) (string, error) {
 	name = git.ResolveName(name)
 	path, err := git.ResolvePath(h.c.Repo.Dir, name)
 	if err != nil {
 		return "", err
 	}
 
-	if _, err := git.OpenPublic(path, ""); err != nil {
-		return "", err
+	if _, oerr := git.OpenPublic(path, ref); oerr != nil {
+		return "", oerr
 	}
 
 	return path, err
