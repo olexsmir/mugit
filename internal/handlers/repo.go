@@ -94,7 +94,7 @@ func (h *handlers) repoIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	p.Commits, err = repo.Commits()
+	p.Commits, err = repo.Commits("")
 	if err != nil {
 		h.write500(w, err)
 		return
@@ -239,24 +239,20 @@ func (h *handlers) fileContentsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type RepoLog struct {
-	Desc    string
-	Commits []*git.Commit
-	Ref     string
+	Desc      string
+	Commits   []*git.Commit
+	Ref       string
+	NextAfter string
 }
 
 func (h *handlers) logHandler(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("name")
 	ref := h.parseRef(r.PathValue("ref"))
+	after := r.URL.Query().Get("after")
 
 	repo, err := h.openPublicRepo(name, ref)
 	if err != nil {
 		h.write404(w, err)
-		return
-	}
-
-	commits, err := repo.Commits()
-	if err != nil {
-		h.write500(w, err)
 		return
 	}
 
@@ -266,10 +262,24 @@ func (h *handlers) logHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	commits, err := repo.Commits(after)
+	if err != nil {
+		h.write500(w, err)
+		return
+	}
+
+	// if we got full page of commits, we probably have more.
+	// NOTE: this has edge case, when last page has git.CommitsPage, "load more would be shown"
+	nextAfter := ""
+	if len(commits) == git.CommitsPage && len(commits) > 0 {
+		nextAfter = commits[len(commits)-1].HashShort
+	}
+
 	h.templ(w, "repo_log", h.pageData(repo, RepoLog{
-		Desc:    desc,
-		Commits: commits,
-		Ref:     ref,
+		Desc:      desc,
+		Ref:       ref,
+		Commits:   commits,
+		NextAfter: nextAfter,
 	}))
 }
 

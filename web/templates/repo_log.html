@@ -46,6 +46,11 @@
           {{ end }}
         </tbody>
       </table>
+      <div class="center">
+        {{- if .P.NextAfter }}
+        <a href="?after={{ urlencode .P.NextAfter }}">[load more]</a>
+        {{- end }}
+      </div>
     </main>
   </body>
 </html>

@@ -11,6 +11,7 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git/v5/plumbing/storer"
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 )
@@ -129,21 +130,42 @@ func newCommit(c *object.Commit) *Commit {
 	}
 }
 
-func (g *Repo) Commits() ([]*Commit, error) {
+const CommitsPage = 150
+
+// Commits returns [CommitsPage] commits after the given commit hash cursor.
+// If after is empty, starts from HEAD.
+func (g *Repo) Commits(after string) ([]*Commit, error) {
 	if g.IsEmpty() {
 		return []*Commit{}, nil
 	}
 
+	from := g.h
+	if after != "" {
+		hash, err := g.r.ResolveRevision(plumbing.Revision(after))
+		if err != nil {
+			return nil, fmt.Errorf("invalid cursor: %w", err)
+		}
+		from = *hash
+	}
+
 	ci, err := g.r.Log(&git.LogOptions{
-		From:  g.h,
+		From:  from,
 		Order: git.LogOrderCommitterTime,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("commits from ref: %w", err)
 	}
 
-	var commits []*Commit
+	// since after commit was shown on prev page, skip it
+	if after != "" {
+		ci.Next()
+	}
+
+	commits := make([]*Commit, 0, CommitsPage)
 	ci.ForEach(func(c *object.Commit) error {
+		if len(commits) == CommitsPage {
+			return storer.ErrStop
+		}
 		commits = append(commits, newCommit(c))
 		return nil
 	})
