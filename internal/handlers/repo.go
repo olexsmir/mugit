@@ -124,7 +124,7 @@ type RepoTree struct {
 
 func (h *handlers) repoTreeHandler(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("name")
-	ref := r.PathValue("ref")
+	ref := h.parseRef(r.PathValue("ref"))
 	treePath := r.PathValue("rest")
 
 	repo, err := h.openPublicRepo(name, ref)
@@ -175,7 +175,7 @@ type RepoFile struct {
 
 func (h *handlers) fileContentsHandler(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("name")
-	ref := r.PathValue("ref")
+	ref := h.parseRef(r.PathValue("ref"))
 	treePath := r.PathValue("rest")
 
 	var raw bool
@@ -246,7 +246,7 @@ type RepoLog struct {
 
 func (h *handlers) logHandler(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("name")
-	ref := r.PathValue("ref")
+	ref := h.parseRef(r.PathValue("ref"))
 
 	repo, err := h.openPublicRepo(name, ref)
 	if err != nil {
@@ -281,7 +281,8 @@ type RepoCommit struct {
 
 func (h *handlers) commitHandler(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("name")
-	ref := r.PathValue("ref")
+	ref := h.parseRef(r.PathValue("ref"))
+
 	repo, err := h.openPublicRepo(name, ref)
 	if err != nil {
 		h.write404(w, err)

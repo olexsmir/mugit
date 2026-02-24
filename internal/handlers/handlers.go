@@ -3,6 +3,7 @@ package handlers
 import (
 	"html/template"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"strings"
 	"time"
@@ -59,9 +60,20 @@ func (h *handlers) serveStaticHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFileFS(w, r, web.StaticFS, f)
 }
 
+// parseRef parses url encoded ref name.
+// If it fails it falls back to raw provided value.
+func (h handlers) parseRef(name string) string {
+	ref, err := url.PathUnescape(name)
+	if err != nil {
+		return name
+	}
+	return ref
+}
+
 var templateFuncs = template.FuncMap{
 	"humanizeRelTime": func(t time.Time) string { return humanize.Time(t) },
 	"humanizeTime":    func(t time.Time) string { return t.Format("2006-01-02 15:04:05 MST") },
+	"urlencode":       func(s string) string { return url.PathEscape(s) },
 	"commitSummary": func(s string) string {
 		before, after, found := strings.Cut(s, "\n")
 		first := strings.TrimSuffix(before, "\r")

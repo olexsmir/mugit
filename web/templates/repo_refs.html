@@ -13,9 +13,9 @@
         {{ range .P.Branches }}
         <div>
           <strong>{{ .Name }}</strong>
-          <a class="link" href="/{{ $repo }}/tree/{{ .Name }}/">browse</a>
-          <a class="link" href="/{{ $repo }}/log/{{ .Name }}">log</a>
-          <a class="link" href="/{{ $repo }}/archive/{{ .Name }}">tar.gz</a>
+          <a class="link" href="/{{ $repo }}/tree/{{ urlencode .Name }}/">browse</a>
+          <a class="link" href="/{{ $repo }}/log/{{ urlencode .Name }}">log</a>
+          <a class="link" href="/{{ $repo }}/archive/{{ urlencode .Name }}">tar.gz</a>
         </div>
         {{ end }}
       </div>
@@ -25,9 +25,9 @@
         {{ range .P.Tags }}
         <div>
           <strong>{{ .Name }}</strong>
-          <a class="link" href="/{{ $repo }}/tree/{{ .Name }}/">browse</a>
-          <a class="link" href="/{{ $repo }}/log/{{ .Name }}">log</a>
-          <a class="link" href="/{{ $repo }}/archive/{{ .Name }}">tar.gz</a>
+          <a class="link" href="/{{ $repo }}/tree/{{ urlencode .Name }}/">browse</a>
+          <a class="link" href="/{{ $repo }}/log/{{ urlencode .Name }}">log</a>
+          <a class="link" href="/{{ $repo }}/archive/{{ urlencode .Name }}">tar.gz</a>
           {{ if .Message }}
           <details class="tag-message">
             <summary>{{ .Name }} message </summary>

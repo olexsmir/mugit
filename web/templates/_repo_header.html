@@ -18,8 +18,8 @@
     <ul>
       <li><a href="/{{ .RepoName }}">summary</a></li>
       <li><a href="/{{ .RepoName }}/refs">refs</a></li>
-      <li><a href="/{{ .RepoName }}/tree/{{ .P.Ref }}/">tree</a></li>
-      <li><a href="/{{ .RepoName }}/log/{{ .P.Ref }}">log</a></li>
+      <li><a href="/{{ .RepoName }}/tree/{{ urlencode .P.Ref }}/">tree</a></li>
+      <li><a href="/{{ .RepoName }}/log/{{  urlencode .P.Ref }}">log</a></li>
     </ul>
   </nav>
   {{- end }}

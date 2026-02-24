@@ -65,7 +65,7 @@ func (h *handlers) uploadPack(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handlers) archiveHandler(w http.ResponseWriter, r *http.Request) {
-	ref := r.PathValue("ref")
+	ref := h.parseRef(r.PathValue("ref"))
 	name := r.PathValue("name")
 	path, err := h.checkRepoPublicityAndGetPath(name)
 	if err != nil {
