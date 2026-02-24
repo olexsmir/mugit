@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0 (unreleased)
+
+### Features:
+- Paginate log page (150 commits per page).
+
+### Bug fixes:
+- Allow downloading only valid and existing refs.
+- Support refs with special characters in names (e.g. `/` or `#`).
+
 ## 0.2.0
 
 ### Features

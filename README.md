@@ -6,7 +6,7 @@ A lightweight, self-hosted Git server that your cow will love.
 
 ## Features
 
-- Web interface — browse repositories, view commits, files, and diffs
+- Web interface — browse repositories, view commits, files, and diffs (no javascript required)
 - Git Smart HTTP — clone over HTTPS (use SSH for pushing)
 - Git over SSH — push and clone over SSH
 - Mirroring — automatically mirror repositories (supports GitHub authentication)
