@@ -101,8 +101,8 @@ mirror:
   interval: 1h  # sync frequency
   # Tokens can be provided directly, or read from environment/file:
   # - literal: "ghp_xxxxxxxxxxxx"
-  # - from env: "${env:GITHUB_TOKEN}" (will read $GITHUB_TOKEN)
-  # - from file: "${file:/abs/path/to/token.txt}"
+  # - from env: "$env:GITHUB_TOKEN" (will read $GITHUB_TOKEN)
+  # - from file: "$file:/abs/path/to/token.txt"
   github_token: "${env:GITHUB_TOKEN}"
 
 cache:
