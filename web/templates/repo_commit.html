@@ -45,13 +45,15 @@
             {{ $commit.ChangeID }}
           </div>
           {{- end }}
+          {{ if $parents }}
           <div>
             <strong>Parent:</strong>
             {{ range $i, $p := $parents -}}
             {{ if $i }}, {{ end -}}
-            <a class="link" href="/{{$.RepoName}}/commit/{{ $p }}">{{ $p }}</a>
+            <a class="link" href="/{{ $.RepoName }}/commit/{{ $p }}">{{ $p }}</a>
             {{- end }}
           </div>
+          {{ end }}
         </div>
 
         {{ if gt (len $diff) 1 -}}
@@ -64,13 +66,14 @@
               {{ if not $path }}{{ $path = .Name.Old }}{{ end }}
               <tr>
                 <td class="diff-type">
-                  {{ if .IsNew }}<span class="diff-type diff-add">A</span>{{ end }}
-                  {{ if .IsDelete }}<span class="diff-type diff-del">D</span>{{ end }}
-                  {{ if not (or .IsNew .IsDelete) }}<span class="diff-type diff-mod">M</span>{{ end }}
+                  {{ if .IsNew }}<span class="diff-type diff-add">A</span>
+                  {{ else if .IsDelete }}<span class="diff-type diff-del">D</span>
+                  {{ else }}<span class="diff-type diff-mod">M</span>{{ end }}
                 </td>
                 <td class="fill">
                   <a href="#{{ $path }}">
-                    {{ if and .Name.Old .Name.New }}{{ .Name.Old }} &#8594; {{ .Name.New }}{{ else }}{{ $path }}{{ end }}
+                    {{ if .IsRename }}{{ .Name.Old }} &#8594; {{ .Name.New }}
+                    {{ else }}{{ $path }}{{ end }}
                   </a>
                 </td>
               </tr>
@@ -80,32 +83,26 @@
         </div>
         {{ end }}
       </section>
+
       <section>
         {{ $this := $commit.Hash }}
-        {{ $parent := index $parents 0 }}
+        {{ $parent := "" }}
+        {{ if $parents }}{{ $parent = index $parents 0 }}{{ end }}
         {{ range $diff }}
         {{ $path := .Name.New }}
         {{ if not $path }}{{ $path = .Name.Old }}{{ end }}
         <div id="{{ $path }}">
           <div class="diff">
-            {{ if .IsNew }}
-            <span class="diff-type diff-add">A</span>
+            {{ if .IsNew }}<span class="diff-type diff-add">A</span>
+            {{ else if .IsDelete }}<span class="diff-type diff-del">D</span>
+            {{ else }}<span class="diff-type diff-mod">M</span>{{ end }}
+
+            {{ if .IsNew }}<a href="/{{ $.RepoName }}/blob/{{ $this }}/{{ .Name.New }}">{{ .Name.New }}</a>{{ else }}
+            {{ if $parent }}<a href="/{{ $.RepoName }}/blob/{{ $parent }}/{{ .Name.Old }}">{{ .Name.Old }}</a>
+            {{ else }}{{ .Name.Old }}{{ end }}
+            {{ if .IsRename }}&#8594;<a href="/{{ $.RepoName }}/blob/{{ $this }}/{{ .Name.New }}">{{ .Name.New }}</a>{{ end }}
             {{ end }}
-            {{ if .IsDelete }}
-            <span class="diff-type diff-del">D</span>
-            {{ end }}
-            {{ if not (or .IsNew .IsDelete) }}
-            <span class="diff-type diff-mod">M</span>
-            {{ end }}
-            {{ if .Name.Old }}
-            <a href="/{{$.RepoName}}/blob/{{ $parent }}/{{ .Name.Old }}">{{ .Name.Old }}</a>
-            {{ if .Name.New }}
-            &#8594;
-            <a href="/{{$.RepoName}}/blob/{{ $this }}/{{ .Name.New }}">{{ .Name.New }}</a>
-            {{ end }}
-            {{ else }}
-            <a href="/{{$.RepoName}}/blob/{{ $this }}/{{ .Name.New }}">{{ .Name.New }}</a>
-            {{- end -}}
+
             {{ if .IsBinary }}
             <p>Not showing binary file.</p>
             {{ else }}
@@ -113,19 +110,14 @@
               {{- range .TextFragments -}}
               <p>{{- .Header -}}</p>
               {{- range .Lines -}}
-              {{- if eq .Op.String "+" -}}
-              <span class="diff-add">{{ .String }}</span>
-              {{- end -}}
-              {{- if eq .Op.String "-" -}}
-              <span class="diff-del">{{ .String }}</span>
-              {{- end -}}
-              {{- if eq .Op.String " " -}}
-              <span class="diff-noop">{{ .String }}</span>
-              {{- end -}}
+              {{- if eq .Op.String "+" -}}<span class="diff-add">{{ .String }}</span>
+              {{- else if eq .Op.String "-" -}}<span class="diff-del">{{ .String }}</span>
+              {{- else -}}<span class="diff-noop">{{ .String }}</span>
               {{- end -}}
               {{- end -}}
               {{- end -}}
             </pre>
+            {{ end }}
           </div>
         </div>
         {{ end }}

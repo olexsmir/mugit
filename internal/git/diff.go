@@ -22,6 +22,7 @@ type Diff struct {
 	IsBinary      bool
 	IsNew         bool
 	IsDelete      bool
+	IsRename      bool
 }
 
 type NiceDiff struct {
@@ -65,6 +66,7 @@ func (g *Repo) Diff() (*NiceDiff, error) {
 		diff.IsBinary = d.IsBinary
 		diff.IsNew = d.IsNew
 		diff.IsDelete = d.IsDelete
+		diff.IsRename = d.IsRename
 
 		for _, tf := range d.TextFragments {
 			diff.TextFragments = append(diff.TextFragments, TextFragment{
