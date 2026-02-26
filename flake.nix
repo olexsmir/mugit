@@ -1,50 +1,30 @@
 {
   description = "a git server that your cow will love";
-  inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs";
-    flake-utils.url = "github:numtide/flake-utils";
-  };
-  outputs =
-    {
-      self,
-      nixpkgs,
-      flake-utils,
-    }:
-    flake-utils.lib.eachDefaultSystem (
-      system:
-      let
-        pkgs = nixpkgs.legacyPackages.${system};
-        version = self.rev or "dev";
-      in
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs";
+  outputs = { self, nixpkgs }:
+    let
+      systems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
+      forAllSystems = f: nixpkgs.lib.genAttrs systems (system: f nixpkgs.legacyPackages.${system});
+    in
       {
-        packages = {
-          default = self.packages.${system}.mugit;
+      packages = forAllSystems (pkgs:
+        let version = self.rev or "dev";
+        in {
+          default = self.packages.${pkgs.stdenv.hostPlatform.system}.mugit;
           mugit = pkgs.buildGoModule {
             pname = "mugit";
             version = version;
             src = ./.;
             vendorHash = "sha256-xF8IRS0Ne1zp4u6uolKFpKEZObSM6VhV95JUj2krXPY=";
-            ldflags = [
-              "-s"
-              "-w"
-              "-X main.version=${version}"
-            ];
+            ldflags = [ "-s" "-w" "-X main.version=${version}" ];
             meta = with pkgs.lib; {
-              homepage = "https://github.com/olexsmir/mugit";
+              homepage = "https://git.olexsmir.xyz/mugit";
               license = licenses.mit;
             };
           };
-        };
-      }
-    )
-    // {
-      nixosModules.default =
-        {
-          config,
-          lib,
-          pkgs,
-          ...
-        }:
+        });
+
+      nixosModules.default = { config, lib, pkgs, ... }:
         with lib;
         let
           cfg = config.services.mugit;
@@ -57,8 +37,8 @@
 
             package = mkOption {
               type = types.package;
-              default = self.packages.${pkgs.system}.mugit;
-              defaultText = literalExpression "self.packages.\${pkgs.system}.mugit";
+              default = self.packages.${pkgs.stdenv.hostPlatform.system}.mugit;
+              defaultText = literalExpression "self.packages.\${pkgs.stdenv.hostPlatform.system}.mugit";
               description = "The mugit package to use.";
             };
 
