@@ -62,9 +62,9 @@
         </tbody>
       </table>
 
-      <article>
-        <pre>{{- if .P.Readme }}{{ .P.Readme }}{{- end -}}</pre>
-      </article>
+      {{- if .P.Readme }}
+      <article clsas="readme">{{- .P.Readme -}}</article>
+      {{- end -}}
     </main>
   </body>
 </html>
