@@ -15,12 +15,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/yuin/goldmark"
-	emoji "github.com/yuin/goldmark-emoji"
-	"github.com/yuin/goldmark/extension"
-	"github.com/yuin/goldmark/renderer/html"
 	"olexsmir.xyz/mugit/internal/git"
-	"olexsmir.xyz/mugit/internal/mdx"
+	"olexsmir.xyz/mugit/internal/markdown"
 )
 
 type Meta struct {
@@ -459,15 +455,6 @@ func (h handlers) getDiff(r *git.Repo, ref string) (*git.NiceDiff, error) {
 	return diff, nil
 }
 
-var markdown = goldmark.New(
-	goldmark.WithRendererOptions(html.WithUnsafe()),
-	goldmark.WithExtensions(
-		extension.GFM,
-		extension.Linkify,
-		emoji.Emoji,
-		mdx.RelativeLink,
-	))
-
 func (h *handlers) renderReadme(r *git.Repo, ref, treePath string) (template.HTML, error) {
 	name := r.Name()
 	cacheKey := fmt.Sprintf("%s:%s:%s", name, ref, treePath)
@@ -492,12 +479,12 @@ func (h *handlers) renderReadme(r *git.Repo, ref, treePath string) (template.HTM
 		if len(content) > 0 {
 			switch ext {
 			case ".md", ".markdown", ".mkd":
-				var buf bytes.Buffer
-				if cerr := markdown.Convert([]byte(content), &buf,
-					mdx.NewRelativeLinkCtx(name, fullPath)); cerr != nil {
-					return "", cerr
+				readme, err := markdown.Render(name, ref, fullPath, content)
+				if err != nil {
+					return "", err
 				}
-				readmeContents = template.HTML(buf.String())
+				return template.HTML(readme), nil
+
 			default:
 				readmeContents = template.HTML(fmt.Sprintf(`<pre>%s</pre>`, content))
 			}
