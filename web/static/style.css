@@ -75,14 +75,6 @@ main, footer {
   line-height: 160%;
 }
 
-h2 { font-weight: 400; }
-strong { font-weight: 500; }
-
-main h1 { padding: 10px 0 10px 0; }
-main h2 { font-size: 18px; }
-main h3 { font-size: 1.15rem; }
-main h2, h3 { padding: 20px 0 0.4rem 0; }
-
 nav { padding: 0.4rem 0 1.5rem 0; }
 nav ul {
   list-style: none;
@@ -95,7 +87,6 @@ nav ul li {
 }
 
 /* utilities */
-
 .nowrap { white-space: nowrap; }
 .fill { width: 100%; }
 .muted { color: var(--gray); }
@@ -131,13 +122,8 @@ nav ul li {
   vertical-align: top;
 }
 
-.table tbody tr:hover {
-  background: var(--light);
-}
-
-.table tbody tr.nohover:hover {
-  background: transparent;
-}
+.table tbody tr:hover { background: var(--light); }
+.table tbody tr.nohover:hover { background: transparent; }
 
 /* tooltip */
 .tooltip {
@@ -369,12 +355,53 @@ nav ul li {
 }
 
 /* readme */
-.readme { padding: 0.6rem 0; }
-.readme ul  { padding: revert; }
+.readme {
+  padding: 1.5rem 0;
+  line-height: 1.6;
+}
+.readme > *:first-child { margin-top: 0; }
+
+.readme h1, .readme h2, .readme h3,
+.readme h4, .readme h5, .readme h6 {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  line-height: 1.25;
+}
+.readme h1 { font-size: 2rem; }
+.readme h2 { font-size: 1.5rem; }
+.readme h3 { font-size: 1.25rem; }
+.readme h4, .readme h5, .readme h6 { font-size: 1rem; }
+
+.readme p, .readme ul, .readme ol, .readme pre { margin-bottom: 1em; }
+.readme ul, .readme ol { padding-left: 2em; }
+.readme li { margin-bottom: 0.25em; }
+.readme a { border-bottom: 1.5px solid var(--medium-gray); }
+.readme a > img { border-bottom: none; }
 .readme img { max-width: 100%; }
 .readme pre {
   background: var(--light-gray);
   padding: 0.6rem;
+}
+
+.readme details > * { padding-left: 1em; }
+.readme details[data-callout] {
+  border-left: 4px solid var(--gray);
+  background: var(--light);
+  padding: 0.5em 1em;
+  margin: 1em 0;
+}
+.readme details[data-callout] .callout-content { padding-left: 0.5em; }
+.readme details[data-callout] summary {
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 0.5em;
+}
+
+.readme blockquote {
+  border-left: 3px solid var(--gray);
+  padding-left: 1em;
+  color: var(--gray);
+  margin: 1em 0;
 }
 
 @media (max-width: 600px) {
