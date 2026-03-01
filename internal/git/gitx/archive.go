@@ -25,6 +25,19 @@ func ArchiveTar(ctx context.Context, repoDir, ref string, out io.Writer) error {
 	return nil
 }
 
+func UploadArchive(ctx context.Context, repoDir string, in io.Reader, out io.Writer) error {
+	if err := gitCmd(ctx, cmdOpts{
+		RepoDir: repoDir,
+		Cmd:     []string{"upload-archive"},
+		Stdin:   in,
+		Stdout:  out,
+		Stderr:  out,
+	}); err != nil {
+		return fmt.Errorf("git-upload-archive: %w", err)
+	}
+	return nil
+}
+
 var isValidRefRe = regexp.MustCompile(`^[a-zA-Z0-9._/-]+$`)
 
 func isValidRef(ref string) bool {

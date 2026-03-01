@@ -4,6 +4,7 @@
 
 ### Features:
 - Paginate log page (150 commits per page).
+- Support `git-upload-archive`.
 
 ### Bug fixes:
 - Allow downloading only valid and existing refs.

@@ -107,6 +107,25 @@ func (s *Server) handler(sess ssh.Session) {
 
 		sess.Exit(0)
 
+	case "git-upload-archive":
+		isPrivate, err := repo.IsPrivate()
+		if err != nil {
+			s.gitError(sess, badRequestErrMsg, nil)
+			return
+		}
+
+		if isPrivate && !authorized {
+			s.gitError(sess, badRequestErrMsg, nil)
+			return
+		}
+
+		if err := gitx.UploadArchive(ctx, repoPath, sess, sess); err != nil {
+			s.gitError(sess, internalServerErrMsg, err)
+			return
+		}
+
+		sess.Exit(0)
+
 	case "git-receive-pack":
 		if !authorized {
 			s.gitError(sess, unauthorizedErrMsg, nil)
