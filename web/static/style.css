@@ -90,6 +90,7 @@ nav ul li {
 .nowrap { white-space: nowrap; }
 .fill { width: 100%; }
 .muted { color: var(--gray); }
+.padtop { padding-top: 20px; }
 
 .center {
   display: flex;
@@ -193,14 +194,8 @@ nav ul li {
   align-items: flex-start;
 }
 
-.repo-index-main {
-  flex: 0 0 72ch;
-}
-
-.repo-index-main .box {
-  width: 100%;
-}
-
+.repo-index-main { flex: 0 0 72ch; }
+.repo-index-main .box { width: 100%; }
 .repo-index-side {
   flex: 0 0 26rem;
   min-width: 0;
@@ -221,9 +216,7 @@ nav ul li {
 }
 
 /* tree */
-.tree, .log, .repo-index {
-  margin-bottom: 2em;
-}
+.tree, .log, .repo-index { margin-bottom: 2em; }
 
 /* file View */
 .file-wrapper {
@@ -339,13 +332,10 @@ nav ul li {
   padding-top: 0.7em;
 }
 
+.refs strong { padding-right: 1em; }
 .refs pre {
   padding-bottom: 0.5rem;
   white-space: pre-wrap;
-}
-
-.refs strong {
-  padding-right: 1em;
 }
 
 .tag-message { margin-left: 0.5rem; }
