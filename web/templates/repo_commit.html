@@ -98,7 +98,7 @@
             {{ else }}<span class="diff-type diff-mod">M</span>{{ end }}
 
             {{ if .IsNew }}<a href="/{{ $.RepoName }}/blob/{{ $this }}/{{ .Name.New }}">{{ .Name.New }}</a>{{ else }}
-            {{ if $parent }}<a href="/{{ $.RepoName }}/blob/{{ $parent }}/{{ .Name.Old }}">{{ .Name.Old }}</a>
+            {{ if $parent }}<a href="/{{ $.RepoName }}/blob/{{ $parent }}/{{ .Name.New }}">{{ .Name.New }}</a>
             {{ else }}{{ .Name.Old }}{{ end }}
             {{ if .IsRename }}&#8594;<a href="/{{ $.RepoName }}/blob/{{ $this }}/{{ .Name.New }}">{{ .Name.New }}</a>{{ end }}
             {{ end }}
