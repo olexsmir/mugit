@@ -5,10 +5,12 @@
 ### Features:
 - Paginate log page (150 commits per page).
 - Support `git-upload-archive`.
+- Better CSS for markdown readmes.
 
 ### Bug fixes:
 - Allow downloading only valid and existing refs.
 - Support refs with special characters in names (e.g. `/` or `#`).
+- Previously when viewing first commit in repo diffs were not rendered.
 
 ## 0.2.0
 
