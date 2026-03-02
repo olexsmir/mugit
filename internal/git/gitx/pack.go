@@ -4,16 +4,18 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strings"
 )
 
 // InfoRefs executes git-upload-pack --advertise-refs for smart-HTTP discovery.
-func InfoRefs(ctx context.Context, repoDir string, out io.Writer) error {
-	if err := PackLine(out, "# service=git-upload-pack\n"); err != nil {
-		return fmt.Errorf("write pack line: %w", err)
-	}
-
-	if err := PackFlush(out); err != nil {
-		return fmt.Errorf("flush pack: %w", err)
+func InfoRefs(ctx context.Context, repoDir, protocol string, out io.Writer) error {
+	if !strings.Contains(protocol, "version=2") {
+		if err := PackLine(out, "# service=git-upload-pack\n"); err != nil {
+			return fmt.Errorf("write pack line: %w", err)
+		}
+		if err := PackFlush(out); err != nil {
+			return fmt.Errorf("flush pack: %w", err)
+		}
 	}
 
 	if err := gitCmd(ctx, cmdOpts{

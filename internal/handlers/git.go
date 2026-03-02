@@ -19,6 +19,7 @@ func (h *handlers) infoRefsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	service := r.URL.Query().Get("service")
+	gitProtocol := r.Header.Get("Git-Protocol")
 	switch service {
 	case "git-upload-pack":
 		w.Header().Set("Content-Type", "application/x-git-upload-pack-advertisement")
@@ -26,7 +27,7 @@ func (h *handlers) infoRefsHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-cache, max-age=0, must-revalidate")
 
 		w.WriteHeader(http.StatusOK)
-		if err := gitx.InfoRefs(r.Context(), path, w); err != nil {
+		if err := gitx.InfoRefs(r.Context(), path, gitProtocol, w); err != nil {
 			h.gitError(w, http.StatusInternalServerError, err.Error())
 			slog.Error("git: info/refs", "err", err)
 			return
