@@ -60,12 +60,11 @@ func (h *handlers) repoFeedHandler(w http.ResponseWriter, r *http.Request) {
 	for _, tag := range tags {
 		href, _ := url.JoinPath("http://", h.c.Meta.Host, repoName, "tree", tag.Name())
 		feed.Items = append(feed.Items, &feeds.Item{
-			Id:          "t:" + tag.Name(),
-			Title:       "tag: " + tag.Name(),
-			Link:        &feeds.Link{Href: href},
-			Description: desc,
-			Updated:     tag.When(),
-			Content:     tag.Message(),
+			Id:      "t:" + tag.Name(),
+			Title:   "tag: " + tag.Name(),
+			Link:    &feeds.Link{Href: href},
+			Updated: tag.When(),
+			Content: tag.Message(),
 		})
 	}
 
