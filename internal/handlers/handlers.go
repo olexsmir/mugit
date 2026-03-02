@@ -39,7 +39,7 @@ func InitRoutes(cfg *config.Config) http.Handler {
 	mux.HandleFunc("GET /", h.indexHandler)
 	mux.HandleFunc("GET /index.xml", h.indexFeedHandler)
 	mux.HandleFunc("GET /static/{file}", h.serveStaticHandler)
-	mux.HandleFunc("GET /{name}", h.repoIndex)
+	mux.HandleFunc("GET /{name}", h.repoIndexHandler)
 	mux.HandleFunc("GET /{name}/info/refs", h.infoRefsHandler)
 	mux.HandleFunc("POST /{name}/git-upload-pack", h.uploadPackHandler)
 	mux.HandleFunc("POST /{name}/git-receive-pack", h.receivePackHandler)

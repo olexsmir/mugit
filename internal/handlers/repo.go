@@ -59,7 +59,7 @@ type RepoIndex struct {
 	MirrorLastSync time.Time
 }
 
-func (h *handlers) repoIndex(w http.ResponseWriter, r *http.Request) {
+func (h *handlers) repoIndexHandler(w http.ResponseWriter, r *http.Request) {
 	repo, err := h.openPublicRepo(r.PathValue("name"), "")
 	if err != nil {
 		h.write404(w, err)
