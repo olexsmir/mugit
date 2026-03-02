@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"compress/gzip"
 	"fmt"
 	"io"
 	"log/slog"
@@ -10,58 +11,77 @@ import (
 	"olexsmir.xyz/mugit/internal/git/gitx"
 )
 
-// multiplex, check if the request smells like gitprotocol-http(5), if so, it
-// passes it to git smart http, otherwise renders templates
-func (h *handlers) multiplex(w http.ResponseWriter, r *http.Request) {
-	if r.URL.RawQuery == "service=git-receive-pack" {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("http pushing is not supported"))
+func (h *handlers) infoRefsHandler(w http.ResponseWriter, r *http.Request) {
+	path, err := h.checkRepoPublicityAndGetPath(r.PathValue("name"), "")
+	if err != nil {
+		h.gitError(w, http.StatusNotFound, "repository not found")
 		return
 	}
 
-	path := r.PathValue("rest")
-	if path == "info/refs" && r.Method == "GET" && r.URL.RawQuery == "service=git-upload-pack" {
-		h.infoRefs(w, r)
-	} else if path == "git-upload-pack" && r.Method == "POST" {
-		h.uploadPack(w, r)
-	} else if r.Method == "GET" && path == "" {
-		h.repoIndex(w, r)
-	} else {
-		h.write404(w, nil)
+	service := r.URL.Query().Get("service")
+	switch service {
+	case "git-upload-pack":
+		w.Header().Set("Content-Type", "application/x-git-upload-pack-advertisement")
+		w.Header().Set("Connection", "Keep-Alive")
+		w.Header().Set("Cache-Control", "no-cache, max-age=0, must-revalidate")
+
+		w.WriteHeader(http.StatusOK)
+		if err := gitx.InfoRefs(r.Context(), path, w); err != nil {
+			h.gitError(w, http.StatusInternalServerError, err.Error())
+			slog.Error("git: info/refs", "err", err)
+			return
+		}
+
+	case "git-receive-pack":
+		h.receivePackHandler(w, r)
+
+	default:
+		h.gitError(w, http.StatusBadRequest, "service unsupported")
 	}
 }
 
-func (h *handlers) infoRefs(w http.ResponseWriter, r *http.Request) {
+const uploadPackExpectedContentType = "application/x-git-upload-pack-request"
+
+func (h *handlers) uploadPackHandler(w http.ResponseWriter, r *http.Request) {
 	path, err := h.checkRepoPublicityAndGetPath(r.PathValue("name"), "")
 	if err != nil {
-		h.write404(w, err)
+		h.gitError(w, http.StatusNotFound, "repository not found")
 		return
 	}
 
-	w.Header().Set("content-type", "application/x-git-upload-pack-advertisement")
-	w.WriteHeader(http.StatusOK)
-	if err := gitx.InfoRefs(r.Context(), path, w); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		slog.Error("git: info/refs", "err", err)
+	contentType := r.Header.Get("Content-Type")
+	if contentType != uploadPackExpectedContentType {
+		h.gitError(w, http.StatusUnsupportedMediaType, "provided content type is not supported")
 		return
 	}
-}
 
-func (h *handlers) uploadPack(w http.ResponseWriter, r *http.Request) {
-	path, err := h.checkRepoPublicityAndGetPath(r.PathValue("name"), "")
-	if err != nil {
-		h.write404(w, err)
-		return
+	bodyReader := r.Body
+	if r.Header.Get("Content-Encoding") == "gzip" {
+		gzipReader, err := gzip.NewReader(r.Body)
+		if err != nil {
+			h.gitError(w, http.StatusInternalServerError, err.Error())
+			slog.Error("git: failed to create gzip reader", "err", err)
+			return
+		}
+		defer gzipReader.Close()
+		bodyReader = gzipReader
 	}
 
 	w.Header().Set("Content-Type", "application/x-git-upload-pack-result")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Connection", "Keep-Alive")
+	w.Header().Set("Cache-Control", "no-cache, max-age=0, must-revalidate")
 
-	if err := gitx.UploadPack(r.Context(), path, true, r.Body, newFlushWriter(w)); err != nil {
+	w.WriteHeader(http.StatusOK)
+	if err := gitx.UploadPack(r.Context(), path, true, bodyReader, newFlushWriter(w)); err != nil {
+		h.gitError(w, http.StatusInternalServerError, err.Error())
 		slog.Error("git: upload-pack", "err", err)
 		return
+
 	}
+}
+
+func (h *handlers) receivePackHandler(w http.ResponseWriter, _ *http.Request) {
+	h.gitError(w, http.StatusForbidden, "pushes are only supported over ssh")
 }
 
 func (h *handlers) archiveHandler(w http.ResponseWriter, r *http.Request) {
@@ -83,6 +103,12 @@ func (h *handlers) archiveHandler(w http.ResponseWriter, r *http.Request) {
 		slog.Error("git: archive", "ref", ref, "err", err)
 		return
 	}
+}
+
+func (h *handlers) gitError(w http.ResponseWriter, code int, msg string) {
+	w.Header().Set("content-type", "text/plain; charset=UTF-8")
+	w.WriteHeader(code)
+	fmt.Fprintf(w, "%s\n", msg)
 }
 
 func (h *handlers) checkRepoPublicityAndGetPath(name string, ref string) (string, error) {
