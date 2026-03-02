@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"mime"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -12,22 +13,26 @@ import (
 )
 
 type NiceTree struct {
-	Name      string
-	Mode      string
-	Size      int64
-	IsFile    bool
-	IsSubtree bool
+	IsFile bool
+	Name   string
+	Commit *Commit
+	Mode   string
+	Size   int64
 }
 
-func makeNiceTree(t *object.Tree) []NiceTree {
-	nts := []NiceTree{}
+func (g *Repo) makeNiceTree(t *object.Tree, parent string) []NiceTree {
+	var nts []NiceTree
 	for _, e := range t.Entries {
 		mode, _ := e.Mode.ToOSFileMode()
 		sz, _ := t.Size(e.Name)
+
+		// TODO: this should be cached, its pretty expensive
+		lc, _ := g.lastCommitForFile(path.Join(parent, e.Name))
 		nts = append(nts, NiceTree{
 			Name:   e.Name,
 			Mode:   mode.String(),
 			IsFile: e.Mode.IsFile(),
+			Commit: lc,
 			Size:   sz,
 		})
 	}
@@ -40,14 +45,14 @@ func (g *Repo) FileTree(path string) ([]NiceTree, error) {
 		return nil, fmt.Errorf("commit object: %w", err)
 	}
 
-	files := []NiceTree{}
 	tree, err := c.Tree()
 	if err != nil {
 		return nil, fmt.Errorf("file tree: %w", err)
 	}
 
+	var files []NiceTree
 	if path == "" {
-		files = makeNiceTree(tree)
+		files = g.makeNiceTree(tree, path)
 	} else {
 		o, err := tree.FindEntry(path)
 		if err != nil {
@@ -59,7 +64,7 @@ func (g *Repo) FileTree(path string) ([]NiceTree, error) {
 			if err != nil {
 				return nil, err
 			}
-			files = makeNiceTree(subtree)
+			files = g.makeNiceTree(subtree, path)
 		}
 	}
 
@@ -117,10 +122,9 @@ func (g *Repo) FileContent(path string) (*FileContent, error) {
 	isBin, _ := file.IsBinary()
 	mimeType := mime.TypeByExtension(filepath.Ext(path))
 	if mimeType == "" {
+		mimeType = "text/plain"
 		if isBin {
 			mimeType = "application/octet-stream"
-		} else {
-			mimeType = "text/plain"
 		}
 	}
 

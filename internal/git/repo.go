@@ -186,6 +186,52 @@ func (g *Repo) LastCommit() (*Commit, error) {
 	return newCommit(c), nil
 }
 
+func (g *Repo) lastCommitForFile(filepath string) (*Commit, error) {
+	iter, err := g.r.Log(&git.LogOptions{
+		From:  g.h,
+		Order: git.LogOrderCommitterTime,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to log: %w", err)
+	}
+	defer iter.Close()
+
+	var prevHash plumbing.Hash
+	var result *object.Commit
+	err = iter.ForEach(func(com *object.Commit) error {
+		tree, terr := com.Tree()
+		if terr != nil {
+			return terr
+		}
+
+		var hash plumbing.Hash
+		entry, eerr := tree.FindEntry(filepath)
+		if eerr == nil {
+			hash = entry.Hash
+		} else {
+			file, ferr := tree.File(filepath)
+			if ferr != nil {
+				return storer.ErrStop
+			}
+			hash = file.Hash
+		}
+
+		if hash != prevHash {
+			result = com
+			prevHash = hash
+		}
+		return nil
+	})
+
+	if !errors.Is(err, storer.ErrStop) && err != nil {
+		return nil, fmt.Errorf("failed to walk commits: %w", err)
+	}
+	if result == nil {
+		return nil, fmt.Errorf("no commits found for path: %s", filepath)
+	}
+	return newCommit(result), nil
+}
+
 type Branch struct {
 	Name       string
 	LastUpdate time.Time

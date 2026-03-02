@@ -14,31 +14,33 @@
       <table class="table tree">
         <thead>
           <tr class="nohover">
-            <th class="mode nowrap">mode</th>
-            <th class="size nowrap">size</th>
-            <th class="fill">name</th>
+            <th class="nowrap">name</th>
+            <th class="fill">last commit</th>
+            <th class="nowrap">last update</th>
           </tr>
         </thead>
         <tbody>
           {{ if $parent }}
           <tr>
-            <td class="mode nowrap"></td>
-            <td class="size nowrap"></td>
-            <td class="fill"><a href="/{{ $name }}/tree/{{ urlencode $ref }}/{{ .P.DotDot }}">..</a></td>
+            <td class="nowrap"><a href="/{{ $name }}/tree/{{ urlencode $ref }}/{{ .P.DotDot }}">..</a></td>
+            <th class="fill"></th>
+            <th class="nowrap"></th>
           </tr>
           {{ end }}
 
           {{ range .P.Tree }}
           {{ if not .IsFile }}
           <tr>
-            <td class="mode nowrap">{{ .Mode }}</td>
-            <td class="size nowrap">{{ .Size }}</td>
+            <td class="nowrap">
+              {{ if $parent }}<a href="/{{ $name}}/tree/{{ urlencode $ref }}/{{ $parent }}/{{ .Name }}">{{ .Name }}/</a>
+              {{ else }}<a href="/{{ $name }}/tree/{{ urlencode $ref }}/{{ .Name }}">{{ .Name }}/</a>{{ end }}
+            </td>
             <td class="fill">
-              {{ if $parent }}
-              <a href="/{{ $name}}/tree/{{ urlencode $ref }}/{{ $parent }}/{{ .Name }}">{{ .Name }}/</a>
-              {{ else }}
-              <a href="/{{ $name }}/tree/{{ urlencode $ref }}/{{ .Name }}">{{ .Name }}/</a>
-              {{ end }}
+              <a href="/{{ $name }}/commit/{{ .Commit.Hash }}">{{ commitSummary .Commit.Message }}</a>
+            </td>
+            <td class="age nowrap">
+              <a href="/{{ $.RepoName }}/commit/{{ .Commit.Hash }}">{{ humanizeRelTime .Commit.Committed }}</a>
+              <span class="tooltip" role="tooltip">{{ humanizeTime .Commit.Committed }}</span>
             </td>
           </tr>
           {{ end }}
@@ -47,14 +49,16 @@
           {{ range .P.Tree }}
           {{ if .IsFile }}
           <tr>
-            <td class="mode nowrap">{{ .Mode }}</td>
-            <td class="size nowrap">{{ .Size }}</td>
+            <td class="nowrap">
+              {{ if $parent }}<a href="/{{ $name }}/blob/{{ urlencode $ref }}/{{ $parent }}/{{ .Name }}">{{ .Name }}</a>
+              {{ else }}<a href="/{{ $name }}/blob/{{ urlencode $ref }}/{{ .Name }}">{{ .Name }}</a>{{ end }}
+            </td>
             <td class="fill">
-              {{ if $parent }}
-              <a href="/{{ $name }}/blob/{{ urlencode $ref }}/{{ $parent }}/{{ .Name }}">{{ .Name }}</a>
-              {{ else }}
-              <a href="/{{ $name }}/blob/{{ urlencode $ref }}/{{ .Name }}">{{ .Name }}</a>
-              {{ end }}
+              <a href="/{{ $.RepoName }}/commit/{{ .Commit.Hash }}">{{ commitSummary .Commit.Message }}</a>
+            </td>
+            <td class="age nowrap">
+              <a href="/{{ $.RepoName }}/commit/{{ .Commit.Hash }}">{{ humanizeRelTime .Commit.Committed }}</a>
+              <span class="tooltip" role="tooltip">{{ humanizeTime .Commit.Committed }}</span>
             </td>
           </tr>
           {{ end }}
