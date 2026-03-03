@@ -13,12 +13,10 @@ import (
 )
 
 func (c *Cli) repoNewAction(ctx context.Context, cmd *cli.Command) error {
-	name := cmd.StringArg("name")
+	name, err := c.getRepoNameArg(cmd)
 	if name == "" {
-		return fmt.Errorf("no name provided")
+		return err
 	}
-
-	name = strings.TrimRight(name, ".git") + ".git"
 
 	path, err := securejoin.SecureJoin(c.cfg.Repo.Dir, name)
 	if err != nil {
@@ -56,12 +54,10 @@ func (c *Cli) repoNewAction(ctx context.Context, cmd *cli.Command) error {
 }
 
 func (c *Cli) repoDescriptionAction(ctx context.Context, cmd *cli.Command) error {
-	name := cmd.StringArg("name")
+	name, err := c.getRepoNameArg(cmd)
 	if name == "" {
-		return fmt.Errorf("no name provided")
+		return err
 	}
-
-	name = strings.TrimRight(name, ".git") + ".git"
 
 	repo, err := c.openRepo(name)
 	if err != nil {
@@ -85,12 +81,10 @@ func (c *Cli) repoDescriptionAction(ctx context.Context, cmd *cli.Command) error
 }
 
 func (c *Cli) repoPrivateAction(ctx context.Context, cmd *cli.Command) error {
-	name := cmd.StringArg("name")
+	name, err := c.getRepoNameArg(cmd)
 	if name == "" {
-		return fmt.Errorf("no name provided")
+		return err
 	}
-
-	name = strings.TrimRight(name, ".git") + ".git"
 
 	repo, err := c.openRepo(name)
 	if err != nil {
@@ -109,4 +103,30 @@ func (c *Cli) repoPrivateAction(ctx context.Context, cmd *cli.Command) error {
 
 	slog.Info("new repo private status", "repo", name, "is_private", newStatus)
 	return nil
+}
+
+func (c *Cli) repoCheckoutAction(ctx context.Context, cmd *cli.Command) error {
+	name, err := c.getRepoNameArg(cmd)
+	if name == "" {
+		return err
+	}
+
+	repo, err := c.openRepo(name)
+	if err != nil {
+		return fmt.Errorf("failed to open repo: %w", err)
+	}
+
+	branch := cmd.Args().Get(0)
+	slog.Info("chaining repo head", "repo", name, "branch", branch)
+	err = repo.Checkout(branch)
+	return err
+}
+
+func (c *Cli) getRepoNameArg(cmd *cli.Command) (string, error) {
+	name := cmd.StringArg("name")
+	if name == "" {
+		return "", fmt.Errorf("no name provided")
+	}
+	name = strings.TrimRight(name, ".git") + ".git"
+	return name, nil
 }

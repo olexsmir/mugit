@@ -95,6 +95,12 @@ func (g *Repo) Name() string {
 	return strings.TrimSuffix(name, ".git")
 }
 
+func (g *Repo) Checkout(ref string) error {
+	head := plumbing.NewSymbolicReference(plumbing.HEAD,
+		plumbing.NewBranchReferenceName(ref))
+	return g.r.Storer.SetReference(head)
+}
+
 type Commit struct {
 	Message        string
 	AuthorEmail    string
