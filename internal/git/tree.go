@@ -73,17 +73,14 @@ func (g *Repo) FileTree(path string) ([]NiceTree, error) {
 
 type FileContent struct {
 	IsBinary bool
+	IsImage  bool
 	Content  []byte
 	Mime     string
 	Size     int64
 }
 
-func (fc FileContent) IsImage() bool {
-	return strings.HasPrefix(fc.Mime, "image/")
-}
-
 func (fc *FileContent) String() string {
-	if fc.IsBinary {
+	if fc.IsBinary || fc.IsImage {
 		return ""
 	}
 	return string(fc.Content)
@@ -130,6 +127,7 @@ func (g *Repo) FileContent(path string) (*FileContent, error) {
 
 	return &FileContent{
 		IsBinary: isBin,
+		IsImage:  strings.HasPrefix(mimeType, "image/"),
 		Content:  content,
 		Mime:     mimeType,
 		Size:     file.Size,

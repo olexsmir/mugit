@@ -205,7 +205,7 @@ func (h *handlers) fileContentsHandler(w http.ResponseWriter, r *http.Request) {
 	p := RepoFile{
 		Ref:      ref,
 		Path:     treePath,
-		IsImage:  fc.IsImage(),
+		IsImage:  fc.IsImage,
 		IsBinary: fc.IsBinary,
 		Mime:     fc.Mime,
 		Size:     fc.Size,
@@ -217,7 +217,7 @@ func (h *handlers) fileContentsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !fc.IsImage() && !fc.IsBinary {
+	if !fc.IsImage && !fc.IsBinary {
 		contentStr := fc.String()
 		lc, err := countLines(strings.NewReader(contentStr))
 		if err != nil {
@@ -470,7 +470,7 @@ func (h *handlers) renderReadme(r *git.Repo, ref, treePath string) (template.HTM
 			continue
 		}
 
-		if fc.IsBinary {
+		if fc.IsBinary && fc.IsImage {
 			continue
 		}
 
