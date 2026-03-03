@@ -265,7 +265,7 @@ func (h *handlers) logHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// if we got full page of commits, we probably have more.
-	// NOTE: this has edge case, when last page has git.CommitsPage, "load more would be shown"
+	// NOTE: this has an edge case, when last page is len(git.CommitsPage), "load more" would be shown
 	nextAfter := ""
 	if len(commits) == git.CommitsPage && len(commits) > 0 {
 		nextAfter = commits[len(commits)-1].HashShort
