@@ -486,7 +486,7 @@ func (h *handlers) renderReadme(r *git.Repo, ref, treePath string) (template.HTM
 				return template.HTML(readme), nil
 
 			default:
-				readmeContents = template.HTML(fmt.Sprintf(`<pre>%s</pre>`, content))
+				readmeContents = template.HTML(fmt.Sprintf(`<pre class="raw">%s</pre>`, content))
 			}
 			break
 		}

@@ -373,6 +373,11 @@ nav ul li {
   padding: 0.6rem;
 }
 
+.readme pre.raw {
+  background: unset;
+  padding: unset;
+}
+
 .readme details > * { padding-left: 1em; }
 .readme details[data-callout] {
   border-left: 4px solid var(--gray);
