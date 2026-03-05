@@ -36,6 +36,7 @@ type RepoConfig struct {
 
 type SSHConfig struct {
 	Enable  bool     `yaml:"enable"`
+	User    string   `yaml:"user"`
 	Port    int      `yaml:"port"`
 	HostKey string   `yaml:"host_key"`
 	Keys    []string `yaml:"keys"`
@@ -117,13 +118,9 @@ func pathOrDefaultWithCandidates(path string, candidates []string) string {
 }
 
 func (c *Config) ensureDefaults() {
-	// ports
+	// http
 	if c.Server.Port == 0 {
 		c.Server.Port = 8080
-	}
-
-	if c.SSH.Port == 0 {
-		c.SSH.Port = 2222
 	}
 
 	// meta
@@ -143,6 +140,15 @@ func (c *Config) ensureDefaults() {
 			"README.txt", "readme.txt",
 			"readme",
 		}
+	}
+
+	// ssh
+	if c.SSH.Port == 0 {
+		c.SSH.Port = 2222
+	}
+
+	if c.SSH.User == "" {
+		c.SSH.User = "git"
 	}
 
 	// mirroring

@@ -35,7 +35,7 @@
         <div class="repo-index-side">
           <h2>Clone urls</h2>
           <pre>https://{{.Meta.Host}}/{{.RepoName}}</pre>
-          {{ if .Meta.SSHEnabled }}<pre>git@{{.Meta.Host}}:{{.RepoName}}</pre>{{end}}
+          {{ if .Meta.SSHEnabled }}<pre>{{ .P.SSHUser }}@{{.Meta.Host}}:{{.RepoName}}</pre>{{end}}
           {{- if .P.IsMirror -}}
           <br>
           <h2>Mirror status</h2>

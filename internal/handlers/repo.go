@@ -50,6 +50,7 @@ func (h *handlers) indexHandler(w http.ResponseWriter, r *http.Request) {
 
 type RepoIndex struct {
 	Desc           string
+	SSHUser        string
 	IsEmpty        bool
 	Readme         template.HTML
 	Ref            string
@@ -106,6 +107,7 @@ func (h *handlers) repoIndexHandler(w http.ResponseWriter, r *http.Request) {
 		p.MirrorLastSync, _ = repo.LastSync()
 	}
 
+	p.SSHUser = h.c.SSH.User
 	h.templ(w, "repo_index", h.pageData(repo, p))
 }
 

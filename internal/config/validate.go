@@ -3,8 +3,11 @@ package config
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 )
+
+var validUserNameRe = regexp.MustCompile("^[a-z_][a-z0-9_-]{0,31}$")
 
 func (c Config) validate() error {
 	var errs []error
@@ -32,6 +35,10 @@ func (c Config) validate() error {
 
 		if c.SSH.Port == c.Server.Port {
 			errs = append(errs, fmt.Errorf("ssh.port must differ from server.port (both are %d)", c.Server.Port))
+		}
+
+		if !validUserNameRe.MatchString(c.SSH.User) {
+			errs = append(errs, fmt.Errorf("ssh.user must be correct linux user name(^[a-z_][a-z0-9_-]{0,31}$)"))
 		}
 
 		if !isFileExists(c.SSH.HostKey) {
