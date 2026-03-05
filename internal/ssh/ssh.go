@@ -9,7 +9,6 @@ import (
 	"github.com/gliderlabs/ssh"
 	"olexsmir.xyz/mugit/internal/config"
 	"olexsmir.xyz/mugit/internal/git"
-	"olexsmir.xyz/mugit/internal/git/gitx"
 
 	gossh "golang.org/x/crypto/ssh"
 )
@@ -100,7 +99,7 @@ func (s *Server) handler(sess ssh.Session) {
 			return
 		}
 
-		if err := gitx.UploadPack(ctx, repoPath, false, sess, sess); err != nil {
+		if err := repo.UploadPack(ctx, false, "", sess, sess); err != nil {
 			s.gitError(sess, internalServerErrMsg, err)
 			return
 		}
@@ -119,7 +118,7 @@ func (s *Server) handler(sess ssh.Session) {
 			return
 		}
 
-		if err := gitx.UploadArchive(ctx, repoPath, sess, sess); err != nil {
+		if err := repo.UploadArchive(ctx, sess, sess); err != nil {
 			s.gitError(sess, internalServerErrMsg, err)
 			return
 		}
@@ -132,7 +131,7 @@ func (s *Server) handler(sess ssh.Session) {
 			return
 		}
 
-		if err := gitx.ReceivePack(ctx, repoPath, sess, sess, sess.Stderr()); err != nil {
+		if err := repo.ReceivePack(ctx, sess, sess, sess.Stderr()); err != nil {
 			s.gitError(sess, internalServerErrMsg, err)
 			return
 		}
@@ -179,7 +178,7 @@ func (s *Server) error(sess ssh.Session, msg string, err error) {
 
 func (s *Server) gitError(sess ssh.Session, msg string, err error) {
 	slog.Error("ssh git error", "msg", msg, "err", err)
-	gitx.PackError(sess, msg)
-	gitx.PackFlush(sess)
+	git.PackError(sess, msg)
+	git.PackFlush(sess)
 	sess.Exit(1)
 }

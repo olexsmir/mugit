@@ -1,4 +1,4 @@
-package gitx
+package git
 
 import (
 	"context"
@@ -9,14 +9,14 @@ import (
 )
 
 // ArchiveTar generates a tarball of a git ref.
-func ArchiveTar(ctx context.Context, repoDir, ref string, out io.Writer) error {
+func (g *Repo) ArchiveTar(ctx context.Context, ref string, out io.Writer) error {
 	if !isValidRef(ref) {
 		return fmt.Errorf("invalid ref: %s", ref)
 	}
 
 	if err := gitCmd(ctx, cmdOpts{
 		Cmd:     []string{"archive", "--format=tar.gz", ref},
-		RepoDir: repoDir,
+		RepoDir: g.path,
 		Stdout:  out,
 	}); err != nil {
 		return fmt.Errorf("git archive %s: %w", ref, err)
@@ -25,10 +25,10 @@ func ArchiveTar(ctx context.Context, repoDir, ref string, out io.Writer) error {
 	return nil
 }
 
-func UploadArchive(ctx context.Context, repoDir string, in io.Reader, out io.Writer) error {
+func (g *Repo) UploadArchive(ctx context.Context, in io.Reader, out io.Writer) error {
 	if err := gitCmd(ctx, cmdOpts{
-		RepoDir: repoDir,
 		Cmd:     []string{"upload-archive"},
+		RepoDir: g.path,
 		Stdin:   in,
 		Stdout:  out,
 		Stderr:  out,

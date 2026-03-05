@@ -8,11 +8,10 @@ import (
 	"net/http"
 
 	"olexsmir.xyz/mugit/internal/git"
-	"olexsmir.xyz/mugit/internal/git/gitx"
 )
 
 func (h *handlers) infoRefsHandler(w http.ResponseWriter, r *http.Request) {
-	path, err := h.checkRepoPublicityAndGetPath(r.PathValue("name"), "")
+	repo, err := h.openPublicRepo(r.PathValue("name"), "")
 	if err != nil {
 		h.gitError(w, http.StatusNotFound, "repository not found")
 		return
@@ -27,7 +26,7 @@ func (h *handlers) infoRefsHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-cache, max-age=0, must-revalidate")
 
 		w.WriteHeader(http.StatusOK)
-		if err := gitx.InfoRefs(r.Context(), path, gitProtocol, w); err != nil {
+		if err := repo.InfoRefs(r.Context(), gitProtocol, w); err != nil {
 			h.gitError(w, http.StatusInternalServerError, err.Error())
 			slog.Error("git: info/refs", "err", err)
 			return
@@ -44,7 +43,8 @@ func (h *handlers) infoRefsHandler(w http.ResponseWriter, r *http.Request) {
 const uploadPackExpectedContentType = "application/x-git-upload-pack-request"
 
 func (h *handlers) uploadPackHandler(w http.ResponseWriter, r *http.Request) {
-	path, err := h.checkRepoPublicityAndGetPath(r.PathValue("name"), "")
+	gitProtocol := r.Header.Get("Git-Protocol")
+	repo, err := h.openPublicRepo(r.PathValue("name"), "")
 	if err != nil {
 		h.gitError(w, http.StatusNotFound, "repository not found")
 		return
@@ -73,7 +73,7 @@ func (h *handlers) uploadPackHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-cache, max-age=0, must-revalidate")
 
 	w.WriteHeader(http.StatusOK)
-	if err := gitx.UploadPack(r.Context(), path, true, bodyReader, newFlushWriter(w)); err != nil {
+	if err := repo.UploadPack(r.Context(), true, gitProtocol, bodyReader, newFlushWriter(w)); err != nil {
 		h.gitError(w, http.StatusInternalServerError, err.Error())
 		slog.Error("git: upload-pack", "err", err)
 		return
@@ -89,7 +89,7 @@ func (h *handlers) archiveHandler(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("name")
 	ref := h.parseRef(r.PathValue("ref"))
 
-	path, err := h.checkRepoPublicityAndGetPath(name, ref)
+	repo, err := h.openPublicRepo(name, ref)
 	if err != nil {
 		h.write404(w, err)
 		return
@@ -100,7 +100,7 @@ func (h *handlers) archiveHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/gzip")
 	w.WriteHeader(http.StatusOK)
 
-	if err := gitx.ArchiveTar(r.Context(), path, ref, w); err != nil {
+	if err := repo.ArchiveTar(r.Context(), ref, w); err != nil {
 		slog.Error("git: archive", "ref", ref, "err", err)
 		return
 	}
@@ -110,20 +110,6 @@ func (h *handlers) gitError(w http.ResponseWriter, code int, msg string) {
 	w.Header().Set("content-type", "text/plain; charset=UTF-8")
 	w.WriteHeader(code)
 	fmt.Fprintf(w, "%s\n", msg)
-}
-
-func (h *handlers) checkRepoPublicityAndGetPath(name string, ref string) (string, error) {
-	name = git.ResolveName(name)
-	path, err := git.ResolvePath(h.c.Repo.Dir, name)
-	if err != nil {
-		return "", err
-	}
-
-	if _, oerr := git.OpenPublic(path, ref); oerr != nil {
-		return "", oerr
-	}
-
-	return path, err
 }
 
 func (h *handlers) openPublicRepo(name, ref string) (*git.Repo, error) {
