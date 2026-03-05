@@ -6,6 +6,9 @@
 - Paginate log page (150 commits per page).
 - Support `git-upload-archive`.
 - Better CSS for markdown readmes.
+- Add breadcrumbs on "file content" page.
+- Show last commit associated with file on tree page.
+- Add a way of changing repos head from cli.
 
 ### Bug fixes:
 - Allow downloading only valid and existing refs.
