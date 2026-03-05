@@ -7,7 +7,15 @@
   <body>
     {{ template "repo_header" . }}
     <main>
-      <p>{{ .P.Path }} (<a class="muted" href="?raw=true">view raw</a>)</p>
+      <p>
+        <a class="link" href="/{{ .RepoName }}/tree/{{ .P.Ref }}">{{ .RepoName }}</a>
+        {{- range .P.Breadcrumbs  -}}
+        <span class="mode">/</span>
+        {{- if .IsLast -}}{{- .Name -}}
+        {{- else -}}<a class="link" href="{{ $.RepoName }}/tree/{{ $.P.Ref }}/{{ $.P.Path }}">{{ .Name }}</a>{{- end -}}
+        {{- end -}}
+        (<a class="muted" href="?raw=true">view raw</a>)
+      </p>
       <div class="file-wrapper">
         {{ if .P.IsImage }}
         <div class="image-viewer">

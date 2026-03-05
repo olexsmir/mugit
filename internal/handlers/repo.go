@@ -158,15 +158,16 @@ func (h *handlers) repoTreeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type RepoFile struct {
-	Ref       string
-	Desc      string
-	LineCount []int
-	Path      string
-	IsImage   bool
-	IsBinary  bool
-	Content   string
-	Mime      string
-	Size      int64
+	Ref         string
+	Desc        string
+	LineCount   []int
+	Breadcrumbs []Breadcrumb
+	Path        string
+	IsImage     bool
+	IsBinary    bool
+	Content     string
+	Mime        string
+	Size        int64
 }
 
 func (h *handlers) fileContentsHandler(w http.ResponseWriter, r *http.Request) {
@@ -228,7 +229,8 @@ func (h *handlers) fileContentsHandler(w http.ResponseWriter, r *http.Request) {
 			lines[i] = i + 1
 		}
 		p.Content = contentStr
-		p.LineCount = lines
+		p.LineCount = lines // TODO: replace with strings.Count(, "\n")
+		p.Breadcrumbs = Breadcrumbs(treePath)
 	}
 
 	h.templ(w, "repo_file", h.pageData(repo, p))
@@ -517,4 +519,26 @@ func (h handlers) pageData(repo *git.Repo, p any) PageData[any] {
 			IsEmpty:     empty,
 		},
 	}
+}
+
+type Breadcrumb struct {
+	Name   string
+	Path   string
+	IsLast bool
+}
+
+func Breadcrumbs(path string) []Breadcrumb {
+	if path == "" {
+		return nil
+	}
+	parts := strings.Split(path, "/")
+	crumbs := make([]Breadcrumb, len(parts))
+	for i, part := range parts {
+		crumbs[i] = Breadcrumb{
+			Name:   part,
+			Path:   strings.Join(parts[:i+1], "/"),
+			IsLast: i == len(parts)-1,
+		}
+	}
+	return crumbs
 }
