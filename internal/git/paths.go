@@ -18,3 +18,20 @@ func ResolvePath(baseDir, repoName string) (string, error) {
 	}
 	return path, err
 }
+
+// topLevelEntry returns the top-level entry name under base for a given path.
+// e.g. base="lua", path="lua/plugins/foo.lua" -> "plugins"
+// e.g. base="",    path="README.md"           -> "README.md"
+// returns "" if path is not under base.
+func topLevelEntry(fullPath, base string) string {
+	if base != "" && base != "." {
+		if !strings.HasPrefix(fullPath, base+"/") {
+			return ""
+		}
+		fullPath = fullPath[len(base)+1:]
+	}
+	if before, _, ok := strings.Cut(fullPath, "/"); ok {
+		return before
+	}
+	return fullPath
+}

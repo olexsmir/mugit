@@ -192,50 +192,66 @@ func (g *Repo) LastCommit() (*Commit, error) {
 	return newCommit(c), nil
 }
 
-func (g *Repo) lastCommitForFile(filepath string) (*Commit, error) {
-	iter, err := g.r.Log(&git.LogOptions{
-		From:  g.h,
-		Order: git.LogOrderCommitterTime,
-	})
+// lastCommitForFilesInTree ...
+// TODO: at the moment it doesn't work well with merges, ideally i would "shell" out it,
+// `git log --pretty:format:%H,%ad,%s --date=iso --name-only -- g.path`
+func (g *Repo) lastCommitForFilesInTree(tree *object.Tree, dirPath string) (map[string]*Commit, error) {
+	log, err := g.r.Log(&git.LogOptions{From: g.h})
 	if err != nil {
-		return nil, fmt.Errorf("failed to log: %w", err)
+		return nil, err
 	}
-	defer iter.Close()
 
-	var prevHash plumbing.Hash
-	var result *object.Commit
-	err = iter.ForEach(func(com *object.Commit) error {
-		tree, terr := com.Tree()
-		if terr != nil {
-			return terr
-		}
-
-		var hash plumbing.Hash
-		entry, eerr := tree.FindEntry(filepath)
-		if eerr == nil {
-			hash = entry.Hash
-		} else {
-			file, ferr := tree.File(filepath)
-			if ferr != nil {
-				return storer.ErrStop
+	result := make(map[string]*Commit)
+	err = log.ForEach(func(c *object.Commit) error {
+		if c.NumParents() == 0 {
+			for _, entry := range tree.Entries {
+				if _, seen := result[entry.Name]; !seen {
+					result[entry.Name] = newCommit(c)
+				}
 			}
-			hash = file.Hash
+			return storer.ErrStop
 		}
 
-		if hash != prevHash {
-			result = com
-			prevHash = hash
+		// skip merge commits
+		if c.NumParents() > 1 {
+			return nil
+		}
+
+		parent, perr := c.Parent(0)
+		if perr != nil {
+			return perr
+		}
+
+		patch, perr := parent.Patch(c)
+		if perr != nil {
+			return perr
+		}
+
+		for _, fp := range patch.FilePatches() {
+			from, to := fp.Files()
+
+			var affectedPath string
+			if to != nil {
+				affectedPath = to.Path()
+			} else if from != nil {
+				affectedPath = from.Path()
+			}
+
+			name := topLevelEntry(affectedPath, dirPath)
+			if name == "" {
+				continue
+			}
+
+			if _, seen := result[name]; !seen {
+				result[name] = newCommit(c)
+			}
 		}
 		return nil
 	})
-
-	if !errors.Is(err, storer.ErrStop) && err != nil {
-		return nil, fmt.Errorf("failed to walk commits: %w", err)
+	if err != nil && !errors.Is(err, storer.ErrStop) {
+		return nil, err
 	}
-	if result == nil {
-		return nil, fmt.Errorf("no commits found for path: %s", filepath)
-	}
-	return newCommit(result), nil
+	return result, nil
 }
 
 type Branch struct {

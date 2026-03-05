@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"mime"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -22,17 +21,20 @@ type NiceTree struct {
 
 func (g *Repo) makeNiceTree(t *object.Tree, parent string) []NiceTree {
 	var nts []NiceTree
+
+	cms, err := g.lastCommitForFilesInTree(t, parent)
+	if err != nil {
+		return nts
+	}
+
 	for _, e := range t.Entries {
 		mode, _ := e.Mode.ToOSFileMode()
 		sz, _ := t.Size(e.Name)
-
-		// TODO: this should be cached, its pretty expensive
-		lc, _ := g.lastCommitForFile(path.Join(parent, e.Name))
 		nts = append(nts, NiceTree{
 			Name:   e.Name,
 			Mode:   mode.String(),
 			IsFile: e.Mode.IsFile(),
-			Commit: lc,
+			Commit: cms[e.Name],
 			Size:   sz,
 		})
 	}
