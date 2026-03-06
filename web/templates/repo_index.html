@@ -35,22 +35,20 @@
         <div class="repo-index-side">
           <h2>Clone urls</h2>
           <pre>https://{{.Meta.Host}}/{{.RepoName}}</pre>
-          {{ if .Meta.SSHEnabled }}<pre>{{ .P.SSHUser }}@{{.Meta.Host}}:{{.RepoName}}</pre>{{end}}
-          {{- if .P.IsMirror -}}
+          {{ if .Meta.SSHEnabled }}<pre>{{.P.SSHUser}}@{{.Meta.Host}}:{{.RepoName}}</pre>{{end}}
+          {{ if .P.IsMirror }}
           <br>
           <h2>Mirror status</h2>
           <p>
             Last updated {{ humanizeRelTime .P.MirrorLastSync }} from:
             <a href="{{.P.MirrorURL}}" target="_blank">{{.P.MirrorURL}}</a>
           </p>
-          {{- end}}
+          {{ end }}
         </div>
       </section>
-      {{ end }}
 
-      {{- if .P.Readme }}
-      <article class="readme">{{- .P.Readme -}}</article>
-      {{- end -}}
+      {{ if .P.Readme }}<article class="readme">{{.P.Readme}}</article>{{ end }}
+      {{ end }}
     </main>
   </body>
 </html>

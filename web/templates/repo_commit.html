@@ -1,3 +1,9 @@
+{{ define "_diff_type" }}
+{{ if .IsNew }}<span class="diff-type diff-add">A</span>
+{{ else if .IsDelete }}<span class="diff-type diff-del">D</span>
+{{ else }}<span class="diff-type diff-mod">M</span>{{ end }}
+{{ end }}
+
 {{ define "repo_commit" }}
 {{ $commit := .P.Diff.Commit }}
 {{ $diff := .P.Diff.Diff }}
@@ -65,11 +71,7 @@
               {{ $path := .Name.New }}
               {{ if not $path }}{{ $path = .Name.Old }}{{ end }}
               <tr>
-                <td class="diff-type">
-                  {{ if .IsNew }}<span class="diff-type diff-add">A</span>
-                  {{ else if .IsDelete }}<span class="diff-type diff-del">D</span>
-                  {{ else }}<span class="diff-type diff-mod">M</span>{{ end }}
-                </td>
+                <td class="diff-type">{{ template "_diff_type" . }}</td>
                 <td class="fill">
                   <a href="#{{ $path }}">
                     {{ if .IsRename }}{{ .Name.Old }} &#8594; {{ .Name.New }}
@@ -93,9 +95,7 @@
         {{ if not $path }}{{ $path = .Name.Old }}{{ end }}
         <div id="{{ $path }}">
           <div class="diff">
-            {{ if .IsNew }}<span class="diff-type diff-add">A</span>
-            {{ else if .IsDelete }}<span class="diff-type diff-del">D</span>
-            {{ else }}<span class="diff-type diff-mod">M</span>{{ end }}
+            {{ template "_diff_type" . }}
 
             {{ if .IsNew }}<a href="/{{ $.RepoName }}/blob/{{ $this }}/{{ .Name.New }}">{{ .Name.New }}</a>{{ else }}
             {{ if $parent }}<a href="/{{ $.RepoName }}/blob/{{ $parent }}/{{ .Name.New }}">{{ .Name.New }}</a>
@@ -103,8 +103,7 @@
             {{ if .IsRename }}&#8594;<a href="/{{ $.RepoName }}/blob/{{ $this }}/{{ .Name.New }}">{{ .Name.New }}</a>{{ end }}
             {{ end }}
 
-            {{ if .IsBinary }}
-            <p>Not showing binary file.</p>
+            {{ if .IsBinary }}<p>Not showing binary file.</p>
             {{ else }}
             <pre>
               {{- range .TextFragments -}}
