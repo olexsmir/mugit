@@ -141,6 +141,11 @@
                     default = false;
                     description = "Wharever to run ssh server";
                   };
+                  user = mkOption {
+                    type = types.str;
+                    default = "git";
+                    description = "User used for git access";
+                  };
                   port = mkOption {
                     type = types.port;
                     default = 2222;
