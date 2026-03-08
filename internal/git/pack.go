@@ -18,15 +18,14 @@ func (g *Repo) InfoRefs(ctx context.Context, protocol string, out io.Writer) err
 		}
 	}
 
-	if err := gitCmd(ctx, cmdOpts{
+	if err := g.gitCmd(ctx, cmdOpts{
 		GitProtocol: protocol,
 		Cmd: []string{
 			"-c", "uploadpack.allowFilter=true",
 			"upload-pack", "--stateless-rpc", "--advertise-refs",
 		},
-		RepoDir: g.path,
-		Stdout:  out,
-		Stderr:  out, // TODO: Check if this is correct.
+		Stdout: out,
+		Stderr: out, // TODO: Check if this is correct.
 	}); err != nil {
 		return fmt.Errorf("git-upload-pack: %w", err)
 	}
@@ -41,10 +40,9 @@ func (g *Repo) UploadPack(ctx context.Context, statelessRPC bool, protocol strin
 		cmd = append(cmd, "--stateless-rpc")
 	}
 
-	if err := gitCmd(ctx, cmdOpts{
+	if err := g.gitCmd(ctx, cmdOpts{
 		Cmd:         cmd,
 		GitProtocol: protocol,
-		RepoDir:     g.path,
 		Stdin:       in,
 		Stdout:      out,
 		Stderr:      out, // TODO: Check if this is correct.
@@ -56,12 +54,11 @@ func (g *Repo) UploadPack(ctx context.Context, statelessRPC bool, protocol strin
 
 // ReceivePack executes git-receive-pack for git push.
 func (g *Repo) ReceivePack(ctx context.Context, in io.Reader, out, errout io.Writer) error {
-	if err := gitCmd(ctx, cmdOpts{
-		RepoDir: g.path,
-		Cmd:     []string{"receive-pack"},
-		Stdin:   in,
-		Stdout:  out,
-		Stderr:  errout,
+	if err := g.gitCmd(ctx, cmdOpts{
+		Cmd:    []string{"receive-pack"},
+		Stdin:  in,
+		Stdout: out,
+		Stderr: errout,
 	}); err != nil {
 		return fmt.Errorf("git-receive-pack: %w", err)
 	}

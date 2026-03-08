@@ -14,10 +14,9 @@ func (g *Repo) ArchiveTar(ctx context.Context, ref string, out io.Writer) error 
 		return fmt.Errorf("invalid ref: %s", ref)
 	}
 
-	if err := gitCmd(ctx, cmdOpts{
-		Cmd:     []string{"archive", "--format=tar.gz", ref},
-		RepoDir: g.path,
-		Stdout:  out,
+	if err := g.gitCmd(ctx, cmdOpts{
+		Cmd:    []string{"archive", "--format=tar.gz", ref},
+		Stdout: out,
 	}); err != nil {
 		return fmt.Errorf("git archive %s: %w", ref, err)
 	}
@@ -26,12 +25,11 @@ func (g *Repo) ArchiveTar(ctx context.Context, ref string, out io.Writer) error 
 }
 
 func (g *Repo) UploadArchive(ctx context.Context, in io.Reader, out io.Writer) error {
-	if err := gitCmd(ctx, cmdOpts{
-		Cmd:     []string{"upload-archive"},
-		RepoDir: g.path,
-		Stdin:   in,
-		Stdout:  out,
-		Stderr:  out,
+	if err := g.gitCmd(ctx, cmdOpts{
+		Cmd:    []string{"upload-archive"},
+		Stdin:  in,
+		Stdout: out,
+		Stderr: out,
 	}); err != nil {
 		return fmt.Errorf("git-upload-archive: %w", err)
 	}
