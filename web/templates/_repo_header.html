@@ -5,7 +5,9 @@
   </div>
   <h1 class="repo-name">
     {{ .RepoName }}
+    {{- if .P.Ref }}
     <span class="ref">@ {{ .P.Ref }}</span>
+    {{- end }}
   </h1>
   {{- if .P.Desc }}
   <div class="desc muted">{{ .P.Desc }}</div>
