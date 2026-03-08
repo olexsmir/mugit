@@ -186,8 +186,6 @@ func (g *Repo) lastCommitForFilesInTree(ctx context.Context, subtree *object.Tre
 		}
 
 		line = strings.TrimSpace(line)
-		fmt.Println("LINE", line)
-
 		if line == "" {
 			if !current.hash.IsZero() {
 				c := current.Commit
