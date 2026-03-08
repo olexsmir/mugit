@@ -192,68 +192,6 @@ func (g *Repo) LastCommit() (*Commit, error) {
 	return newCommit(c), nil
 }
 
-// lastCommitForFilesInTree ...
-// TODO: at the moment it doesn't work well with merges, ideally i would "shell" out it,
-// `git log --pretty:format:%H,%ad,%s --date=iso --name-only -- g.path`
-func (g *Repo) lastCommitForFilesInTree(tree *object.Tree, dirPath string) (map[string]*Commit, error) {
-	log, err := g.r.Log(&git.LogOptions{From: g.h})
-	if err != nil {
-		return nil, err
-	}
-
-	result := make(map[string]*Commit)
-	err = log.ForEach(func(c *object.Commit) error {
-		if c.NumParents() == 0 {
-			for _, entry := range tree.Entries {
-				if _, seen := result[entry.Name]; !seen {
-					result[entry.Name] = newCommit(c)
-				}
-			}
-			return storer.ErrStop
-		}
-
-		// skip merge commits
-		if c.NumParents() > 1 {
-			return nil
-		}
-
-		parent, perr := c.Parent(0)
-		if perr != nil {
-			return perr
-		}
-
-		patch, perr := parent.Patch(c)
-		if perr != nil {
-			return perr
-		}
-
-		for _, fp := range patch.FilePatches() {
-			from, to := fp.Files()
-
-			var affectedPath string
-			if to != nil {
-				affectedPath = to.Path()
-			} else if from != nil {
-				affectedPath = from.Path()
-			}
-
-			name := topLevelEntry(affectedPath, dirPath)
-			if name == "" {
-				continue
-			}
-
-			if _, seen := result[name]; !seen {
-				result[name] = newCommit(c)
-			}
-		}
-		return nil
-	})
-	if err != nil && !errors.Is(err, storer.ErrStop) {
-		return nil, err
-	}
-	return result, nil
-}
-
 type Branch struct {
 	Name       string
 	LastUpdate time.Time
