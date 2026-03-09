@@ -24,10 +24,10 @@ type NiceTree struct {
 	Size   int64
 }
 
-func (g *Repo) makeNiceTree(t *object.Tree, parent string) []NiceTree {
+func (g *Repo) makeNiceTree(ctx context.Context, t *object.Tree, parent string) []NiceTree {
 	var nts []NiceTree
 
-	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 
 	cms, err := g.lastCommitForFilesInTree(ctx, t, parent)
@@ -50,7 +50,7 @@ func (g *Repo) makeNiceTree(t *object.Tree, parent string) []NiceTree {
 	return nts
 }
 
-func (g *Repo) FileTree(path string) ([]NiceTree, error) {
+func (g *Repo) FileTree(ctx context.Context, path string) ([]NiceTree, error) {
 	c, err := g.r.CommitObject(g.h)
 	if err != nil {
 		return nil, fmt.Errorf("commit object: %w", err)
@@ -63,7 +63,7 @@ func (g *Repo) FileTree(path string) ([]NiceTree, error) {
 
 	var files []NiceTree
 	if path == "" {
-		files = g.makeNiceTree(tree, path)
+		files = g.makeNiceTree(ctx, tree, path)
 	} else {
 		o, err := tree.FindEntry(path)
 		if err != nil {
@@ -75,7 +75,7 @@ func (g *Repo) FileTree(path string) ([]NiceTree, error) {
 			if err != nil {
 				return nil, err
 			}
-			files = g.makeNiceTree(subtree, path)
+			files = g.makeNiceTree(ctx, subtree, path)
 		}
 	}
 

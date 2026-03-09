@@ -137,7 +137,7 @@ func (h *handlers) repoTreeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tree, err := repo.FileTree(treePath)
+	tree, err := repo.FileTree(r.Context(), treePath)
 	if err != nil {
 		h.write500(w, err)
 		return
