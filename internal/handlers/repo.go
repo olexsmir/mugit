@@ -207,6 +207,7 @@ func (h *handlers) fileContentsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	p.Breadcrumbs = Breadcrumbs(treePath)
 	if !fc.IsImage && !fc.IsBinary {
 		contentStr := fc.String()
 		lc, err := countLines(strings.NewReader(contentStr))
@@ -219,7 +220,6 @@ func (h *handlers) fileContentsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		p.Content = contentStr
 		p.LineCount = lines // TODO: replace with strings.Count(, "\n")
-		p.Breadcrumbs = Breadcrumbs(treePath)
 	}
 
 	h.templ(w, "repo_file", h.pageData(repo, p))
