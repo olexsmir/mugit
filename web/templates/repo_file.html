@@ -12,7 +12,7 @@
         {{- range .P.Breadcrumbs  -}}
         <span class="mode">/</span>
         {{- if .IsLast -}}{{- .Name -}}
-        {{- else -}}<a class="link" href="{{ $.RepoName }}/tree/{{ $.P.Ref }}/{{ $.P.Path }}">{{ .Name }}</a>{{- end -}}
+        {{- else -}}<a class="link" href="/{{ $.RepoName }}/tree/{{ $.P.Ref }}/{{ .Path }}">{{ .Name }}</a>{{- end -}}
         {{- end -}}
         (<a class="muted" href="?raw=true">view raw</a>)
       </p>
