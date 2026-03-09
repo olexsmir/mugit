@@ -46,6 +46,7 @@ func InitRoutes(cfg *config.Config) http.Handler {
 	mux.HandleFunc("GET /{name}/feed/{$}", h.repoFeedHandler)
 	mux.HandleFunc("GET /{name}/tree/{ref}/{rest...}", h.repoTreeHandler)
 	mux.HandleFunc("GET /{name}/blob/{ref}/{rest...}", h.fileContentsHandler)
+	mux.HandleFunc("GET /{name}/raw/{ref}/{rest...}", h.rawFileContentsHandler)
 	mux.HandleFunc("GET /{name}/log/{ref}", h.logHandler)
 	mux.HandleFunc("GET /{name}/commit/{ref}", h.commitHandler)
 	mux.HandleFunc("GET /{name}/refs/{$}", h.refsHandler)

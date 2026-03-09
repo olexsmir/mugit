@@ -87,8 +87,7 @@ func (m *relLinkTransformer) imageFromRepo(dst string) string {
 	}
 
 	absPath := m.path(dst)
-	return path.Join("/", url.PathEscape(m.repoName), "blob", m.repoRef, absPath) +
-		"?raw=true"
+	return path.Join("/", url.PathEscape(m.repoName), "raw", m.repoRef, absPath)
 }
 
 func (m *relLinkTransformer) path(dst string) string {

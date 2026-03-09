@@ -11,7 +11,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -177,11 +176,6 @@ func (h *handlers) fileContentsHandler(w http.ResponseWriter, r *http.Request) {
 	ref := h.parseRef(r.PathValue("ref"))
 	treePath := r.PathValue("rest")
 
-	var raw bool
-	if rawParam, err := strconv.ParseBool(r.URL.Query().Get("raw")); err == nil {
-		raw = rawParam
-	}
-
 	repo, err := h.openPublicRepo(name, ref)
 	if err != nil {
 		h.write404(w, err)
@@ -195,13 +189,6 @@ func (h *handlers) fileContentsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		h.write500(w, err)
-		return
-	}
-
-	if raw {
-		w.Header().Set("Content-Type", fc.Mime)
-		w.WriteHeader(http.StatusOK)
-		w.Write(fc.Content)
 		return
 	}
 
@@ -236,6 +223,36 @@ func (h *handlers) fileContentsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.templ(w, "repo_file", h.pageData(repo, p))
+}
+
+func (h *handlers) rawFileContentsHandler(w http.ResponseWriter, r *http.Request) {
+	name := r.PathValue("name")
+	ref := h.parseRef(r.PathValue("ref"))
+	treePath := r.PathValue("rest")
+
+	repo, err := h.openPublicRepo(name, ref)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		slog.Info("404", "err", err)
+		return
+	}
+
+	fc, err := repo.FileContent(treePath)
+	if err != nil {
+		if errors.Is(err, git.ErrFileNotFound) {
+			w.WriteHeader(http.StatusNotFound)
+			slog.Info("404", "err", err)
+			return
+		}
+
+		w.WriteHeader(http.StatusInternalServerError)
+		slog.Info("500", "err", err)
+		return
+	}
+
+	w.Header().Set("Content-Type", fc.Mime)
+	w.WriteHeader(http.StatusOK)
+	w.Write(fc.Content)
 }
 
 type RepoLog struct {

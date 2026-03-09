@@ -14,19 +14,19 @@
         {{- if .IsLast -}}{{- .Name -}}
         {{- else -}}<a class="link" href="/{{ $.RepoName }}/tree/{{ $.P.Ref }}/{{ .Path }}">{{ .Name }}</a>{{- end -}}
         {{- end -}}
-        (<a class="muted" href="?raw=true">view raw</a>)
+        (<a class="muted" href="/{{ .RepoName }}/raw/{{ .P.Ref }}/{{ .P.Path }}">view raw</a>)
       </p>
       <div class="file-wrapper">
         {{ if .P.IsImage }}
         <div class="image-viewer">
           <p>{{ .P.Mime }} • {{ .P.Size }} bytes</p>
-          <img src="?raw=true" alt="{{- .P.Path -}}">
+          <img src="/{{ .RepoName }}/raw/{{ .P.Ref }}/{{ .P.Path }}" alt="{{- .P.Path -}}">
         </div>
         {{ else if .P.IsBinary }}
         <div class="binary-viewer">
           <p>Binary file ({{ .P.Mime }})</p>
           <p>Size: {{ .P.Size }} bytes</p>
-          <a class="link" href="?raw=true" download>[ Download ]</a>
+          <a class="link" href="/{{ .RepoName }}/raw/{{ .P.Ref }}/{{ .P.Path }}" download>[ Download ]</a>
         </div>
         {{ else }}
         <table>
