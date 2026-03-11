@@ -40,7 +40,9 @@
           <br>
           <h2>Mirror status</h2>
           <p>
-            Last updated {{ humanizeRelTime .P.MirrorLastSync }} from:
+            {{ if .P.MirrorLastSync.IsZero }}Was not yet synced from:
+            {{ else }}Last updated {{ humanizeRelTime .P.MirrorLastSync }} from:
+            {{ end }}
             <a href="{{.P.MirrorURL}}" target="_blank">{{.P.MirrorURL}}</a>
           </p>
           {{ end }}
