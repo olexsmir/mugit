@@ -309,11 +309,55 @@ nav ul li {
   background: var(--light-gray);
 }
 
+.diff pre {
+  padding: 0;
+  margin: 0;
+}
+
+.diff-line {
+  display: flex;
+}
+
+.diff-line .line-number {
+  flex-shrink: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  text-align: right;
+  color: var(--gray);
+  border-right: 1px solid var(--light-gray);
+  padding: 0 0.5rem;
+  min-width: 3rem;
+}
+
+.diff-line .line-number a {
+  display: inline;
+  padding: 0;
+}
+
+.diff-line > span:last-child {
+  flex-grow: 1;
+  padding: 0 0.5rem;
+}
+
+.diff-line:target {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+@media (prefers-color-scheme: dark) {
+  .diff-line:target {
+    background: rgba(255, 255, 255, 0.05);
+  }
+}
+
 .diff-stat { padding: 1rem 0 1rem 0; }
 .diff-add { color: var(--diff-add); }
 .diff-del { color: var(--diff-del); }
 .diff-mod { color: var(--cyan); }
 .diff-noop { color: var(--gray); }
+.diff-separator {
+  justify-content: center;
+  background: var(--medium-gray);
+}
 
 .jump { margin-top: 0.5rem; }
 .jump-table { margin-top: 0.25rem; }

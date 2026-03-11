@@ -106,12 +106,38 @@
             {{ else }}
             <pre>
               {{- range .TextFragments -}}
-              <p>{{- .Header -}}</p>
+              <span class="diff-line diff-noop diff-separator">···</span>
+              {{- $o := .OldPosition -}}
+              {{- $n := .NewPosition -}}
               {{- range .Lines -}}
-              {{- if eq .Op.String "+" -}}<span class="diff-add">{{ .String }}</span>
-              {{- else if eq .Op.String "-" -}}<span class="diff-del">{{ .String }}</span>
-              {{- else -}}<span class="diff-noop">{{ .String }}</span>
+              {{- $op := .Op.String -}}
+
+              {{- if eq $op "+" -}}
+              <span class="diff-line diff-add" id="{{ $path }}-N{{ $n }}">
+                <span class="line-number"></span>
+                <a class="line-number" href="#{{ $path }}-N{{ $n }}">{{ $n }}</a>
+                <span>{{ .String }}</span>
+              </span>
+              {{- $n = inc64 $n -}}
+
+              {{- else if eq $op "-" -}}
+              <span class="diff-line diff-del" id="{{ $path }}-O{{ $o }}">
+                <a class="line-number" href="#{{ $path }}-O{{ $o }}">{{ $o }}</a>
+                <span class="line-number"></span>
+                <span>{{ .String }}</span>
+              </span>
+              {{- $o = inc64 $o -}}
+
+              {{- else -}}
+              <span class="diff-line diff-noop" id="{{ $path }}-L{{ $o }}">
+                <a class="line-number" href="#{{ $path }}-L{{ $o }}">{{ $o }}</a>
+                <a class="line-number" href="#{{ $path }}-L{{ $o }}">{{ $n }}</a>
+                <span>{{ .String }}</span>
+              </span>
+              {{- $o = inc64 $o -}}
+              {{- $n = inc64 $n -}}
               {{- end -}}
+
               {{- end -}}
               {{- end -}}
             </pre>

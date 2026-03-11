@@ -9,8 +9,10 @@ import (
 )
 
 type TextFragment struct {
-	Header string
-	Lines  []gitdiff.Line
+	Header      string
+	Lines       []gitdiff.Line
+	OldPosition int64
+	NewPosition int64
 }
 
 type Diff struct {
@@ -70,8 +72,10 @@ func (g *Repo) Diff() (*NiceDiff, error) {
 
 		for _, tf := range d.TextFragments {
 			diff.TextFragments = append(diff.TextFragments, TextFragment{
-				Header: tf.Header(),
-				Lines:  tf.Lines,
+				Header:      tf.Header(),
+				Lines:       tf.Lines,
+				OldPosition: tf.OldPosition,
+				NewPosition: tf.NewPosition,
 			})
 			for _, l := range tf.Lines {
 				switch l.Op {
