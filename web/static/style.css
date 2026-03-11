@@ -103,6 +103,8 @@ nav ul li {
 .commit-hash, .commit-email,
 .diff-type { font-family: var(--mono-font); }
 
+.mb { margin-bottom: 1rem; }
+
 /* tables */
 .table {
   width: 100%;

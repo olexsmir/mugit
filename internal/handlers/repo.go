@@ -111,12 +111,13 @@ func (h *handlers) repoIndexHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type RepoTree struct {
-	Desc       string
-	Ref        string
-	Tree       []git.NiceTree
-	ParentPath string
-	DotDot     string
-	Readme     template.HTML
+	Desc        string
+	Ref         string
+	Tree        []git.NiceTree
+	Breadcrumbs []Breadcrumb
+	ParentPath  string
+	DotDot      string
+	Readme      template.HTML
 }
 
 func (h *handlers) repoTreeHandler(w http.ResponseWriter, r *http.Request) {
@@ -149,12 +150,13 @@ func (h *handlers) repoTreeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.templ(w, "repo_tree", h.pageData(repo, RepoTree{
-		Desc:       desc,
-		Ref:        ref,
-		Tree:       tree,
-		ParentPath: treePath,
-		DotDot:     filepath.Dir(treePath),
-		Readme:     readme,
+		Desc:        desc,
+		Ref:         ref,
+		Tree:        tree,
+		ParentPath:  treePath,
+		DotDot:      filepath.Dir(treePath),
+		Breadcrumbs: Breadcrumbs(treePath),
+		Readme:      readme,
 	}))
 }
 

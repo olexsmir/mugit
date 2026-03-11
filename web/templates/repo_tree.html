@@ -10,7 +10,16 @@
     {{ template "repo_header" . }}
     <main>
       {{ $parent := .P.ParentPath }}
-
+      {{ if .P.Breadcrumbs }}
+      <p class="mb">
+        <a class="link" href="/{{ $name }}/tree/{{ .P.Ref }}">{{ .RepoName }}</a>
+        {{- range .P.Breadcrumbs  -}}
+        <span class="mode">/</span>
+        {{- if .IsLast -}}{{- .Name -}}
+        {{- else -}}<a class="link" href="/{{ $name }}/tree/{{ $.P.Ref }}/{{ .Path }}">{{ .Name }}</a>{{- end -}}
+        {{- end -}}
+      </p>
+      {{ end }}
       <table class="table tree">
         <thead>
           <tr class="nohover">
