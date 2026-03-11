@@ -97,11 +97,10 @@
           <div class="diff">
             {{ template "_diff_type" . }}
 
-            {{ if .IsNew }}<a href="/{{ $.RepoName }}/blob/{{ $this }}/{{ .Name.New }}">{{ .Name.New }}</a>{{ else }}
-            {{ if $parent }}<a href="/{{ $.RepoName }}/blob/{{ $parent }}/{{ .Name.New }}">{{ .Name.New }}</a>
-            {{ else }}{{ .Name.Old }}{{ end }}
-            {{ if .IsRename }}&#8594;<a href="/{{ $.RepoName }}/blob/{{ $this }}/{{ .Name.New }}">{{ .Name.New }}</a>{{ end }}
-            {{ end }}
+            {{ $name := .Name.New }}{{ $hash := $this }}
+            {{ if or .IsDelete .IsRename }}{{ $name = .Name.Old }}{{ $hash = $parent }}{{ end }}
+            {{ if $hash }}<a href="/{{ $.RepoName }}/blob/{{ $hash }}/{{ $name }}">{{ $name }}</a>{{ else }}{{ $name }}{{ end }}
+            {{ if .IsRename }} &#8594; <a href="/{{ $.RepoName }}/blob/{{ $this }}/{{ .Name.New }}">{{ .Name.New }}</a>{{ end }}
 
             {{ if .IsBinary }}<p>Not showing binary file.</p>
             {{ else }}
