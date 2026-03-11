@@ -10,6 +10,7 @@ import (
 	securejoin "github.com/cyphar/filepath-securejoin"
 	"github.com/urfave/cli/v3"
 	"olexsmir.xyz/mugit/internal/git"
+	"olexsmir.xyz/mugit/internal/mirror"
 )
 
 func (c *Cli) repoNewAction(ctx context.Context, cmd *cli.Command) error {
@@ -42,8 +43,8 @@ func (c *Cli) repoNewAction(ctx context.Context, cmd *cli.Command) error {
 
 	mirrorURL := cmd.String("mirror")
 	if mirrorURL != "" {
-		if !strings.HasPrefix(mirrorURL, "http") {
-			return fmt.Errorf("only http and https remotes are supported")
+		if err := mirror.IsRemoteSupported(mirrorURL); err != nil {
+			return err
 		}
 		if err := repo.SetMirrorRemote(mirrorURL); err != nil {
 			return fmt.Errorf("failed to set mirror remote: %w", err)

@@ -16,6 +16,13 @@ import (
 	"olexsmir.xyz/mugit/internal/git"
 )
 
+func IsRemoteSupported(remote string) error {
+	if !strings.HasPrefix(remote, "http") {
+		return fmt.Errorf("only http and https remotes are supported")
+	}
+	return nil
+}
+
 type Worker struct {
 	c *config.Config
 }
@@ -88,7 +95,7 @@ func (w *Worker) syncRepo(ctx context.Context, repo *git.Repo) error {
 		return err
 	}
 
-	if err := w.isSupportedRemote(remoteURL); err != nil {
+	if err := IsRemoteSupported(remoteURL); err != nil {
 		slog.Error("mirror: remote is not valid", "repo", name, "err", err)
 		return err
 	}
@@ -145,13 +152,6 @@ func (w *Worker) findMirrorRepos() ([]*git.Repo, error) {
 	}
 
 	return repos, nil
-}
-
-func (w *Worker) isSupportedRemote(remote string) error {
-	if !strings.HasPrefix(remote, "http") {
-		return fmt.Errorf("only http and https remotes are supported")
-	}
-	return nil
 }
 
 func (w *Worker) isRemoteGithub(remoteURL string) bool {
