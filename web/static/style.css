@@ -230,31 +230,32 @@ nav ul li {
   overflow-x: auto;
 }
 
-.line-numbers {
-  white-space: pre-line;
+.file-contents {
+  width: 100%;
+  padding: 0.3em 0 0.3em 0;
+}
+
+.line-number {
+  width: 1%;
   -moz-user-select: -moz-none;
   -khtml-user-select: none;
   -webkit-user-select: none;
   -o-user-select: none;
-  user-select: none;
-  padding-right: 1ch;
 }
 
-.file-content {
-  padding-left: 1.5ch;
-  overflow-y: hidden;
-  overflow-x: auto;
+.line-number a:hover { border-bottom: none; }
+.line-number a {
+    display: block;
+    padding: 0 1rem;
+    text-decoration: none;
 }
+
+.line:has(a:target) { background-color: rgba(0,0,0,0.4); }
+
 .image-viewer, .binary-viewer { padding: 1rem 0; }
 .image-viewer img {
   max-width: 100%;
   height: auto;
-}
-
-.line-numbers pre,
-.file-content pre {
-  margin: 0;
-  line-height: 1.5;
 }
 
 /* commit */

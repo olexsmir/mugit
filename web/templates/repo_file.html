@@ -29,18 +29,16 @@
           <a class="link" href="/{{ .RepoName }}/raw/{{ .P.Ref }}/{{ .P.Path }}" download>[ Download ]</a>
         </div>
         {{ else }}
-        <table>
+        <table class="file-contents" tabindex="-1">
           <tbody>
-            <tr>
-              <td class="line-numbers">
-<pre>{{- range .P.LineCount }}
-<a id="L{{ . }}" href="#L{{ . }}">{{ . }}</a>
-{{- end -}}</pre>
+            {{- range $i, $l := .P.Lines }}
+            <tr class="line">
+              <td class="line-number">
+                <a id="L{{ inc $i }}" href="#L{{ inc $i }}" aria>{{ inc $i }}</a>
               </td>
-              <td class="file-content">
-                <pre>{{- .P.Content -}}</pre>
-              </td>
+              <td><pre>{{ $l }}</pre></td>
             </tr>
+            {{- end -}}
           </tbody>
         </table>
         {{ end }}

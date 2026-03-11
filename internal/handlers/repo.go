@@ -163,12 +163,11 @@ func (h *handlers) repoTreeHandler(w http.ResponseWriter, r *http.Request) {
 type RepoFile struct {
 	Ref         string
 	Desc        string
-	LineCount   []int
+	Lines       []string
 	Breadcrumbs []Breadcrumb
 	Path        string
 	IsImage     bool
 	IsBinary    bool
-	Content     string
 	Mime        string
 	Size        int64
 }
@@ -211,17 +210,7 @@ func (h *handlers) fileContentsHandler(w http.ResponseWriter, r *http.Request) {
 
 	p.Breadcrumbs = Breadcrumbs(treePath)
 	if !fc.IsImage && !fc.IsBinary {
-		contentStr := fc.String()
-		lc, err := countLines(strings.NewReader(contentStr))
-		if err != nil {
-			slog.Error("failed to count line numbers", "err", err)
-		}
-		lines := make([]int, lc)
-		for i := range lines {
-			lines[i] = i + 1
-		}
-		p.Content = contentStr
-		p.LineCount = lines // TODO: replace with strings.Count(, "\n")
+		p.Lines = strings.Split(strings.TrimRight(fc.String(), "\n"), "\n")
 	}
 
 	h.templ(w, "repo_file", h.pageData(repo, p))

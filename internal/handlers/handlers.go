@@ -72,6 +72,7 @@ func (h handlers) parseRef(name string) string {
 }
 
 var templateFuncs = template.FuncMap{
+	"inc":             func(n int) int { return n + 1 },
 	"humanizeRelTime": func(t time.Time) string { return humanize.Time(t) },
 	"humanizeTime":    func(t time.Time) string { return t.Format("2006-01-02 15:04:05 MST") },
 	"urlencode":       func(s string) string { return url.PathEscape(s) },
