@@ -10,7 +10,7 @@
       <p>
         <a class="link" href="/{{ .RepoName }}/tree/{{ .P.Ref }}">{{ .RepoName }}</a>
         {{- range .P.Breadcrumbs  -}}
-        <span class="mode">/</span>
+        <span class="mono">/</span>
         {{- if .IsLast -}}{{- .Name -}}
         {{- else -}}<a class="link" href="/{{ $.RepoName }}/tree/{{ $.P.Ref }}/{{ .Path }}">{{ .Name }}</a>{{- end -}}
         {{- end -}}

@@ -9,9 +9,10 @@
   --darker: #222;
   --diff-add: green;
   --diff-del: red;
+  --sel-bg: rgba(0, 0, 0, 0.08);
 
   --sans-font: -apple-system, BlinkMacSystemFont, "Inter", "Roboto", "Segoe UI", sans-serif;
-  --mono-font: 'SF Mono', SFMono-Regular, ui-monospace, 'DejaVu Sans Mono', 'Roboto Mono', Menlo, Consolas, monospace;
+  --mono-font: "SF Mono", SFMono-Regular, ui-monospace, "DejaVu Sans Mono", "Roboto Mono", Menlo, Consolas, monospace;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -25,6 +26,7 @@
     --dark: #ddd;
     --darker: #f4f4f4;
     --white: #000;
+    --sel-bg: rgba(255, 255, 255, 0.08);
   }
 }
 
@@ -33,6 +35,8 @@
   padding: 0;
   margin: 0;
 }
+
+::selection { background: var(--medium-gray); }
 
 html {
   background: var(--white);
@@ -47,10 +51,6 @@ body {
   max-width: 1200px;
   padding: 0 13px;
   margin: 40px auto;
-}
-
-::selection {
-  background: var(--medium-gray);
 }
 
 a {
@@ -78,7 +78,7 @@ main, footer {
 nav { padding: 0.4rem 0 1.5rem 0; }
 nav ul {
   list-style: none;
-  padding-bottom: 20px;
+  padding-bottom: 1.25rem;
 }
 
 nav ul li {
@@ -87,23 +87,16 @@ nav ul li {
 }
 
 /* utilities */
+.mono { font-family: var(--mono-font); }
 .nowrap { white-space: nowrap; }
 .fill { width: 100%; }
 .muted { color: var(--gray); }
-.padtop { padding-top: 20px; }
-
+.pt { padding-top: 1rem; }
+.mb { margin-bottom: 1rem; }
 .center {
   display: flex;
   justify-content: center;
 }
-
-.size { text-align: right; }
-
-.mode, .size,
-.commit-hash, .commit-email,
-.diff-type { font-family: var(--mono-font); }
-
-.mb { margin-bottom: 1rem; }
 
 /* tables */
 .table {
@@ -138,8 +131,6 @@ nav ul li {
   padding: 0.5rem 0.7rem;
   background: var(--white);
   border: 1px solid var(--medium-gray);
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   z-index: 10;
   font-size: 0.85em;
   line-height: 1.3;
@@ -147,33 +138,26 @@ nav ul li {
   white-space: nowrap;
 }
 
-.author, .age { position: relative; }
-
-.author:hover .tooltip,
-.author:focus-within .tooltip,
-.age:hover .tooltip,
-.age:focus-within .tooltip {
-  display: block;
-}
+.has-tip { position: relative; }
+.has-tip:hover .tooltip,
+.has-tip:focus-within .tooltip { display: block; }
 
 /* box */
+.box + .box { margin-top: 0.8rem; }
 .box {
   background: var(--light-gray);
   padding: 0.6rem;
 }
 
-.box + .box {
-  margin-top: 0.8rem;
-}
-
 /* repo header */
 .repo-header { margin-bottom: 1.25rem; }
+.repo-header .desc { margin-top: 0.35rem; }
+.repo-header .repo-nav { padding: 0.5rem 0 0 0; }
+.repo-header .repo-nav ul { padding-bottom: 0; }
+
 
 .repo-breadcrumb,
-.repo-breadcrumb a {
-  color: var(--gray);
-}
-
+.repo-breadcrumb a { color: var(--gray); }
 .repo-breadcrumb:before { content: "<"; }
 
 .repo-name {
@@ -181,10 +165,6 @@ nav ul li {
   line-height: 1.1;
   margin-top: 0.25rem;
 }
-
-.repo-header .desc { margin-top: 0.35rem; }
-.repo-header .repo-nav { padding: 0.5rem 0 0 0; }
-.repo-header .repo-nav ul { padding-bottom: 0; }
 
 /* index page */
 .index { margin-top: 2em; }
@@ -209,7 +189,7 @@ nav ul li {
 }
 
 /* log page */
-.log td.author .author-short {
+.log td.has-tip .author-short {
   display: inline-block;
   max-width: 25ch;
   overflow: hidden;
@@ -237,20 +217,23 @@ nav ul li {
 
 .line-number {
   width: 1%;
-  -moz-user-select: -moz-none;
-  -khtml-user-select: none;
+  user-select: none;
   -webkit-user-select: none;
+  -moz-user-select: none;
+  -khtml-user-select: none;
   -o-user-select: none;
+  text-align: right;
+  color: var(--gray);
 }
 
 .line-number a:hover { border-bottom: none; }
 .line-number a {
-    display: block;
-    padding: 0 1rem;
-    text-decoration: none;
+  display: block;
+  padding: 0 1rem;
+  text-decoration: none;
 }
 
-.line:has(a:target) { background-color: rgba(0,0,0,0.4); }
+.line:has(a:target) { background-color: var(--sel-bg); }
 
 .image-viewer, .binary-viewer { padding: 1rem 0; }
 .image-viewer img {
@@ -260,15 +243,11 @@ nav ul li {
 
 /* commit */
 .commit { margin-bottom: 1rem; }
-
+.commit .box { margin-bottom: 0.25rem; }
+.commit .commit-info { padding-bottom: 0.25rem; }
 .commit pre {
   padding-bottom: 0;
   white-space: pre-wrap;
-}
-
-.commit .box { margin-bottom: 0.25rem; }
-.commit .commit-info {
-  padding-bottom: 0.25rem;
 }
 
 .commit-message {
@@ -285,20 +264,15 @@ nav ul li {
 
 .commit-date { float: right; }
 
+.commit-email { font-family: var(--mono-font); }
 .commit-email:before { content: '<'; }
 .commit-email:after { content: '>'; }
 
-.commit-refs {
-  margin: 0.5rem 0 1rem 0;
-}
-
+.commit-refs { margin: 0.5rem 0 1rem 0; }
+.commit-refs td.label { padding-right: 1rem; }
 .commit-refs td {
   padding: 0.15rem 0.5rem 0.15rem 0;
   border: none;
-}
-
-.commit-refs td.label {
-  padding-right: 1rem;
 }
 
 /* diff */
@@ -314,16 +288,10 @@ nav ul li {
   margin: 0;
 }
 
-.diff-line {
-  display: flex;
-}
-
+.diff-line { display: flex; }
+.diff-line:target { background: var(--sel-bg); }
 .diff-line .line-number {
   flex-shrink: 0;
-  user-select: none;
-  -webkit-user-select: none;
-  text-align: right;
-  color: var(--gray);
   border-right: 1px solid var(--light-gray);
   padding: 0 0.5rem;
   min-width: 3rem;
@@ -339,16 +307,6 @@ nav ul li {
   padding: 0 0.5rem;
 }
 
-.diff-line:target {
-  background: rgba(0, 0, 0, 0.05);
-}
-
-@media (prefers-color-scheme: dark) {
-  .diff-line:target {
-    background: rgba(255, 255, 255, 0.05);
-  }
-}
-
 .diff-stat { padding: 1rem 0 1rem 0; }
 .diff-add { color: var(--diff-add); }
 .diff-del { color: var(--diff-del); }
@@ -361,14 +319,10 @@ nav ul li {
 
 .jump { margin-top: 0.5rem; }
 .jump-table { margin-top: 0.25rem; }
-
+.jump-table .diff-type { width: 2ch; }
 .jump-table td {
   padding: 0.15rem 0.5rem;
   border-color: var(--medium-gray);
-}
-
-.jump-table .diff-type {
-  width: 2ch;
 }
 
 /* refs */
@@ -398,8 +352,7 @@ nav ul li {
 }
 .readme > *:first-child { margin-top: 0; }
 
-.readme h1, .readme h2, .readme h3,
-.readme h4, .readme h5, .readme h6 {
+.readme h1, .readme h2, .readme h3, .readme h4, .readme h5, .readme h6 {
   margin-top: 1.5em;
   margin-bottom: 0.5em;
   line-height: 1.25;
@@ -447,21 +400,13 @@ nav ul li {
 }
 
 @media (max-width: 600px) {
-  .repo-index {
-    flex-direction: column;
-  }
+  pre { font-size: 0.8rem; }
 
-  .repo-index-main,
-  .repo-index-side {
+  .repo-index { flex-direction: column; }
+  .repo-index-main, .repo-index-side {
     flex: none;
     width: 100%;
   }
 
-  .commit-info:not(:last-child) {
-    padding-bottom: 1.5rem;
-  }
-
-  pre {
-    font-size: 0.8rem;
-  }
+  .commit-info:not(:last-child) { padding-bottom: 1.5rem; }
 }

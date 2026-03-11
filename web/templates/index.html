@@ -30,7 +30,7 @@
               </a>
             <td class="nowrap">
               {{ if not .LastCommit.IsZero }}
-              <span class="age">
+              <span class="has-tip">
                 {{- humanizeRelTime .LastCommit -}}
                 <span class="tooltip" role="tooltip">{{- humanizeTime .LastCommit -}}</span>
               </span>

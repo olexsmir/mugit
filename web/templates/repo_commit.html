@@ -71,7 +71,7 @@
               {{ $path := .Name.New }}
               {{ if not $path }}{{ $path = .Name.Old }}{{ end }}
               <tr>
-                <td class="diff-type">{{ template "_diff_type" . }}</td>
+                <td class="mono">{{ template "_diff_type" . }}</td>
                 <td class="fill">
                   <a href="#{{ $path }}">
                     {{ if .IsRename }}{{ .Name.Old }} &#8594; {{ .Name.New }}

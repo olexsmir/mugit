@@ -14,7 +14,7 @@
       <p class="mb">
         <a class="link" href="/{{ $name }}/tree/{{ .P.Ref }}">{{ .RepoName }}</a>
         {{- range .P.Breadcrumbs  -}}
-        <span class="mode">/</span>
+        <span class="mono">/</span>
         {{- if .IsLast -}}{{- .Name -}}
         {{- else -}}<a class="link" href="/{{ $name }}/tree/{{ $.P.Ref }}/{{ .Path }}">{{ .Name }}</a>{{- end -}}
         {{- end -}}
@@ -47,7 +47,7 @@
             <td class="fill">
               <a href="/{{ $name }}/commit/{{ .Commit.Hash }}">{{ commitSummary .Commit.Message }}</a>
             </td>
-            <td class="age nowrap">
+            <td class="has-tip nowrap">
               <a href="/{{ $.RepoName }}/commit/{{ .Commit.Hash }}">{{ humanizeRelTime .Commit.Committed }}</a>
               <span class="tooltip" role="tooltip">{{ humanizeTime .Commit.Committed }}</span>
             </td>
@@ -65,7 +65,7 @@
             <td class="fill">
               <a href="/{{ $.RepoName }}/commit/{{ .Commit.Hash }}">{{ commitSummary .Commit.Message }}</a>
             </td>
-            <td class="age nowrap">
+            <td class="has-tip nowrap">
               <a href="/{{ $.RepoName }}/commit/{{ .Commit.Hash }}">{{ humanizeRelTime .Commit.Committed }}</a>
               <span class="tooltip" role="tooltip">{{ humanizeTime .Commit.Committed }}</span>
             </td>

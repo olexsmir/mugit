@@ -19,7 +19,7 @@
             <div>
               <a href="/{{ $repo }}/commit/{{ .Hash }}" class="commit-hash link">{{ .HashShort }}</a>
               &mdash; {{ .AuthorName }}
-              <span class="commit-date commit-info age">
+              <span class="commit-date commit-info has-tip">
                 {{ .Committed.Format "Mon, 02 Jan 2006" }}
                 <span class="tooltip" role="tooltip">{{ humanizeTime .Committed }}</span>
               </span>

@@ -26,7 +26,7 @@
                 {{- else -}}<span class="muted">Empty message</span>{{- end -}}
               </a>
             </td>
-            <td class="author nowrap">
+            <td class="has-tip nowrap">
               <span class="author-short">
                 {{ .AuthorName }} <a href="mailto:{{ .AuthorEmail }}" class="commit-email">{{ .AuthorEmail }}</a>
               </span>
@@ -35,10 +35,10 @@
                 <a href="mailto:{{ .AuthorEmail }}" class="commit-email">{{ .AuthorEmail }}</a>
               </span>
             </td>
-            <td class="commit-hash">
+            <td class="mono">
               <a href="/{{ $repo }}/commit/{{ .Hash }}">{{ .HashShort }}</a>
             </td>
-            <td class="age nowrap">
+            <td class="has-tip nowrap">
               {{ humanizeRelTime .Committed }}
               <span class="tooltip" role="tooltip">{{ humanizeTime .Committed }}</span>
             </td>
