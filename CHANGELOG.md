@@ -2,13 +2,17 @@
 
 ## 0.3.0 (unreleased)
 
+### Breaking changes
+- Changed route for raw files. From `/repo/blob/ref/file_path?raw=true` to `/repo/raw/ref/file_path`.
+
 ### Features:
 - Paginate log page (150 commits per page).
 - Support `git-upload-archive`.
 - Better CSS for markdown readmes.
-- Add breadcrumbs on "file content" page.
+- Add breadcrumbs on "file content" and "file tree" pages.
 - Show last commit associated with file on tree page.
 - Add a way of changing repos head from cli.
+- Highlight selected line on file content page.
 
 ### Bug fixes:
 - Allow downloading only valid and existing refs.
