@@ -307,6 +307,7 @@ nav ul li {
   padding: 0 0.5rem;
 }
 
+.diff-op { margin-right: 0.5rem; }
 .diff-stat { padding: 1rem 0 1rem 0; }
 .diff-add { color: var(--diff-add); }
 .diff-del { color: var(--diff-del); }
