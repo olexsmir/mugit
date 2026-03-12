@@ -33,7 +33,7 @@
           <tbody>
             {{- range $i, $l := .P.Lines }}
             <tr class="line">
-              <td class="line-number">
+              <td class="line-number mono">
                 <a id="L{{ inc $i }}" href="#L{{ inc $i }}" aria>{{ inc $i }}</a>
               </td>
               <td><pre>{{ $l }}</pre></td>
