@@ -10,6 +10,12 @@
     <main>
       {{ if .P.IsEmpty }}
       <h3>Repository is empty</h3>
+      {{ if .P.IsMirror }}
+      <p>
+        Awaiting initial sync from:
+        <a class="link" href="{{.P.MirrorURL}}" target="_blank">{{.P.MirrorURL}}</a>
+      </p>
+      {{ end }}
       {{ else }}
       <section class="repo-index">
         <div class="repo-index-main">

@@ -73,6 +73,12 @@ func (h *handlers) repoIndexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	p := RepoIndex{Desc: desc, IsEmpty: repo.IsEmpty()}
+	if isMirror, merr := repo.IsMirror(); isMirror && merr == nil {
+		p.IsMirror = true
+		p.MirrorURL, _ = repo.RemoteURL()
+		p.MirrorLastSync, _ = repo.LastSync()
+	}
+
 	if p.IsEmpty {
 		h.templ(w, "repo_index", h.pageData(repo, p))
 		return
@@ -98,12 +104,6 @@ func (h *handlers) repoIndexHandler(w http.ResponseWriter, r *http.Request) {
 
 	if len(p.Commits) >= 3 {
 		p.Commits = p.Commits[:3:3]
-	}
-
-	if isMirror, err := repo.IsMirror(); isMirror && err == nil {
-		p.IsMirror = true
-		p.MirrorURL, _ = repo.RemoteURL()
-		p.MirrorLastSync, _ = repo.LastSync()
 	}
 
 	p.SSHUser = h.c.SSH.User
