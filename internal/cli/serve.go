@@ -42,7 +42,7 @@ func (c *Cli) serveAction(ctx context.Context, cmd *cli.Command) error {
 		mirrorer := mirror.NewWorker(c.cfg)
 		go func() {
 			slog.Info("starting mirroring worker")
-			mirrorer.Start(context.TODO())
+			mirrorer.Start(ctx)
 		}()
 	}
 
@@ -52,7 +52,7 @@ func (c *Cli) serveAction(ctx context.Context, cmd *cli.Command) error {
 	sig := <-sigChan
 	slog.Info("received signal, starting graceful shutdown", "signal", sig)
 
-	if err := httpServer.Shutdown(context.TODO()); err != nil {
+	if err := httpServer.Shutdown(ctx); err != nil {
 		slog.Error("HTTP server shutdown error", "err", err)
 	} else {
 		slog.Info("HTTP server shutdown complete")
