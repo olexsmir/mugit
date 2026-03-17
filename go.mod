@@ -1,6 +1,6 @@
 module olexsmir.xyz/mugit
 
-go 1.25.3
+go 1.26
 
 require (
 	github.com/bluekeyes/go-gitdiff v0.8.1
