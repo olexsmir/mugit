@@ -79,22 +79,20 @@ func (h *handlers) repoFeedHandler(w http.ResponseWriter, r *http.Request) {
 
 	// tags
 	tags, err := repo.Tags()
-	if err != nil {
-		h.write500(w, err)
-	}
-
-	for _, tag := range tags {
-		href, _ := url.JoinPath("http://", h.c.Meta.Host, repoName, "tree", tag.Name())
-		it := rssItemXML{
-			Title:       "tag: " + tag.Name(),
-			Link:        href,
-			Guid:        href,
-			Description: tag.Message(),
+	if err == nil {
+		for _, tag := range tags {
+			href, _ := url.JoinPath("http://", h.c.Meta.Host, repoName, "tree", tag.Name())
+			it := rssItemXML{
+				Title:       "tag: " + tag.Name(),
+				Link:        href,
+				Guid:        href,
+				Description: tag.Message(),
+			}
+			if !tag.When().IsZero() {
+				it.PubDate = tag.When().Format(time.RFC1123Z)
+			}
+			feed.Channel.Items = append(feed.Channel.Items, it)
 		}
-		if !tag.When().IsZero() {
-			it.PubDate = tag.When().Format(time.RFC1123Z)
-		}
-		feed.Channel.Items = append(feed.Channel.Items, it)
 	}
 
 	w.Header().Set("Content-Type", "application/rss+xml")
