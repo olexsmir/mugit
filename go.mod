@@ -7,7 +7,6 @@ require (
 	github.com/cyphar/filepath-securejoin v0.6.1
 	github.com/gliderlabs/ssh v0.3.8
 	github.com/go-git/go-git/v5 v5.17.0
-	github.com/gorilla/feeds v1.2.0
 	github.com/urfave/cli/v3 v3.7.0
 	github.com/yuin/goldmark v1.7.16
 	github.com/yuin/goldmark-emoji v1.0.6

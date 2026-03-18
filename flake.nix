@@ -15,7 +15,7 @@
             pname = "mugit";
             version = version;
             src = ./.;
-            vendorHash = "sha256-LQE7pyxzUHJpTN51HjiamGYg25MX72I/jSPzmjKfTtI=";
+            vendorHash = "sha256-rnBcUcEN24Qul0Fljo7aQ9aholXDZuUgQhoyzhEC49E=";
             ldflags = [ "-s" "-w" "-X main.version=${version}" ];
             meta = with pkgs.lib; {
               homepage = "https://git.olexsmir.xyz/mugit";

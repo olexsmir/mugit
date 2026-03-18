@@ -1,11 +1,32 @@
 package handlers
 
 import (
+	"encoding/xml"
 	"net/http"
 	"net/url"
-
-	"github.com/gorilla/feeds"
+	"time"
 )
+
+type rssFeedXML struct {
+	XMLName xml.Name      `xml:"rss"`
+	Version string        `xml:"version,attr"`
+	Channel rssChannelXML `xml:"channel"`
+}
+
+type rssChannelXML struct {
+	Title       string       `xml:"title"`
+	Link        string       `xml:"link"`
+	Description string       `xml:"description"`
+	Items       []rssItemXML `xml:"item"`
+}
+
+type rssItemXML struct {
+	Title       string `xml:"title"`
+	Link        string `xml:"link"`
+	Guid        string `xml:"guid"`
+	Description string `xml:"description,omitempty"`
+	PubDate     string `xml:"pubDate,omitempty"`
+}
 
 func (h *handlers) repoFeedHandler(w http.ResponseWriter, r *http.Request) {
 	repo, err := h.openPublicRepo(r.PathValue("name"), "")
@@ -21,17 +42,19 @@ func (h *handlers) repoFeedHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	repoName := repo.Name()
-
 	feedLink, err := url.JoinPath("http://", h.c.Meta.Host, repoName)
 	if err != nil {
 		h.write500(w, err)
 		return
 	}
 
-	feed := &feeds.Feed{
-		Title:       repoName,
-		Link:        &feeds.Link{Href: feedLink},
-		Description: desc,
+	feed := rssFeedXML{
+		Version: "2.0",
+		Channel: rssChannelXML{
+			Title:       repoName,
+			Link:        feedLink,
+			Description: desc,
+		},
 	}
 
 	// branches
@@ -43,12 +66,15 @@ func (h *handlers) repoFeedHandler(w http.ResponseWriter, r *http.Request) {
 
 	for _, branch := range branches {
 		href, _ := url.JoinPath("http://", h.c.Meta.Host, repoName, "tree", branch.Name)
-		feed.Items = append(feed.Items, &feeds.Item{
-			Id:      "b:" + branch.Name,
-			Title:   "branch: " + branch.Name,
-			Link:    &feeds.Link{Href: href},
-			Updated: branch.LastUpdate,
-		})
+		it := rssItemXML{
+			Title: "branch: " + branch.Name,
+			Link:  href,
+			Guid:  href,
+		}
+		if !branch.LastUpdate.IsZero() {
+			it.PubDate = branch.LastUpdate.Format(time.RFC1123Z)
+		}
+		feed.Channel.Items = append(feed.Channel.Items, it)
 	}
 
 	// tags
@@ -59,23 +85,24 @@ func (h *handlers) repoFeedHandler(w http.ResponseWriter, r *http.Request) {
 
 	for _, tag := range tags {
 		href, _ := url.JoinPath("http://", h.c.Meta.Host, repoName, "tree", tag.Name())
-		feed.Items = append(feed.Items, &feeds.Item{
-			Id:      "t:" + tag.Name(),
-			Title:   "tag: " + tag.Name(),
-			Link:    &feeds.Link{Href: href},
-			Updated: tag.When(),
-			Content: tag.Message(),
-		})
-	}
-
-	rss, err := feed.ToRss()
-	if err != nil {
-		h.write500(w, err)
-		return
+		it := rssItemXML{
+			Title:       "tag: " + tag.Name(),
+			Link:        href,
+			Guid:        href,
+			Description: tag.Message(),
+		}
+		if !tag.When().IsZero() {
+			it.PubDate = tag.When().Format(time.RFC1123Z)
+		}
+		feed.Channel.Items = append(feed.Channel.Items, it)
 	}
 
 	w.Header().Set("Content-Type", "application/rss+xml")
-	w.Write([]byte(rss))
+	w.Write([]byte(xml.Header))
+	if err := xml.NewEncoder(w).Encode(feed); err != nil {
+		h.write500(w, err)
+		return
+	}
 }
 
 func (h *handlers) indexFeedHandler(w http.ResponseWriter, r *http.Request) {
@@ -91,30 +118,33 @@ func (h *handlers) indexFeedHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	feed := &feeds.Feed{
-		Title:       h.c.Meta.Host,
-		Link:        &feeds.Link{Href: feedLink},
-		Description: h.c.Meta.Description,
+	feed := rssFeedXML{
+		Version: "2.0",
+		Channel: rssChannelXML{
+			Title:       h.c.Meta.Host,
+			Link:        feedLink,
+			Description: h.c.Meta.Description,
+		},
 	}
 
 	for _, repo := range repos {
 		href, _ := url.JoinPath("http://", h.c.Meta.Host, repo.Name)
-		feed.Items = append(feed.Items, &feeds.Item{
+		it := rssItemXML{
 			Title:       repo.Name,
-			Link:        &feeds.Link{Href: href},
+			Link:        href,
+			Guid:        href,
 			Description: repo.Desc,
-			Id:          repo.Name,
-			Updated:     repo.LastCommit,
-			Content:     repo.Desc,
-		})
-	}
-
-	rss, err := feed.ToRss()
-	if err != nil {
-		h.write500(w, err)
-		return
+		}
+		if !repo.LastCommit.IsZero() {
+			it.PubDate = repo.LastCommit.Format(time.RFC1123Z)
+		}
+		feed.Channel.Items = append(feed.Channel.Items, it)
 	}
 
 	w.Header().Set("Content-Type", "application/rss+xml")
-	w.Write([]byte(rss))
+	w.Write([]byte(xml.Header))
+	if err := xml.NewEncoder(w).Encode(feed); err != nil {
+		h.write500(w, err)
+		return
+	}
 }
