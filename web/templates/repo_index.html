@@ -1,3 +1,9 @@
+{{ define "_remote_urls" }}
+<h2>Clone urls</h2>
+<pre>https://{{.Meta.Host}}/{{.RepoName}}</pre>
+{{ if .Meta.SSHEnabled }}<pre>{{.P.SSHUser}}@{{.Meta.Host}}:{{.RepoName}}</pre>{{ end }}
+{{ end }}
+
 {{ define "repo_index" }}
 <!DOCTYPE html>
 <html>
@@ -15,6 +21,8 @@
         Awaiting initial sync from:
         <a class="link" href="{{.P.MirrorURL}}" target="_blank">{{.P.MirrorURL}}</a>
       </p>
+      <br>
+      {{ template "_remote_urls" . }}
       {{ end }}
       {{ else }}
       <section class="repo-index">
@@ -39,9 +47,7 @@
         </div>
 
         <div class="repo-index-side">
-          <h2>Clone urls</h2>
-          <pre>https://{{.Meta.Host}}/{{.RepoName}}</pre>
-          {{ if .Meta.SSHEnabled }}<pre>{{.P.SSHUser}}@{{.Meta.Host}}:{{.RepoName}}</pre>{{end}}
+          {{ template "_remote_urls" . }}
           {{ if .P.IsMirror }}
           <br>
           <h2>Mirror status</h2>
