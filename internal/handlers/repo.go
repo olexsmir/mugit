@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"fmt"
+	"html"
 	"html/template"
 	"log/slog"
 	"net/http"
@@ -474,7 +475,8 @@ func (h *handlers) renderReadme(r *git.Repo, ref, treePath string) (template.HTM
 				return template.HTML(readme), nil
 
 			default:
-				readmeContents = template.HTML(fmt.Sprintf(`<pre class="raw">%s</pre>`, content))
+				readmeContents = template.HTML(fmt.Sprintf(
+					`<pre class="raw">%s</pre>`, html.EscapeString(content)))
 			}
 			break
 		}
