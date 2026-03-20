@@ -14,7 +14,9 @@
         {{- if .IsLast -}}{{- .Name -}}
         {{- else -}}<a class="link" href="/{{ $.RepoName }}/tree/{{ $.P.Ref }}/{{ .Path }}">{{ .Name }}</a>{{- end -}}
         {{- end -}}
-        (<a class="muted" href="/{{ .RepoName }}/raw/{{ .P.Ref }}/{{ .P.Path }}">view raw</a>)
+        <span class="pl">
+          (<a class="muted" href="/{{ .RepoName }}/raw/{{ .P.Ref }}/{{ .P.Path }}">view raw</a>)
+        </span>
       </p>
       <div class="file-wrapper">
         {{ if .P.IsImage }}

@@ -91,6 +91,7 @@ nav ul li {
 .nowrap { white-space: nowrap; }
 .fill { width: 100%; }
 .muted { color: var(--gray); }
+.pl { padding-left: 0.3rem; }
 .pt { padding-top: 1rem; }
 .mb { margin-bottom: 1rem; }
 .center {
