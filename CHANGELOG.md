@@ -12,6 +12,7 @@
 - Better CSS for markdown readmes.
 - Add breadcrumbs on "file content" and "file tree" pages.
 - Show last commit associated with file on the "tree page".
+- Show both authored and commit time of a commit.
 - Highlight selected line on file content page.
 - `mugit repo new` now accepts `--description`, sets repo description.
 - `mugit repo new --mirror` will sync repo from specified remote.

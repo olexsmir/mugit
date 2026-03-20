@@ -123,6 +123,7 @@ type Commit struct {
 	AuthorName     string
 	CommitterName  string
 	CommitterEmail string
+	Authored       time.Time
 	Committed      time.Time
 	ChangeID       string
 	Hash           string
@@ -145,6 +146,7 @@ func newCommit(c *object.Commit) *Commit {
 		AuthorName:     c.Author.Name,
 		CommitterName:  c.Committer.Name,
 		CommitterEmail: c.Committer.Email,
+		Authored:       c.Author.When,
 		Committed:      c.Committer.When,
 		ChangeID:       changeID,
 		Hash:           c.Hash.String(),

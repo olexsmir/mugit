@@ -171,7 +171,7 @@ func (g *Repo) lastCommitForFilesInTree(ctx context.Context, subtree *object.Tre
 		pathSpec = parent
 	}
 
-	output, err := g.streamingGitLog(ctx, "--pretty=format:%H,%ad,%ae,%an,%ce,%cn,%s", "--date=iso", "--name-only", "--", pathSpec)
+	output, err := g.streamingGitLog(ctx, "--pretty=format:%H,%ad,%ae,%an,%cd,%ce,%cn,%s", "--date=iso", "--name-only", "--", pathSpec)
 	if err != nil {
 		return nil, err
 	}
@@ -205,19 +205,20 @@ func (g *Repo) lastCommitForFilesInTree(ctx context.Context, subtree *object.Tre
 				current = logCommit{}
 			}
 		} else if current.hash.IsZero() {
-			parts := strings.SplitN(line, ",", 7)
-			if len(parts) == 7 {
+			parts := strings.SplitN(line, ",", 8)
+			if len(parts) == 8 {
 				current.hash = plumbing.NewHash(parts[0])
 
 				// NOTE: this is copy-paste of [newCommit]
 				current.Hash = parts[0]
 				current.HashShort = parts[0][:7]
-				current.Committed, _ = time.Parse("2006-01-02 15:04:05 -0700", parts[1])
+				current.Authored, _ = time.Parse("2006-01-02 15:04:05 -0700", parts[1])
 				current.AuthorEmail = parts[2]
 				current.AuthorName = parts[3]
-				current.CommitterEmail = parts[4]
-				current.CommitterName = parts[5]
-				current.Message = parts[6]
+				current.Committed, _ = time.Parse("2006-01-02 15:04:05 -0700", parts[4])
+				current.CommitterEmail = parts[5]
+				current.CommitterName = parts[6]
+				current.Message = parts[7]
 			}
 		} else {
 			// all ancestors along this path should also be included

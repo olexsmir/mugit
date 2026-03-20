@@ -45,6 +45,12 @@
             <strong>Committed at:</strong>
             {{ humanizeTime $commit.Committed }}
           </div>
+          {{ if ne $commit.Authored $commit.Committed }}
+          <div>
+            <strong>Authored at:</strong>
+            {{ humanizeTime $commit.Authored }}
+          </div>
+          {{ end }}
           {{ if $commit.ChangeID -}}
           <div>
             <strong>Change ID:</strong>
