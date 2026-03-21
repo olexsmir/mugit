@@ -10,9 +10,10 @@
 - Support `git-upload-archive`.
 - Better CSS for markdown readmes.
 - Add breadcrumbs on "file content" and "file tree" pages.
-- Show last commit associated with file on tree page.
-- Add a way of changing repos head from cli.
+- Show last commit associated with file on the "tree page".
 - Highlight selected line on file content page.
+- `mugit repo new` now accepts `--description` flag, well it sets repo description.
+- Show remote urls and mirroring data on empty repos.
 
 ### Bug fixes:
 - Allow downloading only valid and existing refs.

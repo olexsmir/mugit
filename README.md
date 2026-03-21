@@ -5,11 +5,10 @@ A lightweight, self-hosted Git server that your cow will love.
 [See it in action!](https://git.olexsmir.xyz)
 
 ## Features
-
-- Web interface — browse repositories, view commits, files, and diffs (no javascript required)
-- Git Smart HTTP — clone over HTTPS (use SSH for pushing)
-- Git over SSH — push and clone over SSH
-- Mirroring — automatically mirror repositories (supports GitHub authentication)
+- Web interface — browse repositories, view commits, files, and diffs (no javascript required).
+- Git Smart HTTP — clone over HTTPS (use SSH for pushing).
+- Git over SSH — push and clone repos over SSH.
+- Mirroring — automatically mirror repos from other forges (supports GitHub authentication).
 - Private repositories — repos accessible only via SSH
 - CLI — command-line for managing your repositories
 
@@ -24,18 +23,19 @@ go build
 go install github.com/olexsmir/mugit@latest
 ```
 
-For nixos you can use our flake, see [my config](https://git.olexsmir.xyz/dotfiles/blob/master/nix/modules/mugit.nix) for reference.
+For nixos, you can use our flake, see [my config](https://git.olexsmir.xyz/dotfiles/blob/master/nix/modules/services/mugit.nix) for reference.
 
 Start the server:
-
 ```sh
 # start server with default config lookup
 mugit serve
 
 # start with a custom config path
 mugit -c /path/to/config.yaml serve
-```
 
+# mirror your repo from github
+mugit repo new repo-name --mirror https://github.com/user/repo
+```
 
 ## Configuration
 
@@ -45,7 +45,7 @@ mugit uses YAML for configuration. By default the server looks for a configurati
 3. `/var/lib/mugit/config.yaml`
 
 
-Durations follow Go's duration syntax (examples: `1h`, `30m`, `5s`). See: https://pkg.go.dev/time#ParseDuration
+Durations follow Go's duration syntax (examples: `1h`, `30m`, `5s`). See: [https://pkg.go.dev/time#ParseDuration]
 
 Minimal configuration example:
 
@@ -104,7 +104,7 @@ mirror:
   # - literal: "ghp_xxxxxxxxxxxx"
   # - from env: "$env:GITHUB_TOKEN" (will read $GITHUB_TOKEN)
   # - from file: "$file:/abs/path/to/token.txt"
-  github_token: "${env:GITHUB_TOKEN}"
+  github_token: "$env:GITHUB_TOKEN"
 
 cache:
   home_page: 5m   # cache index/home page
