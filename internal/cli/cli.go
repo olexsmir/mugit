@@ -87,9 +87,9 @@ func (c *Cli) Run(ctx context.Context, args []string) error {
 						},
 					},
 					{
-						Name:   "checkout",
-						Usage:  "switch branches in repo",
-						Action: c.repoCheckoutAction,
+						Name:   "set-default",
+						Usage:  "switch default repo branch",
+						Action: c.repoSetDefaultAction,
 						Arguments: []cli.Argument{
 							&cli.StringArg{Name: "name"},
 						},
