@@ -64,6 +64,11 @@ func (c *Cli) Run(ctx context.Context, args []string) error {
 								Name:  "mirror",
 								Usage: "remote URL(only http/https) to mirror from",
 							},
+							&cli.StringFlag{
+								Name:    "description",
+								Usage:   "set repo description",
+								Aliases: []string{"desc"},
+							},
 							&cli.BoolFlag{
 								Name:  "private",
 								Usage: "make the repository private",

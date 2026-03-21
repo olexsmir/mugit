@@ -51,6 +51,13 @@ func (c *Cli) repoNewAction(ctx context.Context, cmd *cli.Command) error {
 		}
 	}
 
+	desc := cmd.String("description")
+	if desc != "" {
+		if err := repo.SetDescription(desc); err != nil {
+			return fmt.Errorf("failed to set description: %w", err)
+		}
+	}
+
 	return nil
 }
 
