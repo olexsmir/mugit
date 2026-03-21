@@ -7,7 +7,6 @@ import (
 	"os"
 	"strings"
 
-	securejoin "github.com/cyphar/filepath-securejoin"
 	"github.com/urfave/cli/v3"
 	"olexsmir.xyz/mugit/internal/git"
 	"olexsmir.xyz/mugit/internal/mirror"
@@ -19,7 +18,7 @@ func (c *Cli) repoNewAction(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	path, err := securejoin.SecureJoin(c.cfg.Repo.Dir, name)
+	path, err := git.ResolvePath(c.cfg.Repo.Dir, name)
 	if err != nil {
 		return err
 	}

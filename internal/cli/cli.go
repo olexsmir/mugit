@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	securejoin "github.com/cyphar/filepath-securejoin"
 	"github.com/urfave/cli/v3"
 	"olexsmir.xyz/mugit/internal/config"
 	"olexsmir.xyz/mugit/internal/git"
@@ -107,7 +106,7 @@ func (c *Cli) Run(ctx context.Context, args []string) error {
 }
 
 func (c *Cli) openRepo(name string) (*git.Repo, error) {
-	path, err := securejoin.SecureJoin(c.cfg.Repo.Dir, name)
+	path, err := git.ResolvePath(c.cfg.Repo.Dir, name)
 	if err != nil {
 		return nil, err
 	}
