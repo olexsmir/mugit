@@ -380,7 +380,8 @@ nav ul li {
   padding: unset;
 }
 
-.readme details > * { padding-left: 1em; }
+.readme details > *:not(pre) { padding-left: 1em; }
+.readme details > pre { margin-left: 1em; }
 .readme details[data-callout] {
   border-left: 4px solid var(--gray);
   background: var(--light);
