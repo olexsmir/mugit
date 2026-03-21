@@ -22,7 +22,8 @@
               license = licenses.mit;
             };
           };
-        });
+        }
+      );
 
       nixosModules.default = { config, lib, pkgs, ... }:
         with lib;
@@ -40,12 +41,6 @@
               default = self.packages.${pkgs.stdenv.hostPlatform.system}.mugit;
               defaultText = literalExpression "self.packages.\${pkgs.stdenv.hostPlatform.system}.mugit";
               description = "The mugit package to use.";
-            };
-
-            openFirewall = mkOption {
-              type = types.bool;
-              default = false;
-              description = "Whether to open the firewall for mugit. Can only be used with `config`, not `configFile`.";
             };
 
             exposeCli = mkOption {
@@ -195,18 +190,7 @@
             };
           };
 
-
           config = mkIf cfg.enable {
-            networking.firewall = mkIf cfg.openFirewall {
-              allowedTCPPorts =
-                let
-                  serverPort = cfg.config.server.port or 8080;
-                  sshPort = cfg.config.ssh.port or 2222;
-                  sshEnabled = cfg.config.ssh.enable or false;
-                in
-                [ serverPort ] ++ lib.optional sshEnabled sshPort;
-            };
-
             users.users.${cfg.user} = {
               isSystemUser = true;
               group = cfg.group;
@@ -238,7 +222,7 @@
                       exec ${cfg.package}/bin/mugit --config ${resolvedConfig} "$@"
                     '';
                   in
-                    "${mugitWrapped}/bin/mugit";
+                  "${mugitWrapped}/bin/mugit";
                 owner = cfg.user;
                 group = cfg.group;
                 setuid = true;
@@ -252,35 +236,26 @@
               wantedBy = [ "multi-user.target" ];
               after = [ "network.target" ];
               path = [ pkgs.git ];
-
-              serviceConfig =
-                let
-                  serverPort = cfg.config.server.port or 8080;
-                  sshPort = cfg.config.ssh.port or 2222;
-                  sshEnabled = cfg.config.ssh.enable or false;
-                  needsPrivPort = serverPort < 1024 || (sshEnabled && sshPort < 1024);
-                in
-                {
-                  Type = "simple";
-                  User = cfg.user;
-                  Group = cfg.group;
-                  WorkingDirectory = cfg.config.repo.dir;
-                  StateDirectory = "mugit";
-                  ExecStart = "${cfg.package}/bin/mugit serve --config ${configFile}";
-                  Restart = "on-failure";
-                  RestartSec = "5s";
-                  NoNewPrivileges = true;
-                  PrivateTmp = true;
-                  ProtectSystem = "strict";
-                  ProtectHome = true;
-                  ReadWritePaths = [ cfg.config.repo.dir ];
-                  ProtectKernelTunables = true;
-                  ProtectKernelModules = true;
-                  ProtectControlGroups = true;
-                }
-                // lib.optionalAttrs needsPrivPort {
-                  AmbientCapabilities = [ "CAP_NET_BIND_SERVICE" ];
-                };
+              serviceConfig = {
+                Type = "simple";
+                User = cfg.user;
+                Group = cfg.group;
+                WorkingDirectory = cfg.config.repo.dir;
+                StateDirectory = "mugit";
+                ExecStart = "${cfg.package}/bin/mugit serve --config ${configFile}";
+                Restart = "on-failure";
+                RestartSec = "5s";
+                NoNewPrivileges = true;
+                PrivateTmp = true;
+                ProtectSystem = "strict";
+                ProtectHome = true;
+                ReadWritePaths = [ cfg.config.repo.dir ];
+                ProtectKernelTunables = true;
+                ProtectKernelModules = true;
+                ProtectControlGroups = true;
+              } // lib.optionalAttrs (cfg.config.ssh.enable && cfg.config.ssh.port < 1024) {
+                AmbientCapabilities = [ "CAP_NET_BIND_SERVICE" ];
+              };
             };
           };
         };
