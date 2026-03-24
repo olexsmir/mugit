@@ -22,8 +22,9 @@
         <a class="link" href="{{.P.MirrorURL}}" target="_blank">{{.P.MirrorURL}}</a>
       </p>
       <br>
-      {{ template "_remote_urls" . }}
       {{ end }}
+      <br>
+      {{ template "_remote_urls" . }}
       {{ else }}
       <section class="repo-index">
         <div class="repo-index-main">
