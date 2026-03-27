@@ -4,6 +4,7 @@
 
 ### Breaking changes
 - Changed route for raw files. From `/repo/blob/ref/file_path?raw=true` to `/repo/raw/ref/file_path`.
+- Switch to sshd, instead of running it's own ssh server.
 
 ### Features:
 - Paginate log page (150 commits per page).

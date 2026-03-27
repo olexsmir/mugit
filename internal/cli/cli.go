@@ -7,10 +7,12 @@ import (
 	"github.com/urfave/cli/v3"
 	"olexsmir.xyz/mugit/internal/config"
 	"olexsmir.xyz/mugit/internal/git"
+	"olexsmir.xyz/mugit/internal/ssh"
 )
 
 type Cli struct {
 	cfg     *config.Config
+	ssh     *ssh.Shell
 	version string
 }
 
@@ -40,6 +42,15 @@ func (c *Cli) Run(ctx context.Context, args []string) error {
 				return ctx, err
 			}
 			c.cfg = loadedCfg
+
+			if c.cfg.SSH.Enable {
+				shell, err := ssh.NewShell(c.cfg)
+				if err != nil {
+					return ctx, err
+				}
+				c.ssh = shell
+			}
+
 			return ctx, nil
 		},
 		Commands: []*cli.Command{
@@ -97,6 +108,17 @@ func (c *Cli) Run(ctx context.Context, args []string) error {
 						Arguments: []cli.Argument{
 							&cli.StringArg{Name: "name"},
 						},
+					},
+				},
+			},
+			{
+				Name:        "shell",
+				Description: "sshd things", // TODO: update me
+				Action:      c.sshShellAction,
+				Commands: []*cli.Command{
+					{
+						Name:   "keys",
+						Action: c.sshAuthorizedKeysAction,
 					},
 				},
 			},

@@ -5,8 +5,7 @@
     let
       systems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
       forAllSystems = f: nixpkgs.lib.genAttrs systems (system: f nixpkgs.legacyPackages.${system});
-    in
-      {
+    in {
       packages = forAllSystems (pkgs:
         let version = self.rev or "dev";
         in {
@@ -15,7 +14,7 @@
             pname = "mugit";
             version = version;
             src = ./.;
-            vendorHash = "sha256-rnBcUcEN24Qul0Fljo7aQ9aholXDZuUgQhoyzhEC49E=";
+            vendorHash = "sha256-eJ6L6o2cisJRZxoEDf9gtHL8T+xpnIDq9KPQr1vgLig=";
             ldflags = [ "-s" "-w" "-X main.version=${version}" ];
             meta = with pkgs.lib; {
               homepage = "https://git.olexsmir.xyz/mugit";
@@ -30,9 +29,11 @@
         let
           cfg = config.services.mugit;
           format = pkgs.formats.yaml { };
-          configFile = format.generate "config.yaml" cfg.config;
-        in
-        {
+          sshUser = if cfg.config.ssh.user != "" then cfg.config.ssh.user else cfg.user;
+          configFile  = if cfg.configFile != null
+            then cfg.configFile
+            else format.generate "config.yaml" cfg.config;
+        in {
           options.services.mugit = {
             enable = mkEnableOption "mugit service";
 
@@ -57,13 +58,13 @@
 
             user = mkOption {
               type = types.str;
-              default = "mugit";
+              default = "git";
               description = "User account under which mugit runs.";
             };
 
             group = mkOption {
               type = types.str;
-              default = "mugit";
+              default = "git";
               description = "Group under which mugit runs.";
             };
 
@@ -134,17 +135,12 @@
                   enable = mkOption {
                     type = types.bool;
                     default = false;
-                    description = "Wharever to run ssh server";
+                    description = "Whether to enable SSH git access";
                   };
                   user = mkOption {
                     type = types.str;
-                    default = "git";
-                    description = "User used for git access";
-                  };
-                  port = mkOption {
-                    type = types.port;
-                    default = 2222;
-                    description = "Website port";
+                    default = "";
+                    description = "User used for git access. Defaults to the main user option.";
                   };
                   host_key = mkOption {
                     type = types.str;
@@ -191,15 +187,42 @@
           };
 
           config = mkIf cfg.enable {
+            assertions = [
+              {
+                assertion = !cfg.config.ssh.enable || (cfg.config.ssh.keys != []);
+                message = "SSH is enabled but no SSH keys provided. Please add keys to services.mugit.config.ssh.keys";
+              }
+            ];
+
+            users.groups.${cfg.group} = { };
             users.users.${cfg.user} = {
               isSystemUser = true;
+              useDefaultShell = true;
               group = cfg.group;
               home = cfg.config.repo.dir;
               createHome = true;
               description = "mugit service user";
             };
 
-            users.groups.${cfg.group} = { };
+            services.openssh = mkIf cfg.config.ssh.enable {
+              enable = true;
+              extraConfig = ''
+                Match User ${sshUser}
+                    AuthorizedKeysCommand /etc/ssh/mugit_authorized_keys
+                    AuthorizedKeysCommandUser ${sshUser}
+                    ChallengeResponseAuthentication no
+                    PasswordAuthentication no
+                    AllowUsers ${sshUser}
+              '';
+            };
+
+            environment.etc."ssh/mugit_authorized_keys" = mkIf cfg.config.ssh.enable {
+              mode = "0555";
+              text = ''
+                #!${pkgs.stdenv.shell}
+                ${cfg.package}/bin/mugit --config ${configFile} shell keys "$1"
+              '';
+            };
 
             environment.systemPackages = lib.mkIf cfg.exposeCli [
               (pkgs.runCommandLocal "mugit-completions" {} ''
@@ -216,10 +239,9 @@
               mugit = {
                 source =
                   let
-                    resolvedConfig = if cfg.configFile != null then cfg.configFile else configFile;
                     mugitWrapped = pkgs.writeScriptBin "mugit" ''
                       #!${pkgs.bash}/bin/bash
-                      exec ${cfg.package}/bin/mugit --config ${resolvedConfig} "$@"
+                      exec ${cfg.package}/bin/mugit --config ${configFile} "$@"
                     '';
                   in
                   "${mugitWrapped}/bin/mugit";
@@ -234,7 +256,7 @@
             systemd.services.mugit = {
               description = "mugit service";
               wantedBy = [ "multi-user.target" ];
-              after = [ "network.target" ];
+              after = [ "network.target" ] ++ lib.optionals cfg.config.ssh.enable [ "sshd.service" ];
               path = [ pkgs.git ];
               serviceConfig = {
                 Type = "simple";
@@ -253,8 +275,6 @@
                 ProtectKernelTunables = true;
                 ProtectKernelModules = true;
                 ProtectControlGroups = true;
-              } // lib.optionalAttrs (cfg.config.ssh.enable && cfg.config.ssh.port < 1024) {
-                AmbientCapabilities = [ "CAP_NET_BIND_SERVICE" ];
               };
             };
           };

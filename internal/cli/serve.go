@@ -13,7 +13,6 @@ import (
 	"github.com/urfave/cli/v3"
 	"olexsmir.xyz/mugit/internal/handlers"
 	"olexsmir.xyz/mugit/internal/mirror"
-	"olexsmir.xyz/mugit/internal/ssh"
 )
 
 func (c *Cli) serveAction(ctx context.Context, cmd *cli.Command) error {
@@ -27,16 +26,6 @@ func (c *Cli) serveAction(ctx context.Context, cmd *cli.Command) error {
 			slog.Error("HTTP server error", "err", err)
 		}
 	}()
-
-	if c.cfg.SSH.Enable {
-		sshServer := ssh.NewServer(c.cfg)
-		go func() {
-			slog.Info("starting ssh server", "port", c.cfg.SSH.Port)
-			if err := sshServer.Start(); err != nil {
-				slog.Error("ssh server error", "err", err)
-			}
-		}()
-	}
 
 	if c.cfg.Mirror.Enable {
 		mirrorer := mirror.NewWorker(c.cfg)

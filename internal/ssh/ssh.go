@@ -1,184 +1,97 @@
 package ssh
 
 import (
+	"context"
 	"fmt"
+	"io"
 	"log/slog"
-	"slices"
-	"strconv"
+	"strings"
 
-	"github.com/gliderlabs/ssh"
 	"olexsmir.xyz/mugit/internal/config"
 	"olexsmir.xyz/mugit/internal/git"
 
 	gossh "golang.org/x/crypto/ssh"
 )
 
-type authorizedKeyType string
+type Shell struct {
+	cfg *config.Config
 
-const authorizedKey authorizedKeyType = "authorized"
-
-type Server struct {
-	c        *config.Config
-	authKeys []gossh.PublicKey
+	keys []gossh.PublicKey
 }
 
-func NewServer(cfg *config.Config) *Server {
-	return &Server{
-		c:        cfg,
-		authKeys: []gossh.PublicKey{},
+func NewShell(cfg *config.Config) (*Shell, error) {
+	parsedKeys := make([]gossh.PublicKey, len(cfg.SSH.Keys))
+	for i, key := range cfg.SSH.Keys {
+		pkey, _, _, _, err := gossh.ParseAuthorizedKey([]byte(key))
+		if err != nil {
+			return nil, err
+		}
+		parsedKeys[i] = pkey
 	}
+
+	return &Shell{
+		cfg:  cfg,
+		keys: parsedKeys,
+	}, nil
 }
 
-func (s *Server) Start() error {
-	if err := s.parseAuthKeys(); err != nil {
-		return err
-	}
-
-	srv := &ssh.Server{
-		Addr:             ":" + strconv.Itoa(s.c.SSH.Port),
-		Handler:          s.handler,
-		PublicKeyHandler: s.authhandler,
-	}
-
-	if err := srv.SetOption(ssh.HostKeyFile(s.c.SSH.HostKey)); err != nil {
-		// TODO: validate `gossh.ParsePrivateKey`
-		return err
-	}
-
-	return srv.ListenAndServe()
-}
-
-func (s *Server) authhandler(ctx ssh.Context, key ssh.PublicKey) bool {
-	fingerprint := gossh.FingerprintSHA256(key)
-
-	if ctx.User() != "git" {
-		slog.Info("non git ssh request", "user", ctx.User(), "fingerprint", fingerprint)
-		return false
-	}
-
-	slog.Info("ssh request", "fingerprint", fingerprint)
-
-	ctx.SetValue(authorizedKey, s.isAuthorized(key))
-	return true
-}
-
-func (s *Server) handler(sess ssh.Session) {
-	ctx := sess.Context()
-	authorized := ctx.Value(authorizedKey).(bool)
-
-	cmd := sess.Command()
-	if len(cmd) < 2 {
-		s.error(sess, badRequestErrMsg, nil)
-		return
-	}
-
-	gitCmd := cmd[0]
-	userProvidedRepoName := cmd[1]
-	repoPath, err := git.ResolvePath(s.c.Repo.Dir, git.ResolveName(userProvidedRepoName))
+func (s *Shell) HandleCommand(ctx context.Context, cmd string, stdin io.Reader, stdout, stderr io.Writer) error {
+	gitCmd, repoName, err := s.parseCommand(cmd)
 	if err != nil {
-		s.error(sess, internalServerErrMsg, err)
-		return
+		slog.Error("ssh invalid command", "error", err, "raw_cmd", cmd)
+		return err
+	}
+
+	repoPath, err := git.ResolvePath(s.cfg.Repo.Dir, git.ResolveName(repoName))
+	if err != nil {
+		slog.Error("ssh access denied", "cmd", gitCmd, "repo", repoName, "error", err)
+		return err
 	}
 
 	repo, err := git.Open(repoPath, "")
 	if err != nil {
-		s.gitError(sess, repoNotFoundErrMsg, err)
-		return
+		slog.Error("ssh access denied", "cmd", gitCmd, "repo", repoName, "error", err)
+		return err
 	}
 
 	switch gitCmd {
 	case "git-upload-pack":
-		isPrivate, err := repo.IsPrivate()
-		if err != nil {
-			s.gitError(sess, badRequestErrMsg, nil)
-			return
-		}
-
-		if isPrivate && !authorized {
-			s.gitError(sess, badRequestErrMsg, nil)
-			return
-		}
-
-		if err := repo.UploadPack(ctx, false, "", sess, sess); err != nil {
-			s.gitError(sess, internalServerErrMsg, err)
-			return
-		}
-
-		sess.Exit(0)
-
+		err = repo.UploadPack(ctx, false, "", stdin, stdout)
 	case "git-upload-archive":
-		isPrivate, err := repo.IsPrivate()
-		if err != nil {
-			s.gitError(sess, badRequestErrMsg, nil)
-			return
-		}
-
-		if isPrivate && !authorized {
-			s.gitError(sess, badRequestErrMsg, nil)
-			return
-		}
-
-		if err := repo.UploadArchive(ctx, sess, sess); err != nil {
-			s.gitError(sess, internalServerErrMsg, err)
-			return
-		}
-
-		sess.Exit(0)
-
+		err = repo.UploadArchive(ctx, stdin, stdout)
 	case "git-receive-pack":
-		if !authorized {
-			s.gitError(sess, unauthorizedErrMsg, nil)
-			return
-		}
-
-		if err := repo.ReceivePack(ctx, sess, sess, sess.Stderr()); err != nil {
-			s.gitError(sess, internalServerErrMsg, err)
-			return
-		}
-
-		sess.Exit(0)
-
+		err = repo.ReceivePack(ctx, stdin, stdout, stderr)
 	default:
-		s.error(sess, badRequestErrMsg, nil)
-		return
+		err = fmt.Errorf("access denied: invalid git command %q", gitCmd)
 	}
-}
 
-func (s *Server) isAuthorized(iden gossh.PublicKey) bool {
-	return slices.ContainsFunc(s.authKeys, func(i gossh.PublicKey) bool {
-		return ssh.KeysEqual(iden, i)
-	})
-}
-
-func (s *Server) parseAuthKeys() error {
-	parsedKeys := make([]gossh.PublicKey, len(s.c.SSH.Keys))
-	for i, key := range s.c.SSH.Keys {
-		pkey, _, _, _, err := gossh.ParseAuthorizedKey([]byte(key))
-		if err != nil {
-			return err
-		}
-		parsedKeys[i] = pkey
+	if err != nil {
+		slog.Error("ssh operation failed", "cmd", gitCmd, "repo", repoName, "error", err)
 	}
-	s.authKeys = parsedKeys
-	return nil
+
+	return err
 }
 
-const (
-	internalServerErrMsg = "internal server error\n"
-	badRequestErrMsg     = "bad request\n"
-	unauthorizedErrMsg   = "pushing only allowed to authorized users\n"
-	repoNotFoundErrMsg   = "repository not found\n"
-)
-
-func (s *Server) error(sess ssh.Session, msg string, err error) {
-	slog.Error("ssh error", "msg", msg, "err", err)
-	fmt.Fprintf(sess.Stderr(), "%s", msg)
-	sess.Exit(1)
+func (s *Shell) AuthorizedKeys(executablePath string) string {
+	var out strings.Builder
+	for _, key := range s.cfg.SSH.Keys {
+		fmt.Fprintf(&out, `command="%s shell",no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty %s`+"\n",
+			executablePath, key)
+	}
+	return out.String()
 }
 
-func (s *Server) gitError(sess ssh.Session, msg string, err error) {
-	slog.Error("ssh git error", "msg", msg, "err", err)
-	git.PackError(sess, msg)
-	git.PackFlush(sess)
-	sess.Exit(1)
+func (s *Shell) parseCommand(cmd string) (gitCmd, repoName string, err error) {
+	cmdParts := strings.Fields(cmd)
+	if len(cmdParts) < 2 {
+		return "", "", fmt.Errorf("invalid command: expected 'git-cmd repo', got %q", cmd)
+	}
+
+	gitCmd = cmdParts[0]
+	repoName = strings.Trim(cmdParts[1], "'\"")
+	if repoName == "" {
+		return "", "", fmt.Errorf("invalid command: empty repository name")
+	}
+
+	return gitCmd, repoName, nil
 }

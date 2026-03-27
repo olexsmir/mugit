@@ -17,7 +17,6 @@ func TestCheckPort(t *testing.T) {
 }
 
 func TestConfig_Validate(t *testing.T) {
-	hostKey := "testdata/hostkey"
 	tests := []struct {
 		name     string
 		expected any
@@ -35,10 +34,7 @@ func TestConfig_Validate(t *testing.T) {
 			c: Config{
 				Meta: MetaConfig{Host: "example.com"},
 				Repo: RepoConfig{Dir: t.TempDir()},
-				SSH: SSHConfig{
-					Enable:  true,
-					HostKey: hostKey,
-				},
+				SSH:  SSHConfig{Enable: true},
 			},
 		},
 		{
@@ -71,41 +67,6 @@ func TestConfig_Validate(t *testing.T) {
 				Meta:   MetaConfig{Host: "example.com"},
 				Repo:   RepoConfig{Dir: t.TempDir()},
 				Server: ServerConfig{Port: -1},
-			},
-		},
-		{
-			name:     "invalid ssh port",
-			expected: "ssh.port",
-			c: Config{
-				Meta: MetaConfig{Host: "example.com"},
-				Repo: RepoConfig{Dir: t.TempDir()},
-				SSH: SSHConfig{
-					Enable:  true,
-					HostKey: hostKey,
-					Port:    100000,
-				},
-			},
-		},
-		{
-			name:     "same ssh and http ports",
-			expected: "ssh.port must differ",
-			c: Config{
-				Meta:   MetaConfig{Host: "example.com"},
-				Repo:   RepoConfig{Dir: t.TempDir()},
-				SSH:    SSHConfig{Enable: true, Port: 228},
-				Server: ServerConfig{Port: 228},
-			},
-		},
-		{
-			name:     "invalid ssh.host_key path",
-			expected: "ssh.host_key",
-			c: Config{
-				Meta: MetaConfig{Host: "example.com"},
-				Repo: RepoConfig{Dir: t.TempDir()},
-				SSH: SSHConfig{
-					Enable:  true,
-					HostKey: "/somewhere",
-				},
 			},
 		},
 	}

@@ -88,9 +88,7 @@ repo:
 # ssh: push/clone over SSH
 ssh:
   enable: true
-  port: 2222  # SSH port (default 2222)
   user: "git" # user as which the app operates (default "git")
-  host_key: /var/lib/mugit/host   # path to SSH host key (generate with ssh-keygen)
   # Only these public keys can access private repos and push to others.
   keys:
     - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA......
