@@ -35,9 +35,9 @@ type RepoConfig struct {
 }
 
 type SSHConfig struct {
-	Enable  bool     `yaml:"enable"`
-	User    string   `yaml:"user"`
-	Keys    []string `yaml:"keys"`
+	Enable bool     `yaml:"enable"`
+	User   string   `yaml:"user"`
+	Keys   []string `yaml:"keys"`
 }
 
 type MirrorConfig struct {

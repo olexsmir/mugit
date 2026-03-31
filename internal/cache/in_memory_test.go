@@ -16,6 +16,7 @@ func TestInMemory_Set(t *testing.T) {
 		c.Set("asdf", "qwer")
 		is.Equal(t, c.data["asdf"].v, "qwer")
 	})
+
 	t.Run("overwrites prev value", func(t *testing.T) {
 		c.Set("asdf", "one")
 		c.Set("asdf", "two")
@@ -32,10 +33,12 @@ func TestInMemory_Get(t *testing.T) {
 		is.Equal(t, true, found)
 		is.Equal(t, "qwer", v)
 	})
+
 	t.Run("miss", func(t *testing.T) {
 		_, found := c.Get("missing")
 		is.Equal(t, false, found)
 	})
+
 	t.Run("expired item", func(t *testing.T) {
 		synctest.Test(t, func(t *testing.T) {
 			c.Set("asdf", "qwer")
