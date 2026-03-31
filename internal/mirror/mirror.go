@@ -23,6 +23,10 @@ func IsRemoteSupported(remote string) error {
 	return nil
 }
 
+func IsGithubRemote(remoteURL string) bool {
+	return strings.Contains(remoteURL, "github.com")
+}
+
 type Worker struct {
 	c *config.Config
 }
@@ -100,7 +104,7 @@ func (w *Worker) syncRepo(ctx context.Context, repo *git.Repo) error {
 		return err
 	}
 
-	if w.isRemoteGithub(remoteURL) && w.c.Mirror.GithubToken != "" {
+	if IsGithubRemote(remoteURL) && w.c.Mirror.GithubToken != "" {
 		if err := repo.FetchFromGithubWithToken(ctx, w.c.Mirror.GithubToken); err != nil {
 			slog.Error("mirror: fetch failed (github)", "repo", name, "err", err)
 			return err
@@ -152,8 +156,4 @@ func (w *Worker) findMirrorRepos() ([]*git.Repo, error) {
 	}
 
 	return repos, nil
-}
-
-func (w *Worker) isRemoteGithub(remoteURL string) bool {
-	return strings.Contains(remoteURL, "github.com")
 }
