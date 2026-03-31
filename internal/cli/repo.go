@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"strings"
 
 	"github.com/urfave/cli/v3"
 	"olexsmir.xyz/mugit/internal/git"
@@ -134,6 +133,5 @@ func (c *Cli) getRepoNameArg(cmd *cli.Command) (string, error) {
 	if name == "" {
 		return "", fmt.Errorf("no name provided")
 	}
-	name = strings.TrimRight(name, ".git") + ".git"
-	return name, nil
+	return git.ResolveName(name), nil
 }
