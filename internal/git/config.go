@@ -78,7 +78,7 @@ func (g *Repo) Description() (string, error) {
 
 func (g *Repo) SetDescription(desc string) error {
 	path := filepath.Join(g.path, "description")
-	return os.WriteFile(path, []byte(desc), 0o644)
+	return os.WriteFile(path, []byte(desc), 0o600)
 }
 
 func (g *Repo) LastSync() (time.Time, error) {

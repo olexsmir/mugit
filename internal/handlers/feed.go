@@ -23,7 +23,7 @@ type rssChannelXML struct {
 type rssItemXML struct {
 	Title       string `xml:"title"`
 	Link        string `xml:"link"`
-	Guid        string `xml:"guid"`
+	GUID        string `xml:"guid"`
 	Description string `xml:"description,omitempty"`
 	PubDate     string `xml:"pubDate,omitempty"`
 }
@@ -69,7 +69,7 @@ func (h *handlers) repoFeedHandler(w http.ResponseWriter, r *http.Request) {
 		it := rssItemXML{
 			Title: "branch: " + branch.Name,
 			Link:  href,
-			Guid:  href,
+			GUID:  href,
 		}
 		if !branch.LastUpdate.IsZero() {
 			it.PubDate = branch.LastUpdate.Format(time.RFC1123Z)
@@ -85,7 +85,7 @@ func (h *handlers) repoFeedHandler(w http.ResponseWriter, r *http.Request) {
 			it := rssItemXML{
 				Title:       "tag: " + tag.Name(),
 				Link:        href,
-				Guid:        href,
+				GUID:        href,
 				Description: tag.Message(),
 			}
 			if !tag.When().IsZero() {
@@ -130,7 +130,7 @@ func (h *handlers) indexFeedHandler(w http.ResponseWriter, r *http.Request) {
 		it := rssItemXML{
 			Title:       repo.Name,
 			Link:        href,
-			Guid:        href,
+			GUID:        href,
 			Description: repo.Desc,
 		}
 		if !repo.LastCommit.IsZero() {
