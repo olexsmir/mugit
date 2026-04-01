@@ -16,6 +16,7 @@
             src = ./.;
             vendorHash = "sha256-eJ6L6o2cisJRZxoEDf9gtHL8T+xpnIDq9KPQr1vgLig=";
             ldflags = [ "-s" "-w" "-X main.version=${version}" ];
+            nativeCheckInputs = [ pkgs.git ];
             meta = with pkgs.lib; {
               homepage = "https://git.olexsmir.xyz/mugit";
               license = licenses.mit;
