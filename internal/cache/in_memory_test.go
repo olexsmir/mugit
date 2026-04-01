@@ -50,6 +50,35 @@ func TestInMemory_Get(t *testing.T) {
 	})
 }
 
+func TestInMemory_ZeroTTL(t *testing.T) {
+	c := NewInMemory[string](0)
+	c.Set("key", "val")
+
+	_, found := c.Get("key")
+	is.Equal(t, false, found)
+}
+
+func TestInMemory_StructType(t *testing.T) {
+	type testItem struct{ v string }
+
+	c := NewInMemory[testItem](time.Minute)
+	expected := testItem{v: "repo"}
+	c.Set("k", expected)
+
+	v, found := c.Get("k")
+	is.Equal(t, expected, v)
+	is.Equal(t, true, found)
+}
+
+func TestInMemory_EmptyKey(t *testing.T) {
+	c := NewInMemory[string](time.Minute)
+	c.Set("", "empty-key-val")
+
+	v, found := c.Get("")
+	is.Equal(t, "empty-key-val", v)
+	is.Equal(t, true, found)
+}
+
 func TestInMemory_ConcurrentSetGet(t *testing.T) {
 	c := NewInMemory[int](time.Minute)
 	synctest.Test(t, func(t *testing.T) {
