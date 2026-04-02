@@ -1,4 +1,4 @@
-# Fetch after push: push via SSH, verify refs via HTTP ls-remote
+# Fetch after push: push via filesystem, verify refs via HTTP ls-remote
 mkrepo fetchafterrepo
 
 exec git init local-repo
@@ -8,11 +8,9 @@ cp file.txt local-repo/file.txt
 exec git -C local-repo add file.txt
 exec git -C local-repo commit -m initial
 
-mksshwrapper
-exec chmod +x ssh-wrapper.sh
-exec env GIT_SSH_COMMAND="$WORK/ssh-wrapper.sh" git -C local-repo push git@localhost:fetchafterrepo.git master
+exec git -C local-repo push file://$REPOS/fetchafterrepo.git master
 
-exec git ls-remote $HTTP_URL/fetchafterrepo
+exec git ls-remote $MURL/fetchafterrepo
 stdout 'refs/heads/master'
 
 -- file.txt --

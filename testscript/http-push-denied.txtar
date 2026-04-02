@@ -1,14 +1,15 @@
-# HTTP push denied: verify push over HTTP is rejected
-mkrepo httppushrepo
+# http: reject push
 
-exec git init local-repo
-exec git -C local-repo config user.email "test@test.local"
-exec git -C local-repo config user.name "Test User"
-cp file.txt local-repo/file.txt
-exec git -C local-repo add file.txt
-exec git -C local-repo commit -m initial
+mkrepo http-push
+exec git init local
+exec git -C local config user.email "test@test.local"
+exec git -C local config user.name "Test User"
+cp file.txt local/file.txt
+exec git -C local add file.txt
+exec git -C local commit -m initial
 
-! exec git -C local-repo push $HTTP_URL/httppushrepo.git master
+! exec git -C local push $MURL/http-push.git master
+stderr 'remote: pushes are only supported over ssh'
 
 -- file.txt --
 hello

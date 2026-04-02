@@ -1,5 +1,6 @@
-# Empty repo: create empty repo, verify HTTP clone succeeds but is empty
+# empty repo: http clone empty repo
+
 mkrepo emptyrepo
 
-exec git clone $HTTP_URL/emptyrepo empty-clone
+exec git clone $MURL/emptyrepo empty-clone
 exists empty-clone/.git

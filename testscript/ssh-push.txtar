@@ -1,18 +1,21 @@
 # SSH push: create empty repo, push via mugit shell, verify via HTTP clone
-mkrepo sshpushrepo
+# ssh push: allowed
 
-exec git init local-repo
-exec git -C local-repo config user.email "test@test.local"
-exec git -C local-repo config user.name "Test User"
-cp file.txt local-repo/file.txt
-exec git -C local-repo add file.txt
-exec git -C local-repo commit -m initial
+mkrepo ssh-push
 
-mksshwrapper
+exec git init local
+exec git -C local config user.email "test@test.local"
+exec git -C local config user.name "Test User"
+
+cp file.txt local/file.txt
+exec git -C local add file.txt
+exec git -C local commit -m initial
+
+mksshwrapper # deal with this helper
 exec chmod +x ssh-wrapper.sh
-exec env GIT_SSH_COMMAND="$WORK/ssh-wrapper.sh" git -C local-repo push git@localhost:sshpushrepo.git master
+exec env GIT_SSH_COMMAND="$WORK/ssh-wrapper.sh" git -C local push git@localhost:ssh-push.git master
 
-exec git clone $HTTP_URL/sshpushrepo verify-clone
+exec git clone $MURL/ssh-push verify-clone
 exists verify-clone/file.txt
 exec cat verify-clone/file.txt
 stdout 'hello from ssh'

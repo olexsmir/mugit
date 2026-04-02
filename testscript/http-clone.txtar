@@ -1,9 +1,31 @@
-# HTTP clone: create seeded repo, clone over HTTP, verify files
-mkrepo -seed httpclonerepo
+# http: clone
 
-exec git clone $HTTP_URL/httpclonerepo clone-dir
-exists clone-dir/README.md
-exists clone-dir/hello.txt
-exists clone-dir/src/main.go
-exec cat clone-dir/hello.txt
+exec git init local
+exec git -C local config user.email "test@test.local"
+exec git -C local config user.name "Test User"
+cp readme.txt local/readme.txt
+cp main.go local/main.go
+exec git -C local add .
+exec git -C local commit -m 'init'
+
+mkrepo http-clone
+exec git -C local push file://$REPOS/http-clone.git master
+
+# test
+
+exec git clone $MURL/http-clone clone
+exists clone/readme.txt
+exists clone/main.go
+
+exec cat clone/readme.txt
 stdout 'hello world'
+
+-- readme.txt --
+hello world
+
+-- main.go --
+package main
+
+func main() {
+    println("hello")
+}
