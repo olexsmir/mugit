@@ -22,7 +22,7 @@ import (
 var (
 	mugitBin   string
 	httpPort   int
-	repoDir    string
+	reposDir   string
 	configPath string
 )
 
@@ -38,14 +38,14 @@ func testMain(m *testing.M) int {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	repoDir = filepath.Join(tmpDir, "repos")
-	if err := os.MkdirAll(repoDir, 0o755); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to create repo dir: %v\n", err)
+	reposDir = filepath.Join(tmpDir, "repos")
+	if jerr := os.MkdirAll(reposDir, 0o755); jerr != nil {
+		fmt.Fprintf(os.Stderr, "failed to create repo dir: %v\n", jerr)
 		return 1
 	}
 
-	if err := buildMugitBinary(); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to build binary: %v\n", err)
+	if berr := buildMugitBinary(tmpDir); berr != nil {
+		fmt.Fprintf(os.Stderr, "failed to build binary: %v\n", berr)
 		return 1
 	}
 
@@ -66,7 +66,7 @@ func testMain(m *testing.M) int {
 			Host:  "localhost",
 		},
 		Repo: config.RepoConfig{
-			Dir:     repoDir,
+			Dir:     reposDir,
 			Readmes: []string{"README.md"},
 			Masters: []string{"master", "main"},
 		},
@@ -80,7 +80,12 @@ func testMain(m *testing.M) int {
 	}
 
 	configPath = filepath.Join(tmpDir, "config.yaml")
-	if err := writeConfig(configPath, cfg); err != nil {
+	configBytes, err := yaml.Marshal(cfg)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to marshal config: %v\n", err)
+		return 1
+	}
+	if err := os.WriteFile(configPath, configBytes, 0o600); err != nil {
 		fmt.Fprintf(os.Stderr, "failed to write config: %v\n", err)
 		return 1
 	}
@@ -109,6 +114,11 @@ func TestScript(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration tests")
 	}
+
+	sshWrapperContent := fmt.Sprintf(`#!/bin/sh
+export SSH_ORIGINAL_COMMAND="$2"
+exec %s shell -c %s`, mugitBin, configPath)
+
 	testscript.Run(t, testscript.Params{
 		Dir: "testscript",
 		Cmds: map[string]func(ts *testscript.TestScript, neg bool, args []string){
@@ -117,17 +127,13 @@ func TestScript(t *testing.T) {
 		},
 		Setup: func(env *testscript.Env) error {
 			work := env.Getenv("WORK")
-
-			sshWrapperContent := fmt.Sprintf(`#!/bin/sh
-export SSH_ORIGINAL_COMMAND="$2"
-exec %s shell -c %s`, mugitBin, configPath)
 			sshWrapperPath := filepath.Join(work, "ssh-wrapper.sh")
 			if err := os.WriteFile(sshWrapperPath, []byte(sshWrapperContent), 0o700); err != nil {
 				return fmt.Errorf("failed to create ssh wrapper: %w", err)
 			}
 
 			env.Setenv("SSH_WRAPPER", sshWrapperPath)
-			env.Setenv("REPOS", repoDir)
+			env.Setenv("REPOS", reposDir)
 			env.Setenv("MPORT", strconv.Itoa(httpPort))
 			env.Setenv("MURL", fmt.Sprintf("http://127.0.0.1:%d", httpPort))
 			return nil
@@ -135,13 +141,8 @@ exec %s shell -c %s`, mugitBin, configPath)
 	})
 }
 
-func buildMugitBinary() error {
-	tmpDir, err := os.MkdirTemp("", "mugit-bin-*")
-	if err != nil {
-		return err
-	}
+func buildMugitBinary(tmpDir string) error {
 	mugitBin = filepath.Join(tmpDir, "mugit")
-
 	cmd := exec.Command("go", "build", "-o", mugitBin, ".")
 	cmd.Dir = "."
 	if out, err := cmd.CombinedOutput(); err != nil {
@@ -164,22 +165,17 @@ func findFreePort() (int, error) {
 func waitForPort(port int, timeout time.Duration) error {
 	deadline := time.Now().Add(timeout)
 	for time.Now().Before(deadline) {
-		conn, err := net.DialTimeout("tcp", net.JoinHostPort("127.0.0.1", strconv.Itoa(port)), 200*time.Millisecond)
-		if err == nil {
+		if conn, err := net.DialTimeout(
+			"tcp",
+			net.JoinHostPort("127.0.0.1", strconv.Itoa(port)),
+			200*time.Millisecond,
+		); err == nil {
 			conn.Close()
 			return nil
 		}
 		time.Sleep(50 * time.Millisecond)
 	}
 	return fmt.Errorf("port %d not ready after %s", port, timeout)
-}
-
-func writeConfig(path string, cfg *config.Config) error {
-	data, err := yaml.Marshal(cfg)
-	if err != nil {
-		return err
-	}
-	return os.WriteFile(path, data, 0o644)
 }
 
 func cmdMugit(ts *testscript.TestScript, neg bool, args []string) {
