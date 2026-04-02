@@ -26,6 +26,13 @@ func (c *Cli) repoNewAction(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("repository already exists: %s", name)
 	}
 
+	mirrorURL := cmd.String("mirror")
+	if mirrorURL != "" {
+		if merr := mirror.IsRemoteSupported(mirrorURL); merr != nil {
+			return merr
+		}
+	}
+
 	if err = git.Init(path); err != nil {
 		return err
 	}
@@ -39,11 +46,7 @@ func (c *Cli) repoNewAction(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("failed to set private status: %w", err)
 	}
 
-	mirrorURL := cmd.String("mirror")
 	if mirrorURL != "" {
-		if err := mirror.IsRemoteSupported(mirrorURL); err != nil {
-			return err
-		}
 		if err := repo.SetMirrorRemote(mirrorURL); err != nil {
 			return fmt.Errorf("failed to set mirror remote: %w", err)
 		}
@@ -123,8 +126,11 @@ func (c *Cli) repoSetHeadAction(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	branch := cmd.Args().Get(0)
-	slog.Info("chaining repo head", "repo", name, "branch", branch)
-	err = repo.Checkout(branch)
+	if err = repo.Checkout(branch); err != nil {
+		return err
+	}
+
+	slog.Info("changed repo head", "repo", name, "branch", branch)
 	return err
 }
 

@@ -74,20 +74,24 @@ func (h handlers) parseRef(name string) string {
 var templateFuncs = template.FuncMap{
 	"inc":             func(n int) int { return n + 1 },
 	"inc64":           func(n int64) int64 { return n + 1 },
-	"humanizeRelTime": func(t time.Time) string { return humanize.Time(t) },
 	"humanizeTime":    func(t time.Time) string { return t.Format("2006-01-02 15:04:05 MST") },
-	"urlencode":       func(s string) string { return url.PathEscape(s) },
-	"commitSummary": func(s string) string {
-		before, after, found := strings.Cut(s, "\n")
-		first := strings.TrimSuffix(before, "\r")
-		if !found {
-			return first
-		}
+	"humanizeRelTime": humanize.Time,
+	"urlencode":       url.PathEscape,
+	"commitSummary":   commitSummary,
+}
 
-		if strings.Contains(after, "\n") {
-			return first + "..."
-		}
-
+func commitSummary(commitMsg string) string {
+	before, after, found := strings.Cut(commitMsg, "\n")
+	first := strings.TrimSuffix(before, "\r")
+	if !found {
 		return first
-	},
+	}
+
+	// if there is any content after the first newline, indicate it with "..."
+	after = strings.TrimLeft(after, "\r\n")
+	if after != "" {
+		return first + "..."
+	}
+
+	return first
 }

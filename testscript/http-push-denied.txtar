@@ -1,0 +1,16 @@
+# http: reject push
+
+git init local
+cp file.txt local/file.txt
+git -C local add file.txt
+git -C local commit -m initial
+
+mugit repo new http-push
+
+
+! git -C local push $MURL/http-push.git master
+stderr 'remote: pushes are only supported over ssh'
+
+
+-- file.txt --
+hello

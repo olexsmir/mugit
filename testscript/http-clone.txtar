@@ -1,0 +1,29 @@
+# http: clone
+
+git init local
+cp readme.txt local/readme.txt
+cp main.go local/main.go
+git -C local add .
+git -C local commit -m 'init'
+
+mugit repo new http-clone.git
+git -C local push file://$REPOS/http-clone.git master
+
+
+git clone $MURL/http-clone clone
+exists clone/readme.txt
+exists clone/main.go
+
+exec cat clone/readme.txt
+stdout 'hello world'
+
+
+-- readme.txt --
+hello world
+
+-- main.go --
+package main
+
+func main() {
+    println("hello")
+}
