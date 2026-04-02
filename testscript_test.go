@@ -126,8 +126,10 @@ func TestScript(t *testing.T) {
 			env.Setenv("MUGIT_BIN", mugitBin)
 			env.Setenv("MUGIT_CONFIG", configPath)
 			env.Setenv("REPOS", repoDir)
+			env.Setenv("MUGIT_REPO_DIR", repoDir)
 			env.Setenv("MPORT", strconv.Itoa(httpPort))
 			env.Setenv("MURL", fmt.Sprintf("http://127.0.0.1:%d", httpPort))
+			env.Setenv("HTTP_URL", fmt.Sprintf("http://127.0.0.1:%d", httpPort))
 			return nil
 		},
 		Cmds: map[string]func(ts *testscript.TestScript, neg bool, args []string){
@@ -135,6 +137,7 @@ func TestScript(t *testing.T) {
 			"mkfile":       cmdMkfile,
 			"mugit":        cmdMugit,
 			"mksshwrapper": cmdMksshwrapper,
+			"git":          cmdGit,
 		},
 	})
 }
@@ -249,5 +252,36 @@ func cmdMksshwrapper(ts *testscript.TestScript, neg bool, args []string) {
 	content := fmt.Sprintf("#!/bin/sh\nexport SSH_ORIGINAL_COMMAND=\"$2\"\nexec %s shell -c %s\n", mugitBin, configPath)
 	if err := os.WriteFile(ts.Getenv("WORK")+"/ssh-wrapper.sh", []byte(content), 0o755); err != nil {
 		ts.Fatalf("mksshwrapper: %v", err)
+	}
+}
+
+func cmdGit(ts *testscript.TestScript, neg bool, args []string) {
+	if len(args) > 0 && args[0] == "init" {
+		hasBranch := false
+		for _, arg := range args {
+			if arg == "-b" || arg == "--initial-branch" {
+				hasBranch = true
+				break
+			}
+		}
+		if !hasBranch {
+			args = append([]string{"init", "-b", "master"}, args[1:]...)
+		}
+	}
+	args = append([]string{
+		"-c", "user.email=test@test.local",
+		"-c", "user.name=Test User",
+	}, args...)
+	cmd := exec.Command("git", args...)
+	cmd.Dir = ts.Getenv("WORK")
+	cmd.Stdout = ts.Stdout()
+	cmd.Stderr = ts.Stderr()
+
+	err := cmd.Run()
+	if err == nil && neg {
+		ts.Fatalf("expected git to fail, but it succeeded")
+	}
+	if err != nil && !neg {
+		ts.Fatalf("git: %v", err)
 	}
 }

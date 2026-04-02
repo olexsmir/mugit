@@ -1,18 +1,16 @@
 # Private repo HTTP access denied
 mkrepo privaterepo
 
-exec git init local-repo
-exec git -C local-repo config user.email "test@test.local"
-exec git -C local-repo config user.name "Test User"
+git init local-repo
 cp README.md local-repo/README.md
-exec git -C local-repo add .
-exec git -C local-repo commit -m initial
+git -C local-repo add .
+git -C local-repo commit -m initial
 
-exec git -C local-repo push file://$MUGIT_REPO_DIR/privaterepo.git master
+git -C local-repo push file://$REPOS/privaterepo.git master
 
 mugit repo private privaterepo
 
-! exec git clone $HTTP_URL/privaterepo private-clone
+! exec git clone $MURL/privaterepo private-clone
 
 -- README.md --
 # Private Repo

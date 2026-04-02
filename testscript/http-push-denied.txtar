@@ -1,14 +1,12 @@
 # http: reject push
 
 mkrepo http-push
-exec git init local
-exec git -C local config user.email "test@test.local"
-exec git -C local config user.name "Test User"
+git init local
 cp file.txt local/file.txt
-exec git -C local add file.txt
-exec git -C local commit -m initial
+git -C local add file.txt
+git -C local commit -m initial
 
-! exec git -C local push $MURL/http-push.git master
+! git -C local push $MURL/http-push.git master
 stderr 'remote: pushes are only supported over ssh'
 
 -- file.txt --
