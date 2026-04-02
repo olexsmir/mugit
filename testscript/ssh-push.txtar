@@ -1,11 +1,9 @@
-# ssh push: allowed
-
 git init local
 cp file.txt local/file.txt
 git -C local add file.txt
 git -C local commit -m initial
-mugit repo new ssh-push
 
+mugit repo new ssh-push
 exec env GIT_SSH_COMMAND=$SSH_WRAPPER git -C local push git@localhost:ssh-push.git master
 
 exec git clone $MURL/ssh-push verify-clone

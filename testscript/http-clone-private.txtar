@@ -7,6 +7,7 @@ git -C local commit -m 'init'
 
 mugit repo new http-private
 mugit repo private http-private
+
 git -C local push file://$REPOS/http-private.git master
 
 
