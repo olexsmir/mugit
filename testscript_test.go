@@ -16,7 +16,6 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"olexsmir.xyz/mugit/internal/config"
-	mugitgit "olexsmir.xyz/mugit/internal/git"
 	"olexsmir.xyz/mugit/internal/handlers"
 )
 
@@ -133,8 +132,6 @@ func TestScript(t *testing.T) {
 			return nil
 		},
 		Cmds: map[string]func(ts *testscript.TestScript, neg bool, args []string){
-			"mkrepo":       cmdMkrepo,
-			"mkfile":       cmdMkfile,
 			"mugit":        cmdMugit,
 			"mksshwrapper": cmdMksshwrapper,
 			"git":          cmdGit,
@@ -187,42 +184,6 @@ func writeConfig(path string, cfg *config.Config) error {
 		return err
 	}
 	return os.WriteFile(path, data, 0o644)
-}
-
-func cmdMkrepo(ts *testscript.TestScript, neg bool, args []string) {
-	if neg {
-		ts.Fatalf("unsupported: ! mkrepo")
-	}
-	if len(args) != 1 {
-		ts.Fatalf("usage: mkrepo <name>")
-	}
-
-	name := args[0]
-	repoPath := filepath.Join(repoDir, mugitgit.ResolveName(name))
-	if _, err := os.Stat(repoPath); err == nil {
-		ts.Fatalf("repo %s already exists", name)
-	}
-
-	if err := mugitgit.Init(repoPath); err != nil {
-		ts.Fatalf("init repo: %v", err)
-	}
-}
-
-func cmdMkfile(ts *testscript.TestScript, neg bool, args []string) {
-	if neg {
-		ts.Fatalf("unsupported: ! mkfile")
-	}
-	if len(args) != 2 {
-		ts.Fatalf("usage: mkfile <path> <content>")
-	}
-	path := args[0]
-	content := args[1]
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		ts.Fatalf("mkfile: %v", err)
-	}
-	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
-		ts.Fatalf("mkfile: %v", err)
-	}
 }
 
 func cmdMugit(ts *testscript.TestScript, neg bool, args []string) {

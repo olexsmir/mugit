@@ -6,7 +6,7 @@ cp main.go local/main.go
 git -C local add .
 git -C local commit -m 'init'
 
-mkrepo http-clone
+mugit repo new http-clone.git
 git -C local push file://$REPOS/http-clone.git master
 
 
