@@ -1,0 +1,5 @@
+# Private repo HTTP access denied
+mkrepo -seed privaterepo
+mugit repo private privaterepo
+
+! exec git clone $HTTP_URL/privaterepo private-clone

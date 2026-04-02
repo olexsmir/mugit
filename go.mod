@@ -6,6 +6,7 @@ require (
 	github.com/bluekeyes/go-gitdiff v0.8.1
 	github.com/cyphar/filepath-securejoin v0.6.1
 	github.com/go-git/go-git/v5 v5.17.0
+	github.com/rogpeppe/go-internal v1.14.1
 	github.com/urfave/cli/v3 v3.7.0
 	github.com/yuin/goldmark v1.7.16
 	github.com/yuin/goldmark-emoji v1.0.6
@@ -34,5 +35,6 @@ require (
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	golang.org/x/net v0.51.0 // indirect
 	golang.org/x/sys v0.41.0 // indirect
+	golang.org/x/tools v0.26.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )

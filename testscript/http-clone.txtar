@@ -1,0 +1,9 @@
+# HTTP clone: create seeded repo, clone over HTTP, verify files
+mkrepo -seed httpclonerepo
+
+exec git clone $HTTP_URL/httpclonerepo clone-dir
+exists clone-dir/README.md
+exists clone-dir/hello.txt
+exists clone-dir/src/main.go
+exec cat clone-dir/hello.txt
+stdout 'hello world'
