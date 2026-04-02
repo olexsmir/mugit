@@ -1,0 +1,40 @@
+# set head: sets default branch
+
+git init local
+cp file.txt local/file.txt
+git -C local add file.txt
+git -C local commit -m 'init master'
+
+git -C local switch -c develop
+cp develop.txt local/develop.txt
+git -C local add develop.txt
+git -C local commit -m 'init develop'
+
+
+mugit repo new heady
+git -C local push file://$REPOS/heady.git master
+git -C local push file://$REPOS/heady.git develop
+
+
+exec cat $REPOS/heady.git/HEAD
+stdout 'ref: refs/heads/master'
+
+# change head
+mugit repo set-head heady develop
+stderr 'changed repo head repo=heady.git branch=develop' # fix output
+
+exec cat $REPOS/heady.git/HEAD
+stdout 'ref: refs/heads/develop'
+
+# go back to master
+mugit repo set-head heady.git master
+stderr 'changed repo head repo=heady.git branch=master' # fix output
+
+exec cat $REPOS/heady.git/HEAD
+stdout 'ref: refs/heads/master'
+
+-- file.txt --
+initial content
+
+-- develop.txt --
+develop content

@@ -1,0 +1,10 @@
+mugit repo new desc-repo
+
+mugit repo description desc-repo
+stderr 'description=""' # fix output
+
+mugit repo description desc-repo 'new test desc'
+stderr 'new_description="new test desc"' # fix output
+
+mugit repo description desc-repo
+stderr 'new_description="new test desc"' # fix output

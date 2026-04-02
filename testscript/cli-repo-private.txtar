@@ -1,0 +1,19 @@
+mugit repo new test-private
+
+
+exec cat $REPOS/test-private.git/config
+stdout 'private = false'
+
+
+mugit repo private test-private
+stderr 'is_private=true' # fix output
+
+exec cat $REPOS/test-private.git/config
+stdout 'private = true'
+
+
+mugit repo private test-private.git
+stderr 'is_private=false' # fix output
+
+exec cat $REPOS/test-private.git/config
+stdout 'private = false'
