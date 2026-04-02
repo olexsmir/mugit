@@ -1,0 +1,17 @@
+# http: deny access to private repos
+
+git init local
+cp readme.txt local/readme.txt
+git -C local add .
+git -C local commit -m 'init'
+
+mugit repo new http-private
+mugit repo private http-private
+git -C local push file://$REPOS/http-private.git master
+
+
+! exec git clone $MURL/http-private private-clone
+stderr 'remote: repository not found'
+
+-- readme.txt --
+private repo

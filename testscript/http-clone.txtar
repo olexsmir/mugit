@@ -9,9 +9,8 @@ git -C local commit -m 'init'
 mkrepo http-clone
 git -C local push file://$REPOS/http-clone.git master
 
-# test
 
-exec git clone $MURL/http-clone clone
+git clone $MURL/http-clone clone
 exists clone/readme.txt
 exists clone/main.go
 

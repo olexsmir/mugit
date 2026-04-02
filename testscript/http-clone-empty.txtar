@@ -1,0 +1,7 @@
+# empty repo: http clone empty repo
+
+mugit repo new emptyrepo
+git clone $MURL/emptyrepo empty-clone
+
+
+exists empty-clone/.git

@@ -1,14 +1,15 @@
 # Fetch after push: push via filesystem, verify refs via HTTP ls-remote
+
+git init local
+cp file.txt local/file.txt
+git -C local add file.txt
+git -C local commit -m initial
+
 mkrepo fetchafterrepo
+git -C local push file://$REPOS/fetchafterrepo.git master
 
-git init local-repo
-cp file.txt local-repo/file.txt
-git -C local-repo add file.txt
-git -C local-repo commit -m initial
 
-git -C local-repo push file://$REPOS/fetchafterrepo.git master
-
-exec git ls-remote $MURL/fetchafterrepo
+git ls-remote $MURL/fetchafterrepo
 stdout 'refs/heads/master'
 
 -- file.txt --

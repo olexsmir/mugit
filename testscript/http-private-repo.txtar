@@ -1,7 +1,0 @@
-# http: deny access to private repos
-
-mkrepo privaterepo
-mugit repo private privaterepo
-
-! exec git clone $MURL/privaterepo private-clone
-stderr 'remote: repository not found'
