@@ -56,12 +56,6 @@ func testMain(m *testing.M) int {
 	}
 	httpPort = port
 
-	pubKey, err := os.ReadFile("testscript/testdata/test_key.pub")
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to read test key: %v\n", err)
-		return 1
-	}
-
 	cfg := &config.Config{
 		Server: config.ServerConfig{
 			Host: "127.0.0.1",
@@ -76,11 +70,7 @@ func testMain(m *testing.M) int {
 			Readmes: []string{"README.md"},
 			Masters: []string{"master", "main"},
 		},
-		SSH: config.SSHConfig{
-			Enable: true,
-			User:   "git",
-			Keys:   []string{string(pubKey)},
-		},
+		SSH:    config.SSHConfig{Enable: true, User: "git"},
 		Mirror: config.MirrorConfig{Enable: false},
 		Cache: config.CacheConfig{
 			HomePage: 0,
@@ -121,20 +111,26 @@ func TestScript(t *testing.T) {
 	}
 	testscript.Run(t, testscript.Params{
 		Dir: "testscript",
+		Cmds: map[string]func(ts *testscript.TestScript, neg bool, args []string){
+			"mugit": cmdMugit,
+			"git":   cmdGit,
+		},
 		Setup: func(env *testscript.Env) error {
-			env.Setenv("MUGIT_BIN", mugitBin)
-			env.Setenv("MUGIT_CONFIG", configPath)
+			work := env.Getenv("WORK")
+
+			sshWrapperContent := fmt.Sprintf(`#!/bin/sh
+export SSH_ORIGINAL_COMMAND="$2"
+exec %s shell -c %s`, mugitBin, configPath)
+			sshWrapperPath := filepath.Join(work, "ssh-wrapper.sh")
+			if err := os.WriteFile(sshWrapperPath, []byte(sshWrapperContent), 0o700); err != nil {
+				return fmt.Errorf("failed to create ssh wrapper: %w", err)
+			}
+
+			env.Setenv("SSH_WRAPPER", sshWrapperPath)
 			env.Setenv("REPOS", repoDir)
-			env.Setenv("MUGIT_REPO_DIR", repoDir)
 			env.Setenv("MPORT", strconv.Itoa(httpPort))
 			env.Setenv("MURL", fmt.Sprintf("http://127.0.0.1:%d", httpPort))
-			env.Setenv("HTTP_URL", fmt.Sprintf("http://127.0.0.1:%d", httpPort))
 			return nil
-		},
-		Cmds: map[string]func(ts *testscript.TestScript, neg bool, args []string){
-			"mugit":        cmdMugit,
-			"mksshwrapper": cmdMksshwrapper,
-			"git":          cmdGit,
 		},
 	})
 }
@@ -203,16 +199,6 @@ func cmdMugit(ts *testscript.TestScript, neg bool, args []string) {
 		if err != nil {
 			ts.Fatalf("mugit: %v", err)
 		}
-	}
-}
-
-func cmdMksshwrapper(ts *testscript.TestScript, neg bool, args []string) {
-	if neg {
-		ts.Fatalf("unsupported: ! mksshwrapper")
-	}
-	content := fmt.Sprintf("#!/bin/sh\nexport SSH_ORIGINAL_COMMAND=\"$2\"\nexec %s shell -c %s\n", mugitBin, configPath)
-	if err := os.WriteFile(ts.Getenv("WORK")+"/ssh-wrapper.sh", []byte(content), 0o755); err != nil {
-		ts.Fatalf("mksshwrapper: %v", err)
 	}
 }
 

@@ -6,11 +6,7 @@ git -C local add file.txt
 git -C local commit -m initial
 mugit repo new ssh-push
 
-
-mksshwrapper # deal with this helper
-exec chmod +x ssh-wrapper.sh
-exec env GIT_SSH_COMMAND="$WORK/ssh-wrapper.sh" git -C local push git@localhost:ssh-push.git master
-
+exec env GIT_SSH_COMMAND=$SSH_WRAPPER git -C local push git@localhost:ssh-push.git master
 
 exec git clone $MURL/ssh-push verify-clone
 exists verify-clone/file.txt

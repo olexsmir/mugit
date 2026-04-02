@@ -33,6 +33,7 @@ stderr 'changed repo head repo=heady.git branch=master' # fix output
 exec cat $REPOS/heady.git/HEAD
 stdout 'ref: refs/heads/master'
 
+
 -- file.txt --
 initial content
 

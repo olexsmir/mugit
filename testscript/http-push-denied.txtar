@@ -11,5 +11,6 @@ mugit repo new http-push
 ! git -C local push $MURL/http-push.git master
 stderr 'remote: pushes are only supported over ssh'
 
+
 -- file.txt --
 hello

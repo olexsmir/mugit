@@ -17,6 +17,7 @@ exists clone/main.go
 exec cat clone/readme.txt
 stdout 'hello world'
 
+
 -- readme.txt --
 hello world
 

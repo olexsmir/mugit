@@ -13,5 +13,6 @@ git -C local push file://$REPOS/http-private.git master
 ! exec git clone $MURL/http-private private-clone
 stderr 'remote: repository not found'
 
+
 -- readme.txt --
 private repo
