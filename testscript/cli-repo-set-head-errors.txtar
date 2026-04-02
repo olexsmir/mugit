@@ -1,0 +1,7 @@
+# missing repo name
+! mugit repo set-head
+stderr 'no name provided'
+
+# repo does not exist
+! mugit repo set-head nonexistent main
+stderr 'failed to open repo'

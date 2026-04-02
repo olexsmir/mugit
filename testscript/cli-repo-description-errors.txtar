@@ -1,0 +1,7 @@
+# missing repo name
+! mugit repo description
+stderr 'no name provided'
+
+# repo does not exist
+! mugit repo description nonexistent
+stderr 'failed to open repo'
