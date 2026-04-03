@@ -55,6 +55,28 @@ func (w *Worker) Start(ctx context.Context) error {
 	}
 }
 
+func (w *Worker) SyncRepo(ctx context.Context, name string) error {
+	path, err := git.ResolvePath(w.c.Repo.Dir, git.ResolveName(name))
+	if err != nil {
+		return fmt.Errorf("failed to resolve repo path: %w", err)
+	}
+
+	repo, err := git.Open(path, "")
+	if err != nil {
+		return fmt.Errorf("failed to open repo: %w", err)
+	}
+
+	isMirror, err := repo.IsMirror()
+	if err != nil {
+		return fmt.Errorf("failed to check mirror status: %w", err)
+	}
+	if !isMirror {
+		return fmt.Errorf("repository is not a mirror")
+	}
+
+	return w.syncRepo(ctx, repo)
+}
+
 func (w *Worker) mirror(ctx context.Context) error {
 	repos, err := w.findMirrorRepos()
 	if err != nil {

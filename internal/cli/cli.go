@@ -113,6 +113,14 @@ func (c *Cli) Run(ctx context.Context, args []string) error {
 							&cli.StringArg{Name: "name"},
 						},
 					},
+					{
+						Name:   "sync",
+						Usage:  "trigger sync for a mirror repository",
+						Action: c.repoSyncAction,
+						Arguments: []cli.Argument{
+							&cli.StringArg{Name: "name"},
+						},
+					},
 				},
 			},
 			{

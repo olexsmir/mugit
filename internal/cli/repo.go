@@ -50,6 +50,12 @@ func (c *Cli) repoNewAction(ctx context.Context, cmd *cli.Command) error {
 		if err := repo.SetMirrorRemote(mirrorURL); err != nil {
 			return fmt.Errorf("failed to set mirror remote: %w", err)
 		}
+
+		slog.Info("performing initial sync for mirror", "repo", name)
+		if err := c.syncRepo(ctx, name); err != nil {
+			return err
+		}
+		slog.Info("initial mirror sync completed", "repo", name)
 	}
 
 	desc := cmd.String("description")
@@ -141,10 +147,45 @@ func (c *Cli) repoDefaultAction(ctx context.Context, cmd *cli.Command) error {
 	return err
 }
 
+func (c *Cli) repoSyncAction(ctx context.Context, cmd *cli.Command) error {
+	name, err := c.getRepoNameArg(cmd)
+	if name == "" {
+		return err
+	}
+
+	repo, err := c.openRepo(name)
+	if err != nil {
+		return fmt.Errorf("failed to open repo: %w", err)
+	}
+
+	isMirror, err := repo.IsMirror()
+	if err != nil {
+		return fmt.Errorf("failed to check mirror status: %w", err)
+	}
+	if !isMirror {
+		return fmt.Errorf("repository is not a mirror: %s", name)
+	}
+
+	if err := c.syncRepo(ctx, name); err != nil {
+		return err
+	}
+
+	slog.Info("mirror sync triggered", "repo", name)
+	return nil
+}
+
 func (c *Cli) getRepoNameArg(cmd *cli.Command) (string, error) {
 	name := cmd.StringArg("name")
 	if name == "" {
 		return "", fmt.Errorf("no name provided")
 	}
 	return git.ResolveName(name), nil
+}
+
+func (c *Cli) syncRepo(ctx context.Context, name string) error {
+	worker := mirror.NewWorker(c.cfg)
+	if err := worker.SyncRepo(ctx, name); err != nil {
+		return fmt.Errorf("failed to sync mirror: %w", err)
+	}
+	return nil
 }
