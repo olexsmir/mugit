@@ -68,7 +68,6 @@ func testMain(m *testing.M) int {
 		Repo: config.RepoConfig{
 			Dir:     reposDir,
 			Readmes: []string{"README.md"},
-			Masters: []string{"master", "main"},
 		},
 		SSH:    config.SSHConfig{Enable: true, User: "git"},
 		Mirror: config.MirrorConfig{Enable: false},

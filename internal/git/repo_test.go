@@ -216,42 +216,54 @@ func TestRepo_IsGoMod(t *testing.T) {
 	})
 }
 
-func TestRepo_FindMasterBranch(t *testing.T) {
-	t.Run("finds master branch", func(t *testing.T) {
+func TestRepo_DefaultBranch(t *testing.T) {
+	t.Run("works", func(t *testing.T) {
 		r := newTestRepo(t)
-		r.commitFile("README.md", "test", "init")
-		branch, err := r.open().FindMasterBranch([]string{"master", "main"})
+		r.commitFile("readme", "test", "init")
 
+		branch, err := r.open().DefaultBranch()
 		is.Equal(t, branch, "master")
 		is.Err(t, err, nil)
 	})
 
-	t.Run("finds first matching candidate", func(t *testing.T) {
+	t.Run("multiple branches", func(t *testing.T) {
 		r := newTestRepo(t)
-		hash := r.commitFile("file.txt", "x", "Commit")
-		r.createBranch("main", hash)
+		r.commitFile("readme", "test", "init")
+		m := r.commitFile("main", "test", "init2")
+		r.createBranch("develop", m)
 
-		// master should be found first (master is created by init)
-		branch, err := r.open().FindMasterBranch([]string{"master", "main"})
+		branch, err := r.open().DefaultBranch()
+		is.Equal(t, branch, "master")
+		is.Err(t, err, nil)
+	})
+}
+
+func TestRepo_SetDefaultBranch(t *testing.T) {
+	t.Run("works", func(t *testing.T) {
+		r := newTestRepo(t)
+		r.commitFile("readme", "test", "init")
+
+		rr := r.open()
+
+		branch, err := rr.DefaultBranch()
 		is.Equal(t, branch, "master")
 		is.Err(t, err, nil)
 
-		// if main is check first, it should be found
-		branch, err = r.open().FindMasterBranch([]string{"main", "master"})
-		is.Equal(t, branch, "main")
+		h := r.commitFile("thing", "hello worldie", "new feature")
+		r.createBranch("develop", h)
+		is.Err(t, rr.SetDefaultBranch("develop"), nil)
+
+		branch, err = rr.DefaultBranch()
+		is.Equal(t, branch, "develop")
 		is.Err(t, err, nil)
 	})
 
-	t.Run("returns error when no match", func(t *testing.T) {
+	t.Run("sets only existent branches", func(t *testing.T) {
 		r := newTestRepo(t)
-		r.commitFile("file.txt", "x", "Commit")
-		_, err := r.open().FindMasterBranch([]string{"nonexistent"})
-		is.Err(t, err, "unable to find master")
-	})
+		r.commitFile("readme", "test", "init")
 
-	t.Run("returns error for empty repo", func(t *testing.T) {
-		r := newTestRepo(t)
-		_, err := r.open().FindMasterBranch([]string{"main"})
-		is.Err(t, err, ErrEmptyRepo)
+		rr := r.open()
+		err := rr.SetDefaultBranch("tesites")
+		is.Err(t, err, `not found:`)
 	})
 }

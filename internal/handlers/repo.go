@@ -88,7 +88,7 @@ func (h *handlers) repoIndexHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	p.Ref, err = repo.FindMasterBranch(h.c.Repo.Masters)
+	p.Ref, err = repo.DefaultBranch()
 	if err != nil {
 		h.write500(w, err)
 		return
@@ -349,7 +349,7 @@ func (h *handlers) refsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	master, err := repo.FindMasterBranch(h.c.Repo.Masters)
+	master, err := repo.DefaultBranch()
 	if err != nil {
 		h.write500(w, err)
 		return
