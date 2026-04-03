@@ -61,7 +61,7 @@ type RepoIndex struct {
 func (h *handlers) repoIndexHandler(w http.ResponseWriter, r *http.Request) {
 	repo, err := h.openPublicRepo(r.PathValue("name"), "")
 	if err != nil {
-		h.write404(w, err)
+		h.write404(w, r.URL.Path, err)
 		return
 	}
 
@@ -130,7 +130,7 @@ func (h *handlers) repoTreeHandler(w http.ResponseWriter, r *http.Request) {
 
 	repo, err := h.openPublicRepo(name, ref)
 	if err != nil {
-		h.write404(w, err)
+		h.write404(w, r.URL.Path, err)
 		return
 	}
 
@@ -182,14 +182,14 @@ func (h *handlers) fileContentsHandler(w http.ResponseWriter, r *http.Request) {
 
 	repo, err := h.openPublicRepo(name, ref)
 	if err != nil {
-		h.write404(w, err)
+		h.write404(w, r.URL.Path, err)
 		return
 	}
 
 	fc, err := repo.FileContent(treePath)
 	if err != nil {
 		if errors.Is(err, git.ErrFileNotFound) {
-			h.write404(w, err)
+		h.write404(w, r.URL.Path, err)
 			return
 		}
 		h.write500(w, err)
@@ -263,7 +263,7 @@ func (h *handlers) logHandler(w http.ResponseWriter, r *http.Request) {
 
 	repo, err := h.openPublicRepo(name, ref)
 	if err != nil {
-		h.write404(w, err)
+		h.write404(w, r.URL.Path, err)
 		return
 	}
 
@@ -306,7 +306,7 @@ func (h *handlers) commitHandler(w http.ResponseWriter, r *http.Request) {
 
 	repo, err := h.openPublicRepo(name, ref)
 	if err != nil {
-		h.write404(w, err)
+		h.write404(w, r.URL.Path, err)
 		return
 	}
 
@@ -339,7 +339,7 @@ type RepoRefs struct {
 func (h *handlers) refsHandler(w http.ResponseWriter, r *http.Request) {
 	repo, err := h.openPublicRepo(r.PathValue("name"), "")
 	if err != nil {
-		h.write404(w, err)
+		h.write404(w, r.URL.Path, err)
 		return
 	}
 

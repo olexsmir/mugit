@@ -14,8 +14,8 @@ func (h *handlers) templ(w http.ResponseWriter, name string, data any) {
 	}
 }
 
-func (h *handlers) write404(w http.ResponseWriter, err error) {
-	slog.Info("404", "err", err)
+func (h *handlers) write404(w http.ResponseWriter, path string, err error) {
+	slog.Info("404", "path", path, "err", err)
 	w.WriteHeader(http.StatusNotFound)
 	h.templ(w, "404", nil)
 }

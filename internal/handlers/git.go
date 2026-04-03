@@ -91,7 +91,7 @@ func (h *handlers) archiveHandler(w http.ResponseWriter, r *http.Request) {
 
 	repo, err := h.openPublicRepo(name, ref)
 	if err != nil {
-		h.write404(w, err)
+		h.write404(w, r.URL.Path, err)
 		return
 	}
 
