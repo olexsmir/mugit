@@ -114,7 +114,7 @@ func (c *Cli) repoPrivateAction(ctx context.Context, cmd *cli.Command) error {
 	return nil
 }
 
-func (c *Cli) repoSetHeadAction(ctx context.Context, cmd *cli.Command) error {
+func (c *Cli) repoDefaultAction(ctx context.Context, cmd *cli.Command) error {
 	name, err := c.getRepoNameArg(cmd)
 	if name == "" {
 		return err
@@ -126,7 +126,7 @@ func (c *Cli) repoSetHeadAction(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	branch := cmd.Args().Get(0)
-	if err = repo.Checkout(branch); err != nil {
+	if err = repo.SetDefaultBranch(branch); err != nil {
 		return err
 	}
 

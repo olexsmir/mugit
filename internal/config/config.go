@@ -31,7 +31,6 @@ type MetaConfig struct {
 type RepoConfig struct {
 	Dir     string   `yaml:"dir"`
 	Readmes []string `yaml:"readmes"`
-	Masters []string `yaml:"masters"`
 }
 
 type SSHConfig struct {
@@ -127,10 +126,6 @@ func (c *Config) ensureDefaults() {
 	}
 
 	// repos
-	if len(c.Repo.Masters) == 0 {
-		c.Repo.Masters = []string{"master", "main"}
-	}
-
 	if len(c.Repo.Readmes) == 0 {
 		c.Repo.Readmes = []string{
 			"README.md", "readme.md",

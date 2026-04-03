@@ -95,9 +95,16 @@ func (g *Repo) Name() string {
 	return strings.TrimSuffix(name, ".git")
 }
 
-func (g *Repo) Checkout(ref string) error {
-	head := plumbing.NewSymbolicReference(plumbing.HEAD,
-		plumbing.NewBranchReferenceName(ref))
+func (g *Repo) DefaultBranch() (string, error) {
+	out, err := g.runGitCmd("rev-parse", "--abbrev-ref", "HEAD")
+	if err != nil {
+		return "", fmt.Errorf("failed to get default branch: %w", err)
+	}
+	return strings.TrimSpace(string(out)), nil
+}
+
+func (g *Repo) SetDefaultBranch(branch string) error {
+	head := plumbing.NewSymbolicReference(plumbing.HEAD, plumbing.NewBranchReferenceName(branch))
 	return g.r.Storer.SetReference(head)
 }
 
@@ -222,19 +229,6 @@ func (g *Repo) Branches() ([]*Branch, error) {
 func (g *Repo) IsGoMod() bool {
 	_, err := g.FileContent("go.mod")
 	return err == nil
-}
-
-func (g *Repo) FindMasterBranch(masters []string) (string, error) {
-	if g.IsEmpty() {
-		return "", ErrEmptyRepo
-	}
-
-	for _, b := range masters {
-		if _, err := g.r.ResolveRevision(plumbing.Revision(b)); err == nil {
-			return b, nil
-		}
-	}
-	return "", fmt.Errorf("unable to find master branch")
 }
 
 func (g *Repo) Fetch(ctx context.Context) error {

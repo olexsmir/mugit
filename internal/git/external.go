@@ -3,6 +3,7 @@ package git
 import (
 	"cmp"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os/exec"
@@ -33,6 +34,25 @@ func (g *Repo) gitCmd(ctx context.Context, opts cmdOpts) error {
 	cmd.Stdout = cmp.Or(opts.Stdout, io.Discard)
 	cmd.Stderr = cmp.Or(opts.Stderr, io.Discard)
 	return cmd.Run()
+}
+
+func (g *Repo) runGitCmd(cmd string, args ...string) ([]byte, error) {
+	var gitArgs []string
+	gitArgs = append(gitArgs, cmd)
+	gitArgs = append(gitArgs, args...)
+	gitCmd := exec.Command("git", gitArgs...)
+	gitCmd.Dir = g.path
+	gitCmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	gitCmd.Env = gitEnv
+
+	out, err := gitCmd.Output()
+	if err != nil {
+		if err, ok := errors.AsType[*exec.ExitError](err); ok {
+			return nil, fmt.Errorf("%w, stderr: %s", err, err.Stderr)
+		}
+		return nil, err
+	}
+	return out, nil
 }
 
 func (g *Repo) streamingGitLog(ctx context.Context, extraArgs ...string) (io.ReadCloser, error) {

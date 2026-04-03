@@ -102,9 +102,9 @@ func (c *Cli) Run(ctx context.Context, args []string) error {
 						},
 					},
 					{
-						Name:   "set-head",
-						Usage:  "switches repo's head to specified branch",
-						Action: c.repoSetHeadAction,
+						Name:   "set-default",
+						Usage:  "switch repo's default branch",
+						Action: c.repoDefaultAction,
 						Arguments: []cli.Argument{
 							&cli.StringArg{Name: "name"},
 						},
