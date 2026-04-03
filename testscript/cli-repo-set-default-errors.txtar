@@ -1,7 +1,0 @@
-# missing repo name
-! mugit repo set-default
-stderr 'no name provided'
-
-# repo does not exist
-! mugit repo set-default nonexistent main
-stderr 'failed to open repo'

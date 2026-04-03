@@ -8,3 +8,11 @@ stderr 'new_description="new test desc"' # fix output
 
 mugit repo description desc-repo
 stderr 'new_description="new test desc"' # fix output
+
+# missing repo name
+! mugit repo description
+stderr 'no name provided'
+
+# repo does not exist
+! mugit repo description nonexistent
+stderr 'failed to open repo'

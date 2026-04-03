@@ -33,6 +33,14 @@ stderr 'changed repo head repo=heady.git branch=master' # fix output
 exec cat $REPOS/heady.git/HEAD
 stdout 'ref: refs/heads/master'
 
+# can't use non existent branch
+! mugit repo set-default nonexistent main
+stderr 'failed to open repo'
+
+# no repo provided
+! mugit repo set-default
+stderr 'no name provided'
+
 
 -- file.txt --
 initial content

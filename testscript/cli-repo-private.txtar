@@ -17,3 +17,12 @@ stderr 'is_private=false' # fix output
 
 exec cat $REPOS/test-private.git/config
 stdout 'private = false'
+
+
+# missing repo name
+! mugit repo private
+stderr 'no name provided'
+
+# repo does not exist
+! mugit repo private nonexistent
+stderr 'failed to open repo'

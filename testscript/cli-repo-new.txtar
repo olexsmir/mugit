@@ -4,3 +4,22 @@ mugit repo new new-test-repo
 exists $REPOS/new-test-repo.git/HEAD
 exists $REPOS/new-test-repo.git/objects/
 exists $REPOS/new-test-repo.git/refs/
+
+
+# missing repo name
+! mugit repo new
+stderr 'no name provided'
+
+# repo already exists
+mugit repo new existing-repo
+! mugit repo new existing-repo
+stderr 'already exists'
+
+# invalid mirror URL
+! mugit repo new mirrored-repo --mirror 'invalid://url'
+stderr 'only http and https remotes are supported'
+! exists $REPOS/mirrored-repo.git
+
+! mugit repo new mirrored-repo-ssh --mirror 'git@github.com:olexsmir/gopher.nvim.git'
+stderr 'only http and https remotes are supported'
+! exists $REPOS/mirrored-repo-ssh.git
