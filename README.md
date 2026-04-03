@@ -80,10 +80,6 @@ repo:
     - README.txt
     - readme.txt
     - readme
-  # Default branch names considered the repository 'master' (applied when omitted):
-  masters:
-    - master
-    - main
 
 # ssh: push/clone over SSH
 ssh:

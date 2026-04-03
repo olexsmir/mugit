@@ -13,8 +13,12 @@
 - Add breadcrumbs on "file content" and "file tree" pages.
 - Show last commit associated with file on the "tree page".
 - Highlight selected line on file content page.
-- `mugit repo new` now accepts `--description` flag, well it sets repo description.
+- `mugit repo new` now accepts `--description`, sets repo description.
+- `mugit repo new --mirror` will sync repo from specified remote.
 - Show remote urls and mirroring data on empty repos.
+- `mugit repo default` changes default branch of a repo.
+- `mugit repo sync` syncs specified mirror repo.
+- Mirror status now inclues last sync time(when there were changes fetched) and last checked time.
 
 ### Bug fixes:
 - Allow downloading only valid and existing refs.
