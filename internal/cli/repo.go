@@ -59,6 +59,13 @@ func (c *Cli) repoNewAction(ctx context.Context, cmd *cli.Command) error {
 		}
 	}
 
+	defaultBranch := cmd.String("default")
+	if defaultBranch != "" {
+		if err := repo.SetDefaultBranch(defaultBranch); err != nil {
+			return fmt.Errorf("failed to set default branch: %w", err)
+		}
+	}
+
 	return nil
 }
 

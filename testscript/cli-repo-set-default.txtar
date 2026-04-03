@@ -20,14 +20,14 @@ exec cat $REPOS/heady.git/HEAD
 stdout 'ref: refs/heads/master'
 
 # change head
-mugit repo set-head heady develop
+mugit repo set-default heady develop
 stderr 'changed repo head repo=heady.git branch=develop' # fix output
 
 exec cat $REPOS/heady.git/HEAD
 stdout 'ref: refs/heads/develop'
 
 # go back to master
-mugit repo set-head heady.git master
+mugit repo set-default heady.git master
 stderr 'changed repo head repo=heady.git branch=master' # fix output
 
 exec cat $REPOS/heady.git/HEAD

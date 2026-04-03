@@ -83,6 +83,10 @@ func (c *Cli) Run(ctx context.Context, args []string) error {
 								Name:  "private",
 								Usage: "make the repository private",
 							},
+							&cli.StringFlag{
+								Name:  "default",
+								Usage: "set default branch",
+							},
 						},
 					},
 					{
