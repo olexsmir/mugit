@@ -239,20 +239,31 @@ func TestRepo_DefaultBranch(t *testing.T) {
 }
 
 func TestRepo_SetDefaultBranch(t *testing.T) {
-	r := newTestRepo(t)
-	r.commitFile("readme", "test", "init")
+	t.Run("works", func(t *testing.T) {
+		r := newTestRepo(t)
+		r.commitFile("readme", "test", "init")
 
-	rr := r.open()
+		rr := r.open()
 
-	branch, err := rr.DefaultBranch()
-	is.Equal(t, branch, "master")
-	is.Err(t, err, nil)
+		branch, err := rr.DefaultBranch()
+		is.Equal(t, branch, "master")
+		is.Err(t, err, nil)
 
-	h := r.commitFile("thing", "hello worldie", "new feature")
-	r.createBranch("develop", h)
-	rr.SetDefaultBranch("develop")
+		h := r.commitFile("thing", "hello worldie", "new feature")
+		r.createBranch("develop", h)
+		is.Err(t, rr.SetDefaultBranch("develop"), nil)
 
-	branch, err = rr.DefaultBranch()
-	is.Equal(t, branch, "develop")
-	is.Err(t, err, nil)
+		branch, err = rr.DefaultBranch()
+		is.Equal(t, branch, "develop")
+		is.Err(t, err, nil)
+	})
+
+	t.Run("sets only existent branches", func(t *testing.T) {
+		r := newTestRepo(t)
+		r.commitFile("readme", "test", "init")
+
+		rr := r.open()
+		err := rr.SetDefaultBranch("tesites")
+		is.Err(t, err, `not found:`)
+	})
 }

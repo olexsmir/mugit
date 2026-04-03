@@ -104,7 +104,12 @@ func (g *Repo) DefaultBranch() (string, error) {
 }
 
 func (g *Repo) SetDefaultBranch(branch string) error {
-	head := plumbing.NewSymbolicReference(plumbing.HEAD, plumbing.NewBranchReferenceName(branch))
+	b := plumbing.NewBranchReferenceName(branch)
+	_, err := g.r.Reference(b, true)
+	if err != nil {
+		return fmt.Errorf("branch %q not found: %w", branch, err)
+	}
+	head := plumbing.NewSymbolicReference(plumbing.HEAD, b)
 	return g.r.Storer.SetReference(head)
 }
 
