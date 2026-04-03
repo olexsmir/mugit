@@ -27,7 +27,7 @@ func (h *handlers) infoRefsHandler(w http.ResponseWriter, r *http.Request) {
 
 		w.WriteHeader(http.StatusOK)
 		if err := repo.InfoRefs(r.Context(), gitProtocol, w); err != nil {
-			h.gitError(w, http.StatusInternalServerError, err.Error())
+			git.PackError(w, err.Error())
 			slog.Error("git: info/refs", "err", err)
 			return
 		}
@@ -74,10 +74,9 @@ func (h *handlers) uploadPackHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	if err := repo.UploadPack(r.Context(), true, gitProtocol, bodyReader, newFlushWriter(w)); err != nil {
-		h.gitError(w, http.StatusInternalServerError, err.Error())
+		git.PackError(w, err.Error())
 		slog.Error("git: upload-pack", "err", err)
 		return
-
 	}
 }
 
