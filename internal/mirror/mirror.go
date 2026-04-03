@@ -121,28 +121,34 @@ func (w *Worker) syncRepo(ctx context.Context, repo *git.Repo) error {
 		return err
 	}
 
-	if err := IsRemoteSupported(remoteURL); err != nil {
+	if err = IsRemoteSupported(remoteURL); err != nil {
 		slog.Error("mirror: remote is not valid", "repo", name, "err", err)
 		return err
 	}
 
+	var isUpdated bool
 	if IsGithubRemote(remoteURL) && w.c.Mirror.GithubToken != "" {
-		if err := repo.FetchFromGithubWithToken(ctx, w.c.Mirror.GithubToken); err != nil {
-			slog.Error("mirror: fetch failed (github)", "repo", name, "err", err)
-			return err
-		}
+		isUpdated, err = repo.FetchFromGithubWithToken(ctx, w.c.Mirror.GithubToken)
 	} else {
-		if err := repo.Fetch(ctx); err != nil {
-			slog.Error("mirror: fetch failed", "repo", name, "err", err)
-			return err
+		isUpdated, err = repo.Fetch(ctx)
+	}
+	if err != nil {
+		slog.Error("mirror: fetch failed", "repo", name, "err", err)
+		return err
+	}
+
+	now := time.Now()
+	if err := repo.SetLastChecked(now); err != nil {
+		slog.Error("mirror: failed to set last checked time", "repo", name, "err", err)
+	}
+
+	if isUpdated {
+		if err := repo.SetLastSync(now); err != nil {
+			slog.Error("mirror: failed to set last sync time", "repo", name, "err", err)
 		}
 	}
 
-	if err := repo.SetLastSync(time.Now()); err != nil {
-		slog.Error("mirror: failed to set last sync time", "repo", name, "err", err)
-	}
-
-	slog.Info("mirror: sync completed", "repo", repo.Name())
+	slog.Info("mirror: sync completed", "repo", repo.Name(), "updated", isUpdated)
 	return nil
 }
 

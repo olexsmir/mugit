@@ -236,40 +236,42 @@ func (g *Repo) IsGoMod() bool {
 	return err == nil
 }
 
-func (g *Repo) Fetch(ctx context.Context) error {
+func (g *Repo) Fetch(ctx context.Context) (isUpdated bool, err error) {
 	return g.fetch(ctx, nil)
 }
 
-func (g *Repo) FetchFromGithubWithToken(ctx context.Context, token string) error {
+func (g *Repo) FetchFromGithubWithToken(ctx context.Context, token string) (isUpdated bool, err error) {
 	return g.fetch(ctx, &http.BasicAuth{
 		Username: "x-access-token", // this can be anything but empty
 		Password: token,
 	})
 }
 
-func (g *Repo) fetch(ctx context.Context, auth transport.AuthMethod) error {
+func (g *Repo) fetch(ctx context.Context, auth transport.AuthMethod) (bool, error) {
 	rmt, err := g.r.Remote(originRemote)
 	if err != nil {
-		return fmt.Errorf("failed to get remote: %w", err)
+		return false, fmt.Errorf("failed to get remote: %w", err)
 	}
 
-	if err = rmt.FetchContext(ctx, &git.FetchOptions{
+	err = rmt.FetchContext(ctx, &git.FetchOptions{
 		Auth:  auth,
 		Tags:  git.AllTags,
 		Prune: true,
 		Force: true,
-	}); err != nil && !errors.Is(err, git.NoErrAlreadyUpToDate) {
-		return fmt.Errorf("failed to fetch: %w", err)
+	})
+
+	isUpdated := !errors.Is(err, git.NoErrAlreadyUpToDate)
+	if err != nil && isUpdated {
+		return false, fmt.Errorf("failed to fetch: %w", err)
 	}
 
-	// for some reason fetch doesn't change head for empty repos
 	if !g.IsEmpty() {
-		return nil
+		return isUpdated, nil
 	}
 
 	refs, err := rmt.List(&git.ListOptions{Auth: auth})
 	if err != nil {
-		return fmt.Errorf("failed to list references: %w", err)
+		return false, fmt.Errorf("failed to list references: %w", err)
 	}
 
 	for _, ref := range refs {
@@ -277,11 +279,11 @@ func (g *Repo) fetch(ctx context.Context, auth transport.AuthMethod) error {
 			if err := g.r.Storer.SetReference(
 				plumbing.NewSymbolicReference(plumbing.HEAD, ref.Target()),
 			); err != nil {
-				return fmt.Errorf("failed to set HEAD: %w", err)
+				return false, fmt.Errorf("failed to set HEAD: %w", err)
 			}
 			break
 		}
 	}
 
-	return nil
+	return isUpdated, nil
 }

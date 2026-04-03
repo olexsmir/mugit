@@ -53,10 +53,11 @@
           <br>
           <h2>Mirror status</h2>
           <p>
-            {{ if .P.MirrorLastSync.IsZero }}Was not yet synced from:
-            {{ else }}Last updated {{ humanizeRelTime .P.MirrorLastSync }} from:
-            {{ end }}
-            <a href="{{.P.MirrorURL}}" target="_blank">{{.P.MirrorURL}}</a>
+            {{- if .P.MirrorLastChecked.IsZero -}}Not checked yet
+            {{- else if eq .P.MirrorLastChecked .P.MirrorLastSync -}}Up to date (checked {{ humanizeRelTime .P.MirrorLastChecked }})
+            {{- else if .P.MirrorLastSync.IsZero -}}Checked {{ humanizeRelTime .P.MirrorLastChecked }}, not synced yet
+            {{- else -}}Checked {{ humanizeRelTime .P.MirrorLastChecked }}, last updated {{ humanizeRelTime .P.MirrorLastSync }}
+            {{- end }} · source: <a class="link" href="{{.P.MirrorURL}}" target="_blank">{{.P.MirrorURL}}</a>
           </p>
           {{ end }}
         </div>

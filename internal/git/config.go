@@ -103,6 +103,28 @@ func (g *Repo) SetLastSync(lastSync time.Time) error {
 	return g.setOption("last-sync", lastSync.Format(time.RFC3339))
 }
 
+func (g *Repo) LastChecked() (time.Time, error) {
+	raw, err := g.readOption("last-checked")
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	if raw == "" {
+		return time.Time{}, fmt.Errorf("last-checked not set")
+	}
+
+	out, err := time.Parse(time.RFC3339, raw)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("failed to parse time: %w", err)
+	}
+
+	return out, nil
+}
+
+func (g *Repo) SetLastChecked(lastChecked time.Time) error {
+	return g.setOption("last-checked", lastChecked.Format(time.RFC3339))
+}
+
 func (g *Repo) readOption(key string) (string, error) {
 	c, err := g.r.Config()
 	if err != nil {

@@ -47,15 +47,16 @@ func (h *handlers) indexHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type RepoIndex struct {
-	Desc           string
-	SSHUser        string
-	IsEmpty        bool
-	Readme         template.HTML
-	Ref            string
-	Commits        []*git.Commit
-	IsMirror       bool
-	MirrorURL      string
-	MirrorLastSync time.Time
+	Desc              string
+	SSHUser           string
+	IsEmpty           bool
+	Readme            template.HTML
+	Ref               string
+	Commits           []*git.Commit
+	IsMirror          bool
+	MirrorURL         string
+	MirrorLastSync    time.Time
+	MirrorLastChecked time.Time
 }
 
 func (h *handlers) repoIndexHandler(w http.ResponseWriter, r *http.Request) {
@@ -81,6 +82,7 @@ func (h *handlers) repoIndexHandler(w http.ResponseWriter, r *http.Request) {
 		p.IsMirror = true
 		p.MirrorURL, _ = repo.RemoteURL()
 		p.MirrorLastSync, _ = repo.LastSync()
+		p.MirrorLastChecked, _ = repo.LastChecked()
 	}
 
 	if p.IsEmpty {
@@ -189,7 +191,7 @@ func (h *handlers) fileContentsHandler(w http.ResponseWriter, r *http.Request) {
 	fc, err := repo.FileContent(treePath)
 	if err != nil {
 		if errors.Is(err, git.ErrFileNotFound) {
-		h.write404(w, r.URL.Path, err)
+			h.write404(w, r.URL.Path, err)
 			return
 		}
 		h.write500(w, err)
