@@ -412,4 +412,6 @@ nav ul li {
   }
 
   .commit-info:not(:last-child) { padding-bottom: 1.5rem; }
+  .tree .last-commit { display: none; }
+  .tree tr .nowrap:first-child { width: 100%; }
 }

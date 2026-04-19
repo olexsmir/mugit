@@ -24,7 +24,7 @@
         <thead>
           <tr class="nohover">
             <th class="nowrap">name</th>
-            <th class="fill">last commit</th>
+            <th class="fill last-commit">last commit</th>
             <th class="nowrap">last update</th>
           </tr>
         </thead>
@@ -44,7 +44,7 @@
               {{ if $parent }}<a href="/{{ $name}}/tree/{{ urlencode $ref }}/{{ $parent }}/{{ .Name }}">{{ .Name }}/</a>
               {{ else }}<a href="/{{ $name }}/tree/{{ urlencode $ref }}/{{ .Name }}">{{ .Name }}/</a>{{ end }}
             </td>
-            <td class="fill">
+            <td class="fill last-commit">
               <a class="muted" href="/{{ $name }}/commit/{{ .Commit.Hash }}">{{ commitSummary .Commit.Message }}</a>
             </td>
             <td class="has-tip nowrap">
@@ -62,7 +62,7 @@
               {{ if $parent }}<a href="/{{ $name }}/blob/{{ urlencode $ref }}/{{ $parent }}/{{ .Name }}">{{ .Name }}</a>
               {{ else }}<a href="/{{ $name }}/blob/{{ urlencode $ref }}/{{ .Name }}">{{ .Name }}</a>{{ end }}
             </td>
-            <td class="fill">
+            <td class="fill last-commit">
               <a class="muted" href="/{{ $.RepoName }}/commit/{{ .Commit.Hash }}">{{ commitSummary .Commit.Message }}</a>
             </td>
             <td class="has-tip nowrap">
