@@ -14,7 +14,7 @@
             pname = "mugit";
             version = version;
             src = ./.;
-            vendorHash = "sha256-ZqDG7EniAWVQQ259m4HnARLi06m1Dqpru2p7NYou8Vw=";
+            vendorHash = "sha256-qVvVlS0RgOms6/o6TfGxdQ1DYhr1ouWY7UhAWYN/6ps=";
             ldflags = [ "-s" "-w" "-X main.version=${version}" ];
             nativeCheckInputs = [ pkgs.git ];
             meta = with pkgs.lib; {
