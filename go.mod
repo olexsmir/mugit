@@ -5,7 +5,7 @@ go 1.26
 require (
 	github.com/bluekeyes/go-gitdiff v0.8.1
 	github.com/cyphar/filepath-securejoin v0.6.1
-	github.com/go-git/go-git/v5 v5.17.1
+	github.com/go-git/go-git/v5 v5.18.0
 	github.com/rogpeppe/go-internal v1.14.1
 	github.com/urfave/cli/v3 v3.7.0
 	github.com/yuin/goldmark v1.7.16
