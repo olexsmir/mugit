@@ -35,11 +35,22 @@ func NewShell(cfg *config.Config) (*Shell, error) {
 	}, nil
 }
 
+var validCommands = map[string]bool{
+	"git-upload-pack":    true,
+	"git-upload-archive": true,
+	"git-receive-pack":   true,
+}
+
 func (s *Shell) HandleCommand(ctx context.Context, cmd string, stdin io.Reader, stdout, stderr io.Writer) error {
 	gitCmd, repoName, err := s.parseCommand(cmd)
 	if err != nil {
 		slog.Error("ssh invalid command", "error", err, "raw_cmd", cmd)
 		return err
+	}
+
+	if !validCommands[gitCmd] {
+		slog.Error("access denied: invalid git command")
+		return fmt.Errorf("access denied: invalid git command")
 	}
 
 	repoPath, err := git.ResolvePath(s.cfg.Repo.Dir, git.ResolveName(repoName))

@@ -11,5 +11,11 @@ exists verify-clone/file.txt
 exec cat verify-clone/file.txt
 stdout 'hello from ssh'
 
+
+# should not allow execution of commands
+! exec $SSH_WRAPPER ignored 'echo hi'
+stderr 'access denied:'
+
+
 -- file.txt --
 hello from ssh
