@@ -35,21 +35,10 @@ func NewShell(cfg *config.Config) (*Shell, error) {
 	}, nil
 }
 
-var validCommands = map[string]bool{
-	"git-upload-pack":    true,
-	"git-upload-archive": true,
-	"git-receive-pack":   true,
-}
-
 func (s *Shell) HandleCommand(ctx context.Context, cmd string, stdin io.Reader, stdout, stderr io.Writer) error {
 	gitCmd, repoName, err := s.parseCommand(cmd)
 	if err != nil {
 		return s.replyWithGitError(stderr, "access denied: invalid command", err)
-	}
-
-	if !validCommands[gitCmd] {
-		msg := "access denied: invalid git command"
-		return s.replyWithGitError(stderr, msg, errors.New(msg))
 	}
 
 	repoPath, err := git.ResolvePath(s.cfg.Repo.Dir, git.ResolveName(repoName))
@@ -90,6 +79,12 @@ func (s *Shell) AuthorizedKeys(executablePath string) string {
 	return out.String()
 }
 
+var validCommands = map[string]bool{
+	"git-upload-pack":    true,
+	"git-upload-archive": true,
+	"git-receive-pack":   true,
+}
+
 func (s *Shell) parseCommand(cmd string) (gitCmd, repoName string, err error) {
 	cmdParts := strings.Fields(cmd)
 	if len(cmdParts) < 2 {
@@ -97,6 +92,10 @@ func (s *Shell) parseCommand(cmd string) (gitCmd, repoName string, err error) {
 	}
 
 	gitCmd = cmdParts[0]
+	if !validCommands[gitCmd] {
+		return "", "", fmt.Errorf("invalid command: disallowd command")
+	}
+
 	repoName = strings.Trim(cmdParts[1], "'\"")
 	if repoName == "" {
 		return "", "", fmt.Errorf("invalid command: empty repository name")
