@@ -3,6 +3,9 @@ package cli
 import (
 	"context"
 	"fmt"
+	"log/slog"
+	"os"
+	"path/filepath"
 
 	"github.com/urfave/cli/v3"
 	"olexsmir.xyz/mugit/internal/config"
@@ -137,6 +140,21 @@ func (c *Cli) Run(ctx context.Context, args []string) error {
 		},
 	}
 	return cmd.Run(ctx, args)
+}
+
+func (c *Cli) setupLogger() error {
+	logDir := filepath.Dir(c.cfg.Server.LogFile)
+	if err := os.MkdirAll(logDir, 0o755); err != nil {
+		return fmt.Errorf("failed to create log directory: %w", err)
+	}
+
+	logOutput, err := os.OpenFile(c.cfg.Server.LogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	if err != nil {
+		return fmt.Errorf("failed to open log file: %w", err)
+	}
+
+	slog.SetDefault(slog.New(slog.NewTextHandler(logOutput, nil)))
+	return nil
 }
 
 func (c *Cli) openRepo(name string) (*git.Repo, error) {

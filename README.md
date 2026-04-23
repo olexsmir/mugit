@@ -63,6 +63,7 @@ Full example:
 server:
   host: 0.0.0.0 # bind address (0.0.0.0 = all interfaces)
   port: 5555    # HTTP port (defaults to 8080 when omitted)
+  log_file: /var/lib/mugit/mugit.log # where slog output is written (default: <repo.dir>/mugit.log)
 
 meta:
   title: "My Git Server"    # site title shown on index page

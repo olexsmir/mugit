@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/urfave/cli/v3"
@@ -15,9 +16,13 @@ func (c *Cli) sshShellAction(ctx context.Context, cmd *cli.Command) error {
 	if !c.cfg.SSH.Enable {
 		return errSSHDisabled
 	}
+	if err := c.setupLogger(); err != nil {
+		return err
+	}
 
 	sshCommand := os.Getenv("SSH_ORIGINAL_COMMAND")
 	if err := c.ssh.HandleCommand(ctx, sshCommand, os.Stdin, os.Stdout, os.Stderr); err != nil {
+		slog.Error("ssh command failed", "command", sshCommand, "err", err)
 		os.Exit(1)
 		return nil
 	}

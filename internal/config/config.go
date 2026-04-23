@@ -18,8 +18,9 @@ var (
 )
 
 type ServerConfig struct {
-	Host string `yaml:"host"`
-	Port int    `yaml:"port"`
+	Host    string `yaml:"host"`
+	Port    int    `yaml:"port"`
+	LogFile string `yaml:"log_file"`
 }
 
 type MetaConfig struct {
@@ -115,6 +116,10 @@ func pathOrDefaultWithCandidates(path string, candidates []string) string {
 }
 
 func (c *Config) ensureDefaults() {
+	if c.Server.LogFile == "" {
+		c.Server.LogFile = filepath.Join(c.Repo.Dir, "mugit.log")
+	}
+
 	// http
 	if c.Server.Port == 0 {
 		c.Server.Port = 8080

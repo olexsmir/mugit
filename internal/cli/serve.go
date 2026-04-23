@@ -16,6 +16,10 @@ import (
 )
 
 func (c *Cli) serveAction(ctx context.Context, cmd *cli.Command) error {
+	if err := c.setupLogger(); err != nil {
+		return err
+	}
+
 	httpServer := &http.Server{
 		Addr:    net.JoinHostPort(c.cfg.Server.Host, strconv.Itoa(c.cfg.Server.Port)),
 		Handler: handlers.InitRoutes(c.cfg),

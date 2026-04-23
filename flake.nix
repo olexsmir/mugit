@@ -114,17 +114,17 @@
                     default = 8080;
                     description = "Website port";
                   };
+                  log_file = mkOption {
+                    type = types.str;
+                    default = "";
+                    description = "File to write mugit logs";
+                  };
                 };
                 options.repo = {
                   dir = mkOption {
                     type = types.str;
                     default = "";
                     description = "Directory which mugit will scan for repositories (required)";
-                  };
-                  masters = mkOption {
-                    type = types.listOf types.str;
-                    default = ["master" "main"];
-                    description = "Master branch to look for";
                   };
                   readmes = mkOption {
                     type = types.listOf types.str;
