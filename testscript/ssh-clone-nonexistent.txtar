@@ -1,0 +1,24 @@
+git init local
+cp readme.txt local/readme.txt
+git -C local add .
+git -C local commit -m 'init'
+
+mugit repo new ssh-clone.git
+git -C local push file://$REPOS/ssh-clone.git master
+
+
+exec env GIT_SSH_COMMAND=$SSH_WRAPPER git clone git@localhost:ssh-clone.git clone
+exists clone/readme.txt
+
+exec cat clone/readme.txt
+stdout 'hello world'
+
+
+# clone non existent repo
+! exec env GIT_SSH_COMMAND=$SSH_WRAPPER git clone git@localhost:nonexistent.git wont-clone
+stderr 'fatal: repository not found'
+! stderr 'ERROR mugit'
+
+
+-- readme.txt --
+hello world

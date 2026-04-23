@@ -18,6 +18,11 @@ exec cat clone/readme.txt
 stdout 'hello world'
 
 
+# non existent repo
+! git clone $MURL/nonexistent-http-repo
+stderr 'remote: repository not found'
+
+
 -- readme.txt --
 hello world
 

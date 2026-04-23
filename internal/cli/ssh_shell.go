@@ -17,7 +17,11 @@ func (c *Cli) sshShellAction(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	sshCommand := os.Getenv("SSH_ORIGINAL_COMMAND")
-	return c.ssh.HandleCommand(ctx, sshCommand, os.Stdin, os.Stdout, os.Stderr)
+	if err := c.ssh.HandleCommand(ctx, sshCommand, os.Stdin, os.Stdout, os.Stderr); err != nil {
+		os.Exit(1)
+		return nil
+	}
+	return nil
 }
 
 func (c *Cli) sshAuthorizedKeysAction(ctx context.Context, cmd *cli.Command) error {
