@@ -87,7 +87,7 @@ func TestOpen(t *testing.T) {
 
 	t.Run("fails on invalid path", func(t *testing.T) {
 		_, err := Open("/nonexistent/path", "")
-		is.Err(t, err, "does not exist")
+		is.Err(t, err, ErrRepoNotFound)
 	})
 
 	t.Run("fails on invalid ref", func(t *testing.T) {

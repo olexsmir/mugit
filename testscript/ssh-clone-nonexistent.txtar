@@ -16,7 +16,7 @@ stdout 'hello world'
 
 # clone non existent repo
 ! exec env GIT_SSH_COMMAND=$SSH_WRAPPER git clone git@localhost:nonexistent.git wont-clone
-stderr 'fatal: repository not found'
+stderr 'error: repository not found'
 ! stderr 'ERROR mugit'
 
 

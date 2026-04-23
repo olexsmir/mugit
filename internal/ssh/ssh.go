@@ -48,7 +48,23 @@ func (s *Shell) HandleCommand(ctx context.Context, cmd string, stdin io.Reader, 
 
 	repo, err := git.Open(repoPath, "")
 	if err != nil {
-		return s.replyWithGitError(stderr, "repository not found", err)
+		if !errors.Is(err, git.ErrRepoNotFound) || gitCmd != "git-receive-pack" {
+			return s.replyWithGitError(stderr, "repository not found", err)
+		}
+
+		// SSH Git clients display informational messages from stderr; stdout must remain protocol-only for git-receive-pack.
+		if ierr := s.replyWithGitInfo(stderr, "auto-initializing "+repoName); ierr != nil {
+			return ierr
+		}
+
+		if ierr := git.Init(repoPath); ierr != nil {
+			return s.replyWithGitError(stderr, "failed to init repo", ierr)
+		}
+
+		repo, err = git.Open(repoPath, "")
+		if err != nil {
+			return s.replyWithGitError(stderr, "failed to open initialized repo", err)
+		}
 	}
 
 	switch gitCmd {
@@ -105,9 +121,14 @@ func (s *Shell) parseCommand(cmd string) (gitCmd, repoName string, err error) {
 }
 
 func (s *Shell) replyWithGitError(stderr io.Writer, msg string, cause error) error {
-	if _, err := fmt.Fprintf(stderr, "fatal: %s\n", msg); err != nil {
+	if _, err := fmt.Fprintf(stderr, "error: %s\n", msg); err != nil {
 		return err
 	}
 
 	return cause
+}
+
+func (s *Shell) replyWithGitInfo(msgOut io.Writer, msg string) error {
+	_, err := fmt.Fprintf(msgOut, "info: %s\n", msg)
+	return err
 }

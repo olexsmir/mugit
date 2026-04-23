@@ -19,6 +19,7 @@
 - `mugit repo default` changes default branch of a repo.
 - `mugit repo sync` syncs specified mirror repo.
 - Mirror status now inclues last sync time(when there were changes fetched) and last checked time.
+- Automatically initialize repository on push.
 
 ### Bug fixes:
 - Allow downloading only valid and existing refs.

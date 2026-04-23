@@ -22,6 +22,7 @@ var (
 	ErrEmptyRepo    = errors.New("repository has no commits")
 	ErrFileNotFound = errors.New("file not found")
 	ErrPrivate      = errors.New("repository is private")
+	ErrRepoNotFound = errors.New("repository not found")
 )
 
 type Repo struct {
@@ -37,6 +38,9 @@ func Open(path, ref string) (*Repo, error) {
 	g.path = path
 	g.r, err = git.PlainOpen(path)
 	if err != nil {
+		if errors.Is(err, git.ErrRepositoryNotExists) {
+			return nil, ErrRepoNotFound
+		}
 		return nil, fmt.Errorf("opening %s: %w", path, err)
 	}
 

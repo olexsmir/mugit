@@ -12,6 +12,32 @@ exec cat verify-clone/file.txt
 stdout 'hello from ssh'
 
 
+# auto initializing on first push
+git init local2
+cp file.txt local2/file.txt
+git -C local2 add file.txt
+git -C local2 commit -m initial
+
+
+exec env GIT_SSH_COMMAND=$SSH_WRAPPER git -C local2 push git@localhost:auto-init master
+stderr 'info: auto-initializing auto-init'
+exists $REPOS/auto-init.git/HEAD
+
+# subsequent pushes should not re-initialize
+cp file2.txt local2/file2.txt
+git -C local2 add file2.txt
+git -C local2 commit -m second
+
+exec env GIT_SSH_COMMAND=$SSH_WRAPPER git -C local2 push git@localhost:auto-init master
+! stderr 'auto-initializing auto-init'
+
+
+# verify pushed content is available
+exec env GIT_SSH_COMMAND=$SSH_WRAPPER git clone git@localhost:auto-init verify-auto-init
+exists verify-auto-init/file.txt
+exists verify-auto-init/file2.txt
+
+
 # should not allow execution of commands
 ! exec $SSH_WRAPPER ignored 'echo hi'
 stderr 'access denied:'
@@ -19,3 +45,6 @@ stderr 'access denied:'
 
 -- file.txt --
 hello from ssh
+
+-- file2.txt --
+hello second push
