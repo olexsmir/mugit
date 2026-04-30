@@ -58,6 +58,7 @@ func TestShellParseCommand(t *testing.T) {
 		{"git-upload-archive 'archive-repo'", "git-upload-archive", "archive-repo", ""},
 		{"git-upload-pack", "", "", "invalid command"},
 		{"git-upload-pack ''", "", "", "empty repository name"},
+		{"git-receive-pack repo.git && echo hi", "", "", "invalid command"},
 		{"echo hi", "", "", "invalid command"},
 		{"", "", "", "invalid command"},
 	}

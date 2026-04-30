@@ -42,6 +42,10 @@ exists verify-auto-init/file2.txt
 ! exec $SSH_WRAPPER ignored 'echo hi'
 stderr 'access denied:'
 
+# should not accept command chaining after git command
+! exec $SSH_WRAPPER ignored 'git-receive-pack auto-init.git && echo hi'
+stderr 'access denied: invalid command'
+
 
 -- file.txt --
 hello from ssh

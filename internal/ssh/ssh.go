@@ -103,13 +103,13 @@ var validCommands = map[string]bool{
 
 func (s *Shell) parseCommand(cmd string) (gitCmd, repoName string, err error) {
 	cmdParts := strings.Fields(cmd)
-	if len(cmdParts) < 2 {
+	if len(cmdParts) != 2 {
 		return "", "", fmt.Errorf("invalid command: expected 'git-cmd repo', got %q", cmd)
 	}
 
 	gitCmd = cmdParts[0]
 	if !validCommands[gitCmd] {
-		return "", "", fmt.Errorf("invalid command: disallowd command")
+		return "", "", fmt.Errorf("invalid command: disallowed command")
 	}
 
 	repoName = strings.Trim(cmdParts[1], "'\"")
