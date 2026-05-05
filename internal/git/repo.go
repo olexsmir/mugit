@@ -92,6 +92,9 @@ func Init(path string) error {
 	if _, err := git.PlainInit(path, true); err != nil {
 		return fmt.Errorf("failed to initialize repo: %w", err)
 	}
+	if err := (&Repo{path: path}).SetupHooks(); err != nil {
+		return fmt.Errorf("failed to setup hooks: %w", err)
+	}
 	return nil
 }
 

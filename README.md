@@ -182,6 +182,33 @@ mugit repo set-default myproject main
 mugit repo sync myproject
 ```
 
+## Per-repo hooks
+
+mugit creates these server-side hooks per repository: `pre-receive`, `update`, `post-receive`, `post-update`.
+
+Each hook delegates to executable scripts in: `<repo>.git/hooks/<hook>.d/`
+
+<details>
+<summary>Example: golangci-lint as a pre-receive hook</summary>
+```bash
+# file: `<repo>.git/hooks/pre-receive.d/golangci-lint.sh`:
+#!/bin/sh
+set -eu
+
+while read oldrev newrev refname; do
+  tmpdir=$(mktemp -d)
+  trap 'rm -rf "$tmpdir"' EXIT INT TERM
+
+  git archive "$newrev" | tar -xC "$tmpdir"
+
+  if ! (cd "$tmpdir" && golangci-lint run ./...); then
+    echo "golangci-lint failed for $refname — push rejected" >&2
+    exit 1
+  fi
+done
+```
+</details>
+
 ## License
 
 mugit is licensed under the MIT License.

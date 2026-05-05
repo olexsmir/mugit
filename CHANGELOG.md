@@ -17,6 +17,7 @@
 - Show remote urls and mirroring data on empty repos.
 - Improved markdown README rendering with better typography, code blocks, callouts, and dark mode support.
 - Mirror status shows last sync time(when changes were fetched) and last checked time(when checked, even without changes).
+- Run `pre-receive`, `update`, `post-receive`, `post-update` hooks.
 - Accept gzip-encoded HTTP requests for `git upload-pack`.
 - **ssh:**
   - Support `git-upload-archive` over SSH.
