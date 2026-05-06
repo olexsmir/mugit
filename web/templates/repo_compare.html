@@ -41,7 +41,9 @@
       </section>
 
       <section class="commit">{{ template "_diff_table" $diff }}</section>
-      <section>{{ template "_diff_files" (dict "Repo" $.RepoName "Diff" $diff "RightHash" $cmp.HeadHash "LeftHash" $cmp.MergeBase) }}</section>
+      <section>
+        {{ template "_diff_files" (dict "Repo" $.RepoName "Diff" $diff "RightHash" $cmp.HeadHash "LeftHash" $cmp.MergeBase) }}
+      </section>
     </main>
   </body>
 </html>

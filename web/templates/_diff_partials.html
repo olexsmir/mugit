@@ -1,0 +1,105 @@
+{{ define "_diff_type" }}
+{{ if .IsNew }}<span class="diff-type diff-add">A</span>
+{{ else if .IsDelete }}<span class="diff-type diff-del">D</span>
+{{ else }}<span class="diff-type diff-mod">M</span>{{ end }}
+{{ end }}
+
+{{ define "_diff_stat" }}
+<div class="commit-refs">
+  <span class="diff-mod">{{ .FilesChanged }} files changed</span>,
+  <span class="diff-add">{{ .Insertions }} insertions(+)</span>,
+  <span class="diff-del">{{ .Deletions }} deletions(-)</span>
+</div>
+{{ end }}
+
+{{ define "_diff_table" }}
+{{ if gt (len .) 1 -}}
+<div class="jump">
+  <strong>jump to</strong>
+  <table class="table jump-table">
+    <tbody>
+      {{ range . }}
+      {{ $anchor := .Name.New }}
+      {{ if not $anchor }}{{ $anchor = .Name.Old }}{{ end }}
+      <tr>
+        <td class="mono">{{ template "_diff_type" . }}</td>
+        <td class="fill">
+          <a href="#{{ $anchor }}">
+            {{ if .IsRename }}{{ .Name.Old }} &#8594; {{ .Name.New }}
+            {{ else }}{{ $anchor }}{{ end }}
+          </a>
+        </td>
+      </tr>
+      {{ end }}
+    </tbody>
+  </table>
+</div>
+{{ end }}
+{{ end }}
+
+{{ define "_diff_files" }}
+{{ $repo := .Repo }}
+{{ $leftHash := .LeftHash }}
+{{ $rightHash := .RightHash }}
+{{ range .Diff }}
+{{ $anchor := .Name.New }}
+{{ if not $anchor }}{{ $anchor = .Name.Old }}{{ end }}
+<div id="{{ $anchor }}">
+  <div class="diff">
+    {{ template "_diff_type" . }}
+
+    {{ $primaryName := .Name.New }}
+    {{ $primaryHash := $rightHash }}
+    {{ if or .IsDelete .IsRename }}
+    {{ $primaryName = .Name.Old }}
+    {{ $primaryHash = $leftHash }}
+    {{ end }}
+
+    {{ if $primaryHash }}<a href="/{{ $repo }}/blob/{{ $primaryHash }}/{{ $primaryName }}">{{ $primaryName }}</a>{{ else }}{{ $primaryName }}{{ end }}
+    {{ if .IsRename }} &#8594; <a href="/{{ $repo }}/blob/{{ $rightHash }}/{{ .Name.New }}">{{ .Name.New }}</a>{{ end }}
+
+    {{ if .IsBinary }}
+    <p>Not showing binary file.</p>
+    {{ else }}
+    <pre>
+      {{- range .TextFragments -}}
+      <span class="diff-line diff-noop diff-separator">···</span>
+      {{- $o := .OldPosition -}}
+      {{- $n := .NewPosition -}}
+      {{- range .Lines -}}
+      {{- $op := .Op.String -}}
+
+      {{- if eq $op "+" -}}
+      <span class="diff-line diff-add" id="{{ $anchor }}-N{{ $n }}">
+        <span class="line-number"></span>
+        <a class="line-number" href="#{{ $anchor }}-N{{ $n }}">{{ $n }}</a>
+        <span><span class="diff-op">{{ $op }}</span>{{ .Line }}</span>
+      </span>
+      {{- $n = inc64 $n -}}
+
+      {{- else if eq $op "-" -}}
+      <span class="diff-line diff-del" id="{{ $anchor }}-O{{ $o }}">
+        <a class="line-number" href="#{{ $anchor }}-O{{ $o }}">{{ $o }}</a>
+        <span class="line-number"></span>
+        <span><span class="diff-op">{{ $op }}</span>{{ .Line }}</span>
+      </span>
+      {{- $o = inc64 $o -}}
+
+      {{- else -}}
+      <span class="diff-line diff-noop" id="{{ $anchor }}-L{{ $o }}">
+        <a class="line-number" href="#{{ $anchor }}-L{{ $o }}">{{ $o }}</a>
+        <a class="line-number" href="#{{ $anchor }}-L{{ $o }}">{{ $n }}</a>
+        <span><span class="diff-op">{{ $op }}</span>{{ .Line }}</span>
+      </span>
+      {{- $o = inc64 $o -}}
+      {{- $n = inc64 $n -}}
+      {{- end -}}
+
+      {{- end -}}
+      {{- end -}}
+    </pre>
+    {{ end }}
+  </div>
+</div>
+{{ end }}
+{{ end }}
