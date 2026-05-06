@@ -14,6 +14,7 @@
         <div>
           <strong>{{ .Name }}</strong>
           <a class="link" href="/{{ $repo }}/tree/{{ urlencode .Name }}/">browse</a>
+          {{ if ne $.P.Ref .Name }}<a class="link" href="/{{ $.RepoName }}/compare/{{ urlencode $.P.Ref }}/{{ urlencode .Name }}">compare</a>{{ end }}
           <a class="link" href="/{{ $repo }}/log/{{ urlencode .Name }}">log</a>
           <a class="link" href="/{{ $repo }}/archive/{{ urlencode .Name }}">tar.gz</a>
         </div>
@@ -26,6 +27,7 @@
         <div>
           <strong>{{ .Name }}</strong>
           <a class="link" href="/{{ $repo }}/tree/{{ urlencode .Name }}/">browse</a>
+          {{ if ne $.P.Ref .Name }}<a class="link" href="/{{ $.RepoName }}/compare/{{ urlencode $.P.Ref }}/{{ urlencode .Name }}">compare</a>{{ end }}
           <a class="link" href="/{{ $repo }}/log/{{ urlencode .Name }}">log</a>
           <a class="link" href="/{{ $repo }}/archive/{{ urlencode .Name }}">tar.gz</a>
           {{ if .Message }}

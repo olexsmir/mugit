@@ -331,6 +331,42 @@ func (h *handlers) commitHandler(w http.ResponseWriter, r *http.Request) {
 	}))
 }
 
+type RepoCompare struct {
+	Desc    string
+	Ref     string
+	Compare *git.Compare
+}
+
+func (h *handlers) compareHandler(w http.ResponseWriter, r *http.Request) {
+	name := r.PathValue("name")
+	ref1 := h.parseRef(r.PathValue("ref1"))
+	ref2 := h.parseRef(r.PathValue("ref2"))
+
+	repo, err := h.openPublicRepo(name, ref2)
+	if err != nil {
+		h.write404(w, r.URL.Path, err)
+		return
+	}
+
+	desc, err := repo.Description()
+	if err != nil {
+		h.write500(w, err)
+		return
+	}
+
+	compare, err := repo.Compare(ref1, ref2)
+	if err != nil {
+		h.write404(w, r.URL.Path, err)
+		return
+	}
+
+	h.templ(w, "repo_compare", h.pageData(repo, RepoCompare{
+		Desc:    desc,
+		Ref:     ref2,
+		Compare: compare,
+	}))
+}
+
 type RepoRefs struct {
 	Desc     string
 	Ref      string
