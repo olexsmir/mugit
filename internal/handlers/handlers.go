@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"html/template"
 	"net/http"
 	"net/url"
@@ -49,6 +50,7 @@ func InitRoutes(cfg *config.Config) http.Handler {
 	mux.HandleFunc("GET /{name}/raw/{ref}/{rest...}", h.rawFileContentsHandler)
 	mux.HandleFunc("GET /{name}/log/{ref}", h.logHandler)
 	mux.HandleFunc("GET /{name}/commit/{ref}", h.commitHandler)
+	mux.HandleFunc("GET /{name}/compare/{ref1}/{ref2}", h.compareHandler)
 	mux.HandleFunc("GET /{name}/refs/{$}", h.refsHandler)
 	mux.HandleFunc("GET /{name}/archive/{ref}", h.archiveHandler)
 
@@ -78,6 +80,7 @@ var templateFuncs = template.FuncMap{
 	"humanizeRelTime": humanize.Time,
 	"urlencode":       url.PathEscape,
 	"commitSummary":   commitSummary,
+	"dict":            dict,
 }
 
 func commitSummary(commitMsg string) string {
@@ -94,4 +97,20 @@ func commitSummary(commitMsg string) string {
 	}
 
 	return first
+}
+
+func dict(v ...any) (map[string]any, error) {
+	if len(v)%2 != 0 {
+		return nil, errors.New("dict requires an even number of arguments")
+	}
+
+	out := make(map[string]any, len(v)/2)
+	for i := 0; i < len(v); i += 2 {
+		key, ok := v[i].(string)
+		if !ok {
+			return nil, errors.New("dict keys must be strings")
+		}
+		out[key] = v[i+1]
+	}
+	return out, nil
 }

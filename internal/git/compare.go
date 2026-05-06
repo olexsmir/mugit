@@ -10,13 +10,13 @@ import (
 )
 
 type Compare struct {
-	BaseRef, BaseHash, BaseHashShort string
-	HeadRef, HeadHash, HeadHashShort string
-	MergeBase, MergeBaseShort        string
-	Ahead                            int
-	Behind                           int
-	Commits                          []*Commit
-	Diff                             *NiceDiff
+	BaseRef, BaseHash string
+	HeadRef, HeadHash string
+	MergeBase         string
+	Ahead             int
+	Behind            int
+	Commits           []*Commit
+	Diff              *NiceDiff
 }
 
 func (g *Repo) Compare(baseRef, headRef string) (*Compare, error) {
@@ -65,18 +65,15 @@ func (g *Repo) Compare(baseRef, headRef string) (*Compare, error) {
 	}
 
 	return &Compare{
-		BaseRef:        baseRef,
-		HeadRef:        headRef,
-		BaseHash:       baseHash.String(),
-		HeadHash:       headHash.String(),
-		BaseHashShort:  newShortHash(baseHash),
-		HeadHashShort:  newShortHash(headHash),
-		MergeBase:      mergeBase,
-		MergeBaseShort: mergeBase[:7],
-		Ahead:          ahead,
-		Behind:         behind,
-		Commits:        commits,
-		Diff:           diff,
+		BaseRef:   baseRef,
+		HeadRef:   headRef,
+		BaseHash:  baseHash.String(),
+		HeadHash:  headHash.String(),
+		MergeBase: mergeBase,
+		Ahead:     ahead,
+		Behind:    behind,
+		Commits:   commits,
+		Diff:      diff,
 	}, nil
 }
 

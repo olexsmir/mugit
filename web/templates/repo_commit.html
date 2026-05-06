@@ -4,6 +4,138 @@
 {{ else }}<span class="diff-type diff-mod">M</span>{{ end }}
 {{ end }}
 
+{{ define "_commit_table" }}
+<table class="table log">
+  <thead>
+    <tr class="nohover">
+      <th class="fill">Message</th>
+      <th class="author nowrap">Author</th>
+      <th>Hash</th>
+      <th class="age nowrap">Age</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{ range $.Commits }}
+    <tr>
+      <td class="fill">
+        <a href="/{{ $.Repo }}/commit/{{ .Hash }}">
+          {{- if .Message }}{{- commitSummary .Message -}}
+          {{- else -}}<span class="muted">Empty message</span>{{- end -}}
+        </a>
+      </td>
+      <td class="has-tip nowrap">
+        <span class="author-short">
+          {{ .AuthorName }} <a href="mailto:{{ .AuthorEmail }}" class="commit-email">{{ .AuthorEmail }}</a>
+        </span>
+        <span class="tooltip" role="tooltip">
+          <strong>{{ .AuthorName }}</strong><br>
+          <a href="mailto:{{ .AuthorEmail }}" class="commit-email">{{ .AuthorEmail }}</a>
+        </span>
+      </td>
+      <td class="mono">
+        <a href="/{{ $.Repo }}/commit/{{ .Hash }}">{{ .HashShort }}</a>
+      </td>
+      <td class="has-tip nowrap">
+        {{ humanizeRelTime .Committed }}
+        <span class="tooltip" role="tooltip">{{ humanizeTime .Committed }}</span>
+      </td>
+    </tr>
+    {{ end }}
+  </tbody>
+</table>
+{{ end }}
+
+{{ define "_diff_stat" }}
+<div class="commit-refs">
+  <span class="diff-mod">{{ .FilesChanged }} files changed</span>,
+  <span class="diff-add">{{ .Insertions }} insertions(+)</span>,
+  <span class="diff-del">{{ .Deletions }} deletions(-)</span>
+</div>
+{{ end }}
+
+{{ define "_diff_table" }}
+{{ if gt (len .) 1 -}}
+<div class="jump">
+  <strong>jump to</strong>
+  <table class="table jump-table">
+    <tbody>
+      {{ range . }}
+      {{ $path := .Name.New }}
+      {{ if not $path }}{{ $path = .Name.Old }}{{ end }}
+      <tr>
+        <td class="mono">{{ template "_diff_type" . }}</td>
+        <td class="fill">
+          <a href="#{{ $path }}">
+            {{ if .IsRename }}{{ .Name.Old }} &#8594; {{ .Name.New }}
+            {{ else }}{{ $path }}{{ end }}
+          </a>
+        </td>
+      </tr>
+      {{ end }}
+    </tbody>
+  </table>
+</div>
+{{ end }}
+{{ end }}
+
+{{ define "_diff_files" }}
+{{ range .Diff }}
+{{ $path := .Name.New }}
+{{ if not $path }}{{ $path = .Name.Old }}{{ end }}
+<div id="{{ $path }}">
+  <div class="diff">
+    {{ template "_diff_type" . }}
+
+    {{ $name := .Name.New }}{{ $hash := $.RightHash }}
+    {{ if or .IsDelete .IsRename }}{{ $name = .Name.Old }}{{ $hash = $.LeftHash }}{{ end }}
+    {{ if $hash }}<a href="/{{ $.Repo }}/blob/{{ $hash }}/{{ $name }}">{{ $name }}</a>{{ else }}{{ $name }}{{ end }}
+    {{ if .IsRename }} &#8594; <a href="/{{ $.Repo }}/blob/{{ $.RightHash }}/{{ .Name.New }}">{{ .Name.New }}</a>{{ end }}
+
+    {{ if .IsBinary }}<p>Not showing binary file.</p>
+    {{ else }}
+    <pre>
+      {{- range .TextFragments -}}
+      <span class="diff-line diff-noop diff-separator">···</span>
+      {{- $o := .OldPosition -}}
+      {{- $n := .NewPosition -}}
+      {{- range .Lines -}}
+      {{- $op := .Op.String -}}
+
+      {{- if eq $op "+" -}}
+      <span class="diff-line diff-add" id="{{ $path }}-N{{ $n }}">
+        <span class="line-number"></span>
+        <a class="line-number" href="#{{ $path }}-N{{ $n }}">{{ $n }}</a>
+        <span><span class="diff-op">{{ $op }}</span>{{ .Line }}</span>
+      </span>
+      {{- $n = inc64 $n -}}
+
+      {{- else if eq $op "-" -}}
+      <span class="diff-line diff-del" id="{{ $path }}-O{{ $o }}">
+        <a class="line-number" href="#{{ $path }}-O{{ $o }}">{{ $o }}</a>
+        <span class="line-number"></span>
+        <span><span class="diff-op">{{ $op }}</span>{{ .Line }}</span>
+      </span>
+      {{- $o = inc64 $o -}}
+
+      {{- else -}}
+      <span class="diff-line diff-noop" id="{{ $path }}-L{{ $o }}">
+        <a class="line-number" href="#{{ $path }}-L{{ $o }}">{{ $o }}</a>
+        <a class="line-number" href="#{{ $path }}-L{{ $o }}">{{ $n }}</a>
+        <span><span class="diff-op">{{ $op }}</span>{{ .Line }}</span>
+      </span>
+      {{- $o = inc64 $o -}}
+      {{- $n = inc64 $n -}}
+      {{- end -}}
+
+      {{- end -}}
+      {{- end -}}
+    </pre>
+    {{ end }}
+  </div>
+</div>
+{{ end }}
+{{ end }}
+
 {{ define "repo_commit" }}
 {{ $commit := .P.Diff.Commit }}
 {{ $diff := .P.Diff.Diff }}
@@ -18,11 +150,7 @@
     {{ template "repo_header" . }}
     <main>
       <section class="commit">
-        <div class="commit-refs">
-          <span class="diff-mod">{{ $stat.FilesChanged }} files changed</span>,
-          <span class="diff-add">{{ $stat.Insertions }} insertions(+)</span>,
-          <span class="diff-del">{{ $stat.Deletions }} deletions(-)</span>
-        </div>
+        {{ template "_diff_stat" $stat }}
 
         <div class="box">
           <pre class="commit-message">
@@ -68,89 +196,13 @@
           {{ end }}
         </div>
 
-        {{ if gt (len $diff) 1 -}}
-        <div class="jump">
-          <strong>jump to</strong>
-          <table class="table jump-table">
-            <tbody>
-              {{ range $diff }}
-              {{ $path := .Name.New }}
-              {{ if not $path }}{{ $path = .Name.Old }}{{ end }}
-              <tr>
-                <td class="mono">{{ template "_diff_type" . }}</td>
-                <td class="fill">
-                  <a href="#{{ $path }}">
-                    {{ if .IsRename }}{{ .Name.Old }} &#8594; {{ .Name.New }}
-                    {{ else }}{{ $path }}{{ end }}
-                  </a>
-                </td>
-              </tr>
-              {{ end }}
-            </tbody>
-          </table>
-        </div>
-        {{ end }}
+        {{ template "_diff_table" $diff }}
       </section>
 
       <section>
-        {{ $this := $commit.Hash }}
         {{ $parent := "" }}
         {{ if $parents }}{{ $parent = index $parents 0 }}{{ end }}
-        {{ range $diff }}
-        {{ $path := .Name.New }}
-        {{ if not $path }}{{ $path = .Name.Old }}{{ end }}
-        <div id="{{ $path }}">
-          <div class="diff">
-            {{ template "_diff_type" . }}
-
-            {{ $name := .Name.New }}{{ $hash := $this }}
-            {{ if or .IsDelete .IsRename }}{{ $name = .Name.Old }}{{ $hash = $parent }}{{ end }}
-            {{ if $hash }}<a href="/{{ $.RepoName }}/blob/{{ $hash }}/{{ $name }}">{{ $name }}</a>{{ else }}{{ $name }}{{ end }}
-            {{ if .IsRename }} &#8594; <a href="/{{ $.RepoName }}/blob/{{ $this }}/{{ .Name.New }}">{{ .Name.New }}</a>{{ end }}
-
-            {{ if .IsBinary }}<p>Not showing binary file.</p>
-            {{ else }}
-            <pre>
-              {{- range .TextFragments -}}
-              <span class="diff-line diff-noop diff-separator">···</span>
-              {{- $o := .OldPosition -}}
-              {{- $n := .NewPosition -}}
-              {{- range .Lines -}}
-              {{- $op := .Op.String -}}
-
-              {{- if eq $op "+" -}}
-              <span class="diff-line diff-add" id="{{ $path }}-N{{ $n }}">
-                <span class="line-number"></span>
-                <a class="line-number" href="#{{ $path }}-N{{ $n }}">{{ $n }}</a>
-                <span><span class="diff-op">{{ $op }}</span>{{ .Line }}</span>
-              </span>
-              {{- $n = inc64 $n -}}
-
-              {{- else if eq $op "-" -}}
-              <span class="diff-line diff-del" id="{{ $path }}-O{{ $o }}">
-                <a class="line-number" href="#{{ $path }}-O{{ $o }}">{{ $o }}</a>
-                <span class="line-number"></span>
-                <span><span class="diff-op">{{ $op }}</span>{{ .Line }}</span>
-              </span>
-              {{- $o = inc64 $o -}}
-
-              {{- else -}}
-              <span class="diff-line diff-noop" id="{{ $path }}-L{{ $o }}">
-                <a class="line-number" href="#{{ $path }}-L{{ $o }}">{{ $o }}</a>
-                <a class="line-number" href="#{{ $path }}-L{{ $o }}">{{ $n }}</a>
-                <span><span class="diff-op">{{ $op }}</span>{{ .Line }}</span>
-              </span>
-              {{- $o = inc64 $o -}}
-              {{- $n = inc64 $n -}}
-              {{- end -}}
-
-              {{- end -}}
-              {{- end -}}
-            </pre>
-            {{ end }}
-          </div>
-        </div>
-        {{ end }}
+        {{ template "_diff_files" (dict "Repo" .RepoName "Diff" $diff "RightHash" $commit.Hash "LeftHash" $parent) }}
       </section>
     </main>
   </body>

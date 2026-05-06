@@ -1,0 +1,48 @@
+{{ define "repo_compare" }}
+{{ $cmp := .P.Compare }}
+{{ $diff := $cmp.Diff.Diff }}
+<html>
+  <head>
+    {{ template "head" . }}
+    <title>{{ $.RepoName }}: compare {{ $cmp.BaseRef }}...{{ $cmp.HeadRef }}</title>
+  </head>
+  <body>
+    {{ template "repo_header" . }}
+    <main>
+      <section class="commit">
+        <div class="commit-refs">
+          <strong>{{ $cmp.BaseRef }}</strong>...<strong>{{ $cmp.HeadRef }}</strong>
+          <span class="pl">
+            <span class="diff-add">{{ $cmp.Ahead }} ahead</span>,
+            <span class="diff-del">{{ $cmp.Behind }} behind</span>
+          </span>
+        </div>
+        <div class="box">
+          <span>
+            <strong>Merge base:</strong>
+            <a class="link" href="/{{ $.RepoName }}/commit/{{ $cmp.MergeBase }}">{{ printf "%.7s" $cmp.MergeBase }}</a>,
+          </span>
+          <span>
+            <strong>Base:</strong>
+            <a class="link" href="/{{ $.RepoName }}/commit/{{ $cmp.BaseHash }}">{{ printf "%.7s" $cmp.BaseHash }}</a>,
+          </span>
+          <span>
+            <strong>Head:</strong>
+            <a class="link" href="/{{ $.RepoName }}/commit/{{ $cmp.HeadHash }}">{{ printf "%.7s" $cmp.HeadHash }}</a>
+          </span>
+        </div>
+      </section>
+
+      <section class="commit">
+        <h3>Commits in {{ $cmp.HeadRef }} not in {{ $cmp.BaseRef }}</h3>
+        {{ template "_diff_stat" $cmp.Diff.Stat }}
+        {{ if $cmp.Commits }}{{ template "_commit_table" (dict "Repo" $.RepoName "Commits" $cmp.Commits) }}
+        {{ else }}<p class="muted">No commits to compare.</p>{{ end }}
+      </section>
+
+      <section class="commit">{{ template "_diff_table" $diff }}</section>
+      <section>{{ template "_diff_files" (dict "Repo" $.RepoName "Diff" $diff "RightHash" $cmp.HeadHash "LeftHash" $cmp.MergeBase) }}</section>
+    </main>
+  </body>
+</html>
+{{ end }}
