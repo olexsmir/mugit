@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/bluekeyes/go-gitdiff/gitdiff"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 )
 
@@ -49,14 +50,26 @@ func (g *Repo) Diff() (*NiceDiff, error) {
 		return nil, err
 	}
 
-	diffs, _, err := gitdiff.Parse(strings.NewReader(patch.String()))
+	nd, err := parseNiceDiff(patch.String())
+	if err != nil {
+		return nil, err
+	}
+	nd.Commit = newCommit(c)
+	nd.Parents = parents
+	return nd, nil
+}
+
+func parseNiceDiff(patch string) (*NiceDiff, error) {
+	nd := &NiceDiff{}
+	if strings.TrimSpace(patch) == "" {
+		return nd, nil
+	}
+
+	diffs, _, err := gitdiff.Parse(strings.NewReader(patch))
 	if err != nil {
 		return nil, fmt.Errorf("parsing diff: %w", err)
 	}
 
-	nd := NiceDiff{}
-	nd.Commit = newCommit(c)
-	nd.Parents = parents
 	nd.Stat.FilesChanged = len(diffs)
 	nd.Diff = make([]Diff, len(diffs))
 	for i, d := range diffs {
@@ -87,7 +100,7 @@ func (g *Repo) Diff() (*NiceDiff, error) {
 			}
 		}
 	}
-	return &nd, nil
+	return nd, nil
 }
 
 func (g *Repo) getPatch(c *object.Commit) (*object.Patch, []string, error) {
@@ -118,4 +131,35 @@ func (g *Repo) getPatch(c *object.Commit) (*object.Patch, []string, error) {
 	}
 
 	return patch, parents, nil
+}
+
+func (g *Repo) diffBetween(base, head plumbing.Hash) (*NiceDiff, error) {
+	baseCommit, err := g.r.CommitObject(base)
+	if err != nil {
+		return nil, fmt.Errorf("base commit object %s: %w", base, err)
+	}
+	headCommit, err := g.r.CommitObject(head)
+	if err != nil {
+		return nil, fmt.Errorf("head commit object %s: %w", head, err)
+	}
+
+	baseTree, err := baseCommit.Tree()
+	if err != nil {
+		return nil, fmt.Errorf("base tree %s: %w", base, err)
+	}
+	headTree, err := headCommit.Tree()
+	if err != nil {
+		return nil, fmt.Errorf("head tree %s: %w", head, err)
+	}
+
+	patch, err := baseTree.Patch(headTree)
+	if err != nil {
+		return nil, fmt.Errorf("tree patch %s..%s: %w", base, head, err)
+	}
+
+	diff, err := parseNiceDiff(patch.String())
+	if err != nil {
+ 		return nil, fmt.Errorf("parse tree diff %s..%s: %w", base, head, err)
+	}
+	return diff, nil
 }
