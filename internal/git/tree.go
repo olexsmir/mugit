@@ -151,6 +151,26 @@ type logCommit struct {
 	files []string
 }
 
+func (g *Repo) lastFileCommitHash(ctx context.Context, fpath string) (string, error) {
+	output, err := g.streamingGitLog(ctx, "-n", "1", "--format=%H", "--", fpath)
+	if err != nil {
+		return "", fmt.Errorf("last file commit for %q: %w", fpath, err)
+	}
+	defer output.Close()
+
+	raw, err := io.ReadAll(output)
+	if err != nil {
+		return "", fmt.Errorf("reading log output for %q: %w", fpath, err)
+	}
+
+	hash := string(raw)
+	if hash == "" {
+		return "", fmt.Errorf("no last commit found for %q", fpath)
+	}
+
+	return hash, nil
+}
+
 func (g *Repo) lastCommitForFilesInTree(ctx context.Context, subtree *object.Tree, parent string) (map[string]*Commit, error) {
 	filesToDo := make(map[string]struct{})
 	filesDone := make(map[string]*Commit)

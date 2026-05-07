@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -205,6 +206,21 @@ func (g *Repo) LastCommit() (*Commit, error) {
 	c, err := g.r.CommitObject(g.h)
 	if err != nil {
 		return nil, fmt.Errorf("last commit: %w", err)
+	}
+
+	return newCommit(c), nil
+}
+
+func (g *Repo) LastFileCommit(ctx context.Context, fpath string) (*Commit, error) {
+	path := path.Clean(fpath)
+	hash, err := g.lastFileCommitHash(ctx, path)
+	if err != nil {
+		return nil, err
+	}
+
+	c, err := g.r.CommitObject(plumbing.NewHash(hash))
+	if err != nil {
+		return nil, fmt.Errorf("commit object %s: %w", hash, err)
 	}
 
 	return newCommit(c), nil

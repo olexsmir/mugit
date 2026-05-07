@@ -172,14 +172,39 @@ func TestRepo_LastCommit(t *testing.T) {
 		r.commitFile("latest.txt", "latest", "latest commit")
 
 		commit, err := r.open().LastCommit()
-		is.Equal(t, commit.Message, "latest commit")
 		is.Err(t, err, nil)
+		is.Equal(t, commit.Message, "latest commit")
 	})
 
 	t.Run("empty repo returns empty commit", func(t *testing.T) {
 		commit, err := newTestRepo(t).open().LastCommit()
 		is.Err(t, err, nil)
 		is.Equal(t, commit.Message, "")
+	})
+}
+
+func TestRepo_LastFileCommit(t *testing.T) {
+	t.Run("returns last commit for root file", func(t *testing.T) {
+		r := newTestRepo(t)
+		r.commitFile("README.md", "v1\n", "init readme")
+		last := r.commitFile("README.md", "v2\n", "update readme")
+
+		c, err := r.open().LastFileCommit(t.Context(), "README.md")
+		is.Err(t, err, nil)
+		is.Equal(t, c.Hash, last.String())
+		is.Equal(t, c.Message, "update readme")
+	})
+
+	t.Run("returns last commit for nested file", func(t *testing.T) {
+		r := newTestRepo(t)
+		r.commitFile("docs/guide.md", "v1\n", "add guide")
+		last := r.commitFile("docs/guide.md", "v2\n", "update guide")
+		r.commitFile("README.md", "root\n", "touch root")
+
+		c, err := r.open().LastFileCommit(t.Context(), "docs/guide.md")
+		is.Err(t, err, nil)
+		is.Equal(t, c.Hash, last.String())
+		is.Equal(t, c.Message, "update guide")
 	})
 }
 

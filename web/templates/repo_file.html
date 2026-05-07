@@ -18,6 +18,26 @@
           (<a class="muted" href="/{{ .RepoName }}/raw/{{ .P.Ref }}/{{ .P.Path }}">view raw</a>)
         </span>
       </p>
+
+      <div class="box msb">
+        <span class="has-tip">
+          <span>
+           <a class="bold" href="mailto:{{ .P.LastCommit.AuthorEmail }}">{{ .P.LastCommit.AuthorName }}</a>
+          </span>
+          <span class="tooltip" role="tooltip">
+            <strong>{{ .P.LastCommit.AuthorName }}</strong><br>
+            <a href="mailto:{{ .P.LastCommit.AuthorEmail }}" class="commit-email">{{ .P.LastCommit.AuthorEmail }}</a>
+          </span>
+        </span>
+        <span class="pl">
+          <a class="link" href="/{{ .RepoName }}/commit/{{ .P.LastCommit.Hash }}">
+            {{- if .P.LastCommit.Message }}{{- commitSummary .P.LastCommit.Message -}}
+            {{- else -}}<span class="muted">Empty message</span>{{- end -}}
+          </a>,
+        </span>
+        <span class="muted">{{ humanizeRelTime .P.LastCommit.Committed }}</span>
+      </div>
+
       <div class="file-wrapper">
         {{ if .P.IsImage }}
         <div class="image-viewer">

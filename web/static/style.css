@@ -88,12 +88,14 @@ nav ul li {
 
 /* utilities */
 .mono { font-family: var(--mono-font); }
+.bold { font-weight: 700; }
 .nowrap { white-space: nowrap; }
 .fill { width: 100%; }
 .muted { color: var(--gray); }
 .pl { padding-left: 0.3rem; }
 .pt { padding-top: 1rem; }
 .mb { margin-bottom: 1rem; }
+.msb {margin-bottom: 0.3rem; }
 .center {
   display: flex;
   justify-content: center;

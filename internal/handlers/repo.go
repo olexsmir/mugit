@@ -169,6 +169,7 @@ type RepoFile struct {
 	Ref         string
 	Desc        string
 	Lines       []string
+	LastCommit  *git.Commit
 	Breadcrumbs []Breadcrumb
 	Path        string
 	IsImage     bool
@@ -205,6 +206,12 @@ func (h *handlers) fileContentsHandler(w http.ResponseWriter, r *http.Request) {
 		IsBinary: fc.IsBinary,
 		Mime:     fc.Mime,
 		Size:     fc.Size,
+	}
+
+	p.LastCommit, err = repo.LastFileCommit(r.Context(), treePath)
+	if err != nil {
+		h.write500(w, err)
+		return
 	}
 
 	p.Desc, err = repo.Description()
