@@ -8,44 +8,7 @@
   <body>
     {{ template "repo_header" . }}
     <main>
-      <table class="table log">
-        <thead>
-          <tr class="nohover">
-            <th class="fill">Message</th>
-            <th class="author nowrap">Author</th>
-            <th>Hash</th>
-            <th class="age nowrap">Age</th>
-          </tr>
-        </thead>
-        <tbody>
-          {{ range .P.Commits }}
-          <tr>
-            <td class="fill">
-              <a href="/{{ $repo }}/commit/{{ .Hash }}">
-                {{- if .Message }}{{- commitSummary .Message -}}
-                {{- else -}}<span class="muted">Empty message</span>{{- end -}}
-              </a>
-            </td>
-            <td class="has-tip nowrap">
-              <span class="author-short">
-                {{ .AuthorName }} <a href="mailto:{{ .AuthorEmail }}" class="commit-email">{{ .AuthorEmail }}</a>
-              </span>
-              <span class="tooltip" role="tooltip">
-                <strong>{{ .AuthorName }}</strong><br>
-                <a href="mailto:{{ .AuthorEmail }}" class="commit-email">{{ .AuthorEmail }}</a>
-              </span>
-            </td>
-            <td class="mono">
-              <a href="/{{ $repo }}/commit/{{ .Hash }}">{{ .HashShort }}</a>
-            </td>
-            <td class="has-tip nowrap">
-              {{ humanizeRelTime .Committed }}
-              <span class="tooltip" role="tooltip">{{ humanizeTime .Committed }}</span>
-            </td>
-          </tr>
-          {{ end }}
-        </tbody>
-      </table>
+      {{ template "_commit_table" (dict "Repo" $repo "Commits" .P.Commits) }}
       <div class="center">
         {{ if .P.NextAfter }}
         <a href="?after={{ urlencode .P.NextAfter }}">[load more]</a>

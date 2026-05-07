@@ -91,6 +91,19 @@ func (t *testRepo) createBranch(name string, hash plumbing.Hash) {
 	is.Err(t.tb, t.r.Storer.SetReference(ref), nil)
 }
 
+func (t *testRepo) checkoutBranch(name string, create bool) {
+	t.tb.Helper()
+
+	wt, err := t.r.Worktree()
+	is.Err(t.tb, err, nil)
+
+	err = wt.Checkout(&git.CheckoutOptions{
+		Branch: plumbing.NewBranchReferenceName(name),
+		Create: create,
+	})
+	is.Err(t.tb, err, nil)
+}
+
 func (t *testRepo) createTag(name string, hash plumbing.Hash) {
 	t.tb.Helper()
 	ref := plumbing.NewHashReference(plumbing.NewTagReferenceName(name), hash)
