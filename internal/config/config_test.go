@@ -79,6 +79,6 @@ func TestPathOrDefaultWithCandidates(t *testing.T) {
 func candidateFile(t *testing.T, name string) string {
 	t.Helper()
 	out := filepath.Join(t.TempDir(), name)
-	os.WriteFile(out, []byte("test"), 0o644)
+	_ = os.WriteFile(out, []byte("test"), 0o644)
 	return out
 }

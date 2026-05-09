@@ -120,7 +120,7 @@ func (g *Repo) FileContent(path string) (*FileContent, error) {
 	if err != nil {
 		return nil, fmt.Errorf("file reader: %w", err)
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 
 	content, err := io.ReadAll(reader)
 	if err != nil {
@@ -156,7 +156,7 @@ func (g *Repo) lastFileCommitHash(ctx context.Context, fpath string) (string, er
 	if err != nil {
 		return "", fmt.Errorf("last file commit for %q: %w", fpath, err)
 	}
-	defer output.Close()
+	defer func() { _ = output.Close() }()
 
 	raw, err := io.ReadAll(output)
 	if err != nil {
@@ -195,7 +195,7 @@ func (g *Repo) lastCommitForFilesInTree(ctx context.Context, subtree *object.Tre
 	if err != nil {
 		return nil, err
 	}
-	defer output.Close() // Ensure the git process is properly cleaned up
+	defer func() { _ = output.Close() }()
 
 	var current logCommit
 	reader := bufio.NewReader(output)

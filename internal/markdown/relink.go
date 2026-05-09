@@ -141,7 +141,7 @@ type rawBlockRenderer struct{}
 func (r *rawBlockRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 	reg.Register(rawBlockKind, func(w util.BufWriter, _ []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
 		if entering {
-			w.Write(node.(*rawBlock).data)
+			_, _ = w.Write(node.(*rawBlock).data)
 		}
 		return ast.WalkContinue, nil
 	})

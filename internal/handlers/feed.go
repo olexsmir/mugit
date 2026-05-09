@@ -96,7 +96,7 @@ func (h *handlers) repoFeedHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/rss+xml")
-	w.Write([]byte(xml.Header))
+	_, _ = w.Write([]byte(xml.Header))
 	if err := xml.NewEncoder(w).Encode(feed); err != nil {
 		h.write500(w, err)
 		return
@@ -140,7 +140,7 @@ func (h *handlers) indexFeedHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/rss+xml")
-	w.Write([]byte(xml.Header))
+	_, _ = w.Write([]byte(xml.Header))
 	if err := xml.NewEncoder(w).Encode(feed); err != nil {
 		h.write500(w, err)
 		return

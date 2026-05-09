@@ -65,8 +65,7 @@ func TestRepo_Description(t *testing.T) {
 
 		// Write the default git description to the .git directory
 		descPath := filepath.Join(r.path, ".git", "description")
-		err := os.WriteFile(descPath, []byte(defaultDescription), 0o644)
-		is.Err(t, err, nil)
+		_ = os.WriteFile(descPath, []byte(defaultDescription), 0o644)
 
 		desc, err := r.open().Description()
 		is.Err(t, err, nil)

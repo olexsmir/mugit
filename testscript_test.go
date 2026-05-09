@@ -36,7 +36,7 @@ func testMain(m *testing.M) int {
 		fmt.Fprintf(os.Stderr, "failed to create temp dir: %v\n", err)
 		return 1
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	reposDir = filepath.Join(tmpDir, "repos")
 	if jerr := os.MkdirAll(reposDir, 0o755); jerr != nil {
@@ -106,7 +106,7 @@ func testMain(m *testing.M) int {
 	}
 
 	code := m.Run()
-	httpServer.Shutdown(ctx)
+	_ = httpServer.Shutdown(ctx)
 	return code
 }
 
@@ -146,7 +146,7 @@ func buildMugitBinary(tmpDir string) error {
 	cmd := exec.Command("go", "build", "-o", mugitBin, ".")
 	cmd.Dir = "."
 	if out, err := cmd.CombinedOutput(); err != nil {
-		os.RemoveAll(tmpDir)
+		_ = os.RemoveAll(tmpDir)
 		return fmt.Errorf("go build: %v\n%s", err, out)
 	}
 	return nil
@@ -158,7 +158,7 @@ func findFreePort() (int, error) {
 		return 0, err
 	}
 	port := l.Addr().(*net.TCPAddr).Port
-	l.Close()
+	_ = l.Close()
 	return port, nil
 }
 
@@ -170,7 +170,7 @@ func waitForPort(port int, timeout time.Duration) error {
 			net.JoinHostPort("127.0.0.1", strconv.Itoa(port)),
 			200*time.Millisecond,
 		); err == nil {
-			conn.Close()
+			_ = conn.Close()
 			return nil
 		}
 		time.Sleep(50 * time.Millisecond)

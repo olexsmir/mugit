@@ -27,7 +27,7 @@ func (h *handlers) infoRefsHandler(w http.ResponseWriter, r *http.Request) {
 
 		w.WriteHeader(http.StatusOK)
 		if err := repo.InfoRefs(r.Context(), gitProtocol, w); err != nil {
-			git.PackError(w, err.Error())
+			_ = git.PackError(w, err.Error())
 			slog.Error("git: info/refs", "err", err)
 			return
 		}
@@ -64,7 +64,7 @@ func (h *handlers) uploadPackHandler(w http.ResponseWriter, r *http.Request) {
 			slog.Error("git: failed to create gzip reader", "err", err)
 			return
 		}
-		defer gzipReader.Close()
+		defer func() { _ = gzipReader.Close() }()
 		bodyReader = gzipReader
 	}
 
@@ -74,7 +74,7 @@ func (h *handlers) uploadPackHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	if err := repo.UploadPack(r.Context(), true, gitProtocol, bodyReader, newFlushWriter(w)); err != nil {
-		git.PackError(w, err.Error())
+		_ = git.PackError(w, err.Error())
 		slog.Error("git: upload-pack", "err", err)
 		return
 	}
@@ -108,7 +108,7 @@ func (h *handlers) archiveHandler(w http.ResponseWriter, r *http.Request) {
 func (h *handlers) gitError(w http.ResponseWriter, code int, msg string) {
 	w.Header().Set("content-type", "text/plain; charset=UTF-8")
 	w.WriteHeader(code)
-	fmt.Fprintf(w, "%s\n", msg)
+	_, _ = fmt.Fprintf(w, "%s\n", msg)
 }
 
 func (h *handlers) openPublicRepo(name, ref string) (*git.Repo, error) {

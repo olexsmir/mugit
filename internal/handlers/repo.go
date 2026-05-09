@@ -255,7 +255,7 @@ func (h *handlers) rawFileContentsHandler(w http.ResponseWriter, r *http.Request
 
 	w.Header().Set("Content-Type", fc.Mime)
 	w.WriteHeader(http.StatusOK)
-	w.Write(fc.Content)
+	_, _ = w.Write(fc.Content)
 }
 
 type RepoLog struct {

@@ -183,19 +183,20 @@ func (g *Repo) Commits(after string) ([]*Commit, error) {
 
 	// since after commit was shown on prev page, skip it
 	if after != "" {
-		ci.Next()
+		if _, err = ci.Next(); err != nil {
+			return nil, err
+		}
 	}
 
 	commits := make([]*Commit, 0, CommitsPage)
-	ci.ForEach(func(c *object.Commit) error {
+	err = ci.ForEach(func(c *object.Commit) error {
 		if len(commits) == CommitsPage {
 			return storer.ErrStop
 		}
 		commits = append(commits, newCommit(c))
 		return nil
 	})
-
-	return commits, nil
+	return commits, err
 }
 
 func (g *Repo) LastCommit() (*Commit, error) {

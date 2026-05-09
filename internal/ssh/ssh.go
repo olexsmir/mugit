@@ -74,7 +74,7 @@ func (s *Shell) HandleCommand(ctx context.Context, cmd string, stdin io.Reader, 
 	}
 
 	if s.cfg.Meta.Modt != "" {
-		fmt.Fprintln(stderr, s.cfg.Meta.Modt)
+		_, _ = fmt.Fprintln(stderr, s.cfg.Meta.Modt)
 	}
 
 	switch gitCmd {

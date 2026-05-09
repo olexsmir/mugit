@@ -45,7 +45,7 @@ func (c *Cli) sshAuthorizedKeysAction(ctx context.Context, cmd *cli.Command) err
 	}
 
 	out := c.ssh.AuthorizedKeys(executablePath)
-	fmt.Fprint(os.Stdout, out)
+	_, _ = fmt.Fprint(os.Stdout, out)
 
 	return nil
 }

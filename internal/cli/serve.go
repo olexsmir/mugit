@@ -35,7 +35,9 @@ func (c *Cli) serveAction(ctx context.Context, cmd *cli.Command) error {
 		mirrorer := mirror.NewWorker(c.cfg)
 		go func() {
 			slog.Info("starting mirroring worker")
-			mirrorer.Start(ctx)
+			if err := mirrorer.Start(ctx); err != nil {
+				slog.Error("failed to start mirrorer", "err", err)
+			}
 		}()
 	}
 
