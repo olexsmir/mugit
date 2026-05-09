@@ -40,6 +40,11 @@ exists verify-auto-init/file.txt
 exists verify-auto-init/file2.txt
 
 
+# should print MOTD for ssh -T style connections
+exec $SSH_WRAPPER ignored
+stderr 'Welcome to test mugit!'
+
+
 # should not allow execution of commands
 ! exec $SSH_WRAPPER ignored 'echo hi'
 stderr 'access denied:'

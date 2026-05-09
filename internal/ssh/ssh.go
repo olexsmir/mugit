@@ -36,6 +36,12 @@ func NewShell(cfg *config.Config) (*Shell, error) {
 }
 
 func (s *Shell) HandleCommand(ctx context.Context, cmd string, stdin io.Reader, stdout, stderr io.Writer) error {
+	// ssh -T `mugit@host`
+	if strings.TrimSpace(cmd) == "" {
+		_, err := fmt.Fprintln(stderr, s.cfg.Meta.Modt)
+		return err
+	}
+
 	gitCmd, repoName, err := s.parseCommand(cmd)
 	if err != nil {
 		return s.replyWithGitError(stderr, "access denied: invalid command", err)

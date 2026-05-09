@@ -20,6 +20,7 @@
 - `mugit repo default` changes default branch of a repo.
 - `mugit repo sync` syncs specified mirror repo.
 - Mirror status now inclues last sync time(when there were changes fetched) and last checked time.
+- Add modt for ssh pushes/clones.
 - Automatically initialize repository on push.
 
 ### Bug fixes:

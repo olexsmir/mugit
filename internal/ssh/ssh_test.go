@@ -1,6 +1,7 @@
 package ssh
 
 import (
+	"bytes"
 	"strings"
 	"testing"
 
@@ -89,5 +90,22 @@ func TestShellAuthorizedKeys(t *testing.T) {
 	}
 	if !strings.Contains(result, validKey) {
 		t.Errorf("AuthorizedKeys() missing SSH key\ngot: %s", result)
+	}
+}
+
+func TestShellHandleCommand_modt(t *testing.T) {
+	modt := "test modt"
+	shell, err := NewShell(&config.Config{Meta: config.MetaConfig{
+		Modt: modt,
+	}})
+	is.Err(t, err, nil)
+
+	var stdout, stderr bytes.Buffer
+	err = shell.HandleCommand(t.Context(), "", strings.NewReader(""), &stdout, &stderr)
+	is.Err(t, err, nil)
+	is.Equal(t, stdout.String(), "")
+
+	if !strings.Contains(stderr.String(), modt) {
+		t.Fatalf("expected MOTD in stderr\ngot: %s", stderr.String())
 	}
 }
