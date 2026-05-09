@@ -27,6 +27,7 @@ type MetaConfig struct {
 	Title       string `yaml:"title"`
 	Description string `yaml:"description"`
 	Host        string `yaml:"host"`
+	Modt        string `yaml:"modt"`
 }
 
 type RepoConfig struct {

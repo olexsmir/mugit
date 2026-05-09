@@ -64,6 +64,7 @@ func testMain(m *testing.M) int {
 		Meta: config.MetaConfig{
 			Title: "test mugit",
 			Host:  "localhost",
+			Modt:  "Welcome to test mugit!",
 		},
 		Repo: config.RepoConfig{
 			Dir:     reposDir,

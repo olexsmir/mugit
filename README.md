@@ -69,6 +69,7 @@ meta:
   title: "My Git Server"    # site title shown on index page
   description: "A place for my projects"
   host: git.example.com     # used for clone URLs and go-import meta tag
+  modt: "Welcome to my git server!" # message shown on SSH clone/push (empty = disabled)
 
 repo:
   dir: /var/lib/mugit   # directory with repositories
