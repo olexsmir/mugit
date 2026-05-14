@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.0 (unreleased)
+## 0.3.0
 
 ### Breaking changes
 - Switched to system sshd integration instead of bundling a custom SSH server.
