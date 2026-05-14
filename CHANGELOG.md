@@ -3,30 +3,36 @@
 ## 0.3.0 (unreleased)
 
 ### Breaking changes
+- Switched to system sshd integration instead of bundling a custom SSH server.
 - Changed route for raw files. From `/repo/blob/ref/file_path?raw=true` to `/repo/raw/ref/file_path`.
-- Switch to sshd, instead of running it's own ssh server.
 
 ### Features:
 - Paginate log page (150 commits per page).
-- Support `git-upload-archive`.
-- Better CSS for markdown readmes.
-- Add breadcrumbs on "file content" and "file tree" pages.
-- Show last commit associated with file on the "tree page".
-- Show both authored and commit time of a commit.
-- Highlight selected line on file content page.
-- `mugit repo new` now accepts `--description`, sets repo description.
-- `mugit repo new --mirror` will sync repo from specified remote.
+- New compare refs page(`/{name}/compare/{ref1}/{ref2}`) with ahead/behind count, merge base, commits, and diff.
+- RSS feeds: global(`/index.xml`) and per-repo(`/{name}/feed/`).
+- Breadcrumbs on file content and file tree pages.
+- Last commit info on tree page(per-file) and file content page.
+- Show both authored and committed timestamps on commit page when they differ.
+- Highlight selected line on file content page with `#L{N}` anchor links.
 - Show remote urls and mirroring data on empty repos.
-- `mugit repo default` changes default branch of a repo.
-- `mugit repo sync` syncs specified mirror repo.
-- Mirror status now inclues last sync time(when there were changes fetched) and last checked time.
-- Add modt for ssh pushes/clones.
-- Automatically initialize repository on push.
+- Improved markdown README rendering with better typography, code blocks, callouts, and dark mode support.
+- Mirror status shows last sync time(when changes were fetched) and last checked time(when checked, even without changes).
+- Accept gzip-encoded HTTP requests for `git upload-pack`.
+- **ssh:**
+  - Support `git-upload-archive` over SSH.
+  - Automatically initialize repository on first push.
+  - Show modt on ssh connections (push, clone, `ssh -T`)
+- **cli:**
+  - `mugit repo new repo --description <desc>` sets repository description on creation.
+  - `mugit repo new repo --private` creates a private repository.
+  - `mugit repo new repo --mirror <url>` creates a mirror and performs initial sync.
+  - `mugit repo set-default <repo.git> <branch>` changes repo default branch.
+  - `mugit repo sync <repo.git>` triggers an immediate mirror sync.
 
 ### Bug fixes:
 - Allow downloading only valid and existing refs.
 - Support refs with special characters in names (e.g. `/` or `#`).
-- Previously when viewing first commit in repo diffs were not rendered.
+- Fix diffs not rendering when viewing the first commit in a repository.
 
 ## 0.2.0
 
@@ -34,13 +40,13 @@
 - Commit Page:
   - Show both author and committer names when they differ.
   - Redesign commit page layout with improved colors and navigation.
-  - Use mono font for commit hashes.
+  - Use monospace font for commit hashes.
 - Format commit timestamps as `YYYY-MM-DD HH:MM:SS TZ`.
 - Hide navigation bar for empty repositories.
 - Render subtree-scoped README files on the tree view.
 - Markdown rendering:
   - Render images with relative links within repository.
-  - Add emoji support :hey: (e.g. `:smile:`).
+  - :hey: Add emoji support (e.g. `:smile:`).
 
 ### Bug Fixes
 - Correct MIME types for raw file downloads.
@@ -52,4 +58,4 @@
   - CLI: create, toggle private/public repo status, and add descriptions.
   - Web UI.
   - SSH server for git pull/push operations.
-  - Pull based mirroring.
+  - Pull-based mirroring.
