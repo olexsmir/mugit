@@ -1,0 +1,14 @@
+[Unit]
+Description=mugit
+After=network.target
+
+[Service]
+Type=simple
+User=mugit
+Group=mugit
+ExecStart=/usr/local/bin/mugit serve
+Restart=on-failure
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+
+[Install]
+WantedBy=multi-user.target

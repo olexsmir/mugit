@@ -15,27 +15,70 @@ A lightweight, self-hosted Git server that your cow will love.
 ## Quick install & deploy
 
 ```sh
+# get binary
 git clone https://git.olexsmir.xyz/mugit.git
 cd mugit
 go build
-
 # or
 go install github.com/olexsmir/mugit@latest
-```
 
-For nixos, you can use our flake, see [my config](https://git.olexsmir.xyz/dotfiles/blob/master/nix/modules/services/mugit.nix) for reference.
 
-Start the server:
-```sh
-# start server with default config lookup
+# start server
 mugit serve
-
-# start with a custom config path
-mugit -c /path/to/config.yaml serve
-
-# mirror your repo from github
-mugit repo new repo-name --mirror https://github.com/user/repo
 ```
+
+<details>
+<summary>Deploy guide</summary>
+
+  If you're on nixos feel free to use mugit's flake. See [example config](https://git.olexsmir.xyz/dotfiles/blob/master/nix/modules/services/mugit.nix) for a full reference.
+
+  1. Get a mugit binary.
+
+  Download it from [github releases](https://github.com/olexsmir/mugit/releases) or build it from source:
+  ```bash
+  git clone https://git.olexsmir.xyz/mugit.git
+  cd mugit
+  go build -o /usr/local/bin/mugit
+  ```
+
+  2. Create a user for mugit, and repo for your repo.
+  ```bash
+  useradd -r -d /var/lib/mugit -m -s /bin/sh mugit
+  mkdir -p /var/lib/mugit
+  ```
+
+  3. Configure
+  ```yaml
+  # file: /var/lib/mugit/config.yaml
+  meta:
+    host: git.example.com
+  repo:
+    dir: /var/lib/mugit
+  ```
+
+  4. Systemd service
+  ```bash
+  cp mugit/mugit.service /etc/systemd/system/mugit.service
+  systemctl enable --now mugit
+  ```
+
+  5. SSH server integration
+
+  mugit integrates with the system's OpenSSH via `AuthorizedKeysCommand`. Add this to `/etc/ssh/sshd_config`:
+  ```
+  Match User mugit
+    AuthorizedKeysCommand /usr/local/bin/mugit shell keys %f
+    AuthorizedKeysCommandUser mugit
+  ```
+
+  Restart SSH:
+  ```bash
+  systemctl restart sshd
+  ```
+
+  5. Point reverse proxy to mugit, by default mugit runs on 8080 port.
+</details>
+
 
 ## Configuration
 
@@ -123,6 +166,7 @@ mugit repo new --private myproject
 # create a mirror of an external repository
 mugit repo new myproject --mirror https://codeberg.org/user/repo
 mugit repo new myproject --private --mirror https://github.com/user/repo
+mugit repo new myproject --description "My awesome project"
 
 # toggle repository visibility
 mugit repo private myproject
@@ -130,6 +174,12 @@ mugit repo private myproject
 # show and set repository description
 mugit repo description myproject
 mugit repo description myproject "My awesome project"
+
+# switch default branch
+mugit repo set-default myproject main
+
+# trigger mirror sync
+mugit repo sync myproject
 ```
 
 ## License
