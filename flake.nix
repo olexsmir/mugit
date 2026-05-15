@@ -114,11 +114,6 @@
                     default = 8080;
                     description = "Website port";
                   };
-                  log_file = mkOption {
-                    type = types.str;
-                    default = "";
-                    description = "File to write mugit logs";
-                  };
                 };
                 options.repo = {
                   dir = mkOption {
@@ -152,6 +147,11 @@
                     type = types.listOf types.str;
                     default = [];
                     description = "List of public ssh keys which are allows to do git pushes, and access private repositories";
+                  };
+                  log_file = mkOption {
+                    type = types.str;
+                    default = "";
+                    description = "File to write mugit logs (defaults to `repo.dir`/mugit-ssh.log)";
                   };
                 };
                 options.mirror = {

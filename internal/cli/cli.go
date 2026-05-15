@@ -128,7 +128,7 @@ func (c *Cli) Run(ctx context.Context, args []string) error {
 			},
 			{
 				Name:        "shell",
-				Description: "sshd things", // TODO: update me
+				Description: "git over sshd",
 				Action:      c.sshShellAction,
 				Commands: []*cli.Command{
 					{
@@ -143,12 +143,12 @@ func (c *Cli) Run(ctx context.Context, args []string) error {
 }
 
 func (c *Cli) setupLogger() error {
-	logDir := filepath.Dir(c.cfg.Server.LogFile)
+	logDir := filepath.Dir(c.cfg.SSH.LogFile)
 	if err := os.MkdirAll(logDir, 0o755); err != nil {
 		return fmt.Errorf("failed to create log directory: %w", err)
 	}
 
-	logOutput, err := os.OpenFile(c.cfg.Server.LogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	logOutput, err := os.OpenFile(c.cfg.SSH.LogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
 		return fmt.Errorf("failed to open log file: %w", err)
 	}

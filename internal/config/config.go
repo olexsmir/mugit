@@ -18,9 +18,8 @@ var (
 )
 
 type ServerConfig struct {
-	Host    string `yaml:"host"`
-	Port    int    `yaml:"port"`
-	LogFile string `yaml:"log_file"`
+	Host string `yaml:"host"`
+	Port int    `yaml:"port"`
 }
 
 type MetaConfig struct {
@@ -36,9 +35,10 @@ type RepoConfig struct {
 }
 
 type SSHConfig struct {
-	Enable bool     `yaml:"enable"`
-	User   string   `yaml:"user"`
-	Keys   []string `yaml:"keys"`
+	Enable  bool     `yaml:"enable"`
+	User    string   `yaml:"user"`
+	Keys    []string `yaml:"keys"`
+	LogFile string   `yaml:"log_file"`
 }
 
 type MirrorConfig struct {
@@ -117,10 +117,6 @@ func pathOrDefaultWithCandidates(path string, candidates []string) string {
 }
 
 func (c *Config) ensureDefaults() {
-	if c.Server.LogFile == "" {
-		c.Server.LogFile = filepath.Join(c.Repo.Dir, "mugit.log")
-	}
-
 	// http
 	if c.Server.Port == 0 {
 		c.Server.Port = 8080
@@ -144,6 +140,9 @@ func (c *Config) ensureDefaults() {
 	// ssh
 	if c.SSH.User == "" {
 		c.SSH.User = "git"
+	}
+	if c.SSH.LogFile == "" {
+		c.SSH.LogFile = filepath.Join(c.Repo.Dir, "mugit-ssh.log")
 	}
 
 	// mirroring

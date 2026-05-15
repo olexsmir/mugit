@@ -33,6 +33,9 @@ func (c *Cli) sshAuthorizedKeysAction(ctx context.Context, cmd *cli.Command) err
 	if !c.cfg.SSH.Enable {
 		return errSSHDisabled
 	}
+	if err := c.setupLogger(); err != nil {
+		return err
+	}
 
 	fingerprint := cmd.Args().First()
 	if fingerprint == "" {
