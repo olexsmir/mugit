@@ -75,9 +75,7 @@
         </tbody>
       </table>
 
-      {{- if and .P.Readme .P.ParentPath -}}
-      <article class="readme">{{- .P.Readme -}}</article>
-      {{- end -}}
+      {{ if .P.Readme }}<article class="readme">{{.P.Readme}}</article>{{ end }}
     </main>
   </body>
 </html>
