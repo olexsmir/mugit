@@ -97,6 +97,11 @@
                     default = "";
                     description = "Website description";
                   };
+                  modt = mkOption {
+                    type = types.str;
+                    default = "";
+                    description = "MODT shown on ssh connections";
+                  };
                   host = mkOption {
                     type = types.str;
                     default = "";
