@@ -82,7 +82,7 @@ func (g *Repo) resolveRef(ref string) (plumbing.Hash, error) {
 	if err != nil {
 		return plumbing.ZeroHash, err
 	}
-	return *hash, nil
+	return g.peelToCommit(*hash), nil
 }
 
 func parseAheadBehind(counts []byte) (behind, ahead int, err error) {

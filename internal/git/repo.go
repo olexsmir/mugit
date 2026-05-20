@@ -59,7 +59,7 @@ func Open(path, ref string) (*Repo, error) {
 		if err != nil {
 			return nil, fmt.Errorf("resolving rev %s for %s: %w", ref, path, err)
 		}
-		g.h = *hash
+		g.h = g.peelToCommit(*hash)
 	}
 	return &g, nil
 }
@@ -312,4 +312,23 @@ func (g *Repo) fetch(ctx context.Context, auth transport.AuthMethod) (bool, erro
 	}
 
 	return isUpdated, nil
+}
+
+func (g *Repo) peelToCommit(h plumbing.Hash) plumbing.Hash {
+	obj, err := g.r.Object(plumbing.AnyObject, h)
+	if err != nil {
+		return h
+	}
+	if obj.Type() == plumbing.TagObject {
+		tag, ok := obj.(*object.Tag)
+		if !ok {
+			return h
+		}
+		commit, err := tag.Commit()
+		if err != nil {
+			return h
+		}
+		return commit.Hash
+	}
+	return h
 }

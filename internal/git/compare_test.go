@@ -2,6 +2,7 @@ package git
 
 import (
 	"testing"
+	"time"
 
 	"olexsmir.xyz/x/is"
 )
@@ -47,5 +48,50 @@ func TestRepo_Compare(t *testing.T) {
 
 		_, err := r.open().Compare("master", "does-not-exist")
 		is.Err(t, err, "resolving head ref")
+	})
+
+	t.Run("compares branch with lightweight tag", func(t *testing.T) {
+		r := newTestRepo(t)
+		base := r.commitFile("README.md", "base\n", "base commit")
+		r.createTag("v1.0", base)
+		r.createBranch("develop", base)
+		r.checkoutBranch("develop", false)
+		r.commitFile("develop.txt", "develop only\n", "develop change")
+
+		cmp, err := r.open().Compare("v1.0", "develop")
+		is.Err(t, err, nil)
+		is.Equal(t, cmp.BaseRef, "v1.0")
+		is.Equal(t, cmp.HeadRef, "develop")
+		is.Equal(t, cmp.Behind, 0)
+		is.Equal(t, cmp.Ahead, 1)
+		is.Equal(t, cmp.Diff.Stat.FilesChanged, 1)
+	})
+
+	t.Run("compares branch with annotated tag", func(t *testing.T) {
+		r := newTestRepo(t)
+		base := r.commitFile("README.md", "base\n", "base commit")
+		r.createAnnotatedTag("v1.0", "v1 release", base, time.Now())
+		r.createBranch("develop", base)
+		r.checkoutBranch("develop", false)
+		r.commitFile("develop.txt", "develop only\n", "develop change")
+
+		cmp, err := r.open().Compare("v1.0", "develop")
+		is.Err(t, err, nil)
+		is.Equal(t, cmp.BaseRef, "v1.0")
+		is.Equal(t, cmp.HeadRef, "develop")
+		is.Equal(t, cmp.Behind, 0)
+		is.Equal(t, cmp.Ahead, 1)
+	})
+
+	t.Run("compares two annotated tags", func(t *testing.T) {
+		r := newTestRepo(t)
+		base := r.commitFile("README.md", "base\n", "base commit")
+		head := r.commitFile("develop.txt", "develop only\n", "develop change")
+		r.createAnnotatedTag("v1.0", "v1.0", base, time.Now())
+		r.createAnnotatedTag("v2.0", "v2.0", head, time.Now())
+
+		cmp, err := r.open().Compare("v1.0", "v2.0")
+		is.Err(t, err, nil)
+		is.Equal(t, cmp.Ahead, 1)
 	})
 }
