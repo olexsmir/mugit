@@ -159,7 +159,7 @@ func (g *Repo) diffBetween(base, head plumbing.Hash) (*NiceDiff, error) {
 
 	diff, err := parseNiceDiff(patch.String())
 	if err != nil {
- 		return nil, fmt.Errorf("parse tree diff %s..%s: %w", base, head, err)
+		return nil, fmt.Errorf("parse tree diff %s..%s: %w", base, head, err)
 	}
 	return diff, nil
 }

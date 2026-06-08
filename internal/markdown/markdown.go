@@ -25,7 +25,8 @@ var (
 			emoji.Emoji,
 			callout.CalloutExtention,
 			&relativeLink{},
-		))
+		),
+	)
 )
 
 func Render(repoName, repoRef, readmePath, readmeSource string) (string, error) {

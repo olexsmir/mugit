@@ -43,7 +43,8 @@ func (h *handlers) loggingMiddleware(next http.Handler) http.Handler {
 		wrapped := wrapResponseWriter(w)
 		next.ServeHTTP(wrapped, r)
 
-		slog.Info("http request",
+		slog.Info(
+			"http request",
 			"method", r.Method,
 			"status", wrapped.status,
 			"path", r.URL.Path,

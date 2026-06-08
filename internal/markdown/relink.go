@@ -78,7 +78,8 @@ func (m *relLinkTransformer) relativeLinkTransformer(link *ast.Link) {
 
 func (m *relLinkTransformer) imageFromRepoTransformer(img *ast.Image) {
 	img.Destination = []byte(m.imageFromRepo(
-		string(img.Destination)))
+		string(img.Destination),
+	))
 }
 
 func (m *relLinkTransformer) imageFromRepo(dst string) string {
