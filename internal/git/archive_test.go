@@ -23,6 +23,12 @@ func TestIsValidRef(t *testing.T) {
 		{name: "branch with dot", ref: "release.1.0", want: true},
 		{name: "branch with hyphen", ref: "bug-fix", want: true},
 
+		// flag injection prevention
+		{name: "flag --help", ref: "--help", want: false},
+		{name: "flag --output", ref: "--output", want: false},
+		{name: "flag -o", ref: "-o", want: false},
+		{name: "flag -", ref: "-", want: false},
+
 		// security sensitive
 		{name: "empty string", ref: "", want: false},
 		{name: "double dot traversal", ref: "..", want: false},

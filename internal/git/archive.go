@@ -15,7 +15,7 @@ func (g *Repo) ArchiveTar(ctx context.Context, ref string, out io.Writer) error 
 	}
 
 	if err := g.gitCmd(ctx, cmdOpts{
-		Cmd:    []string{"archive", "--format=tar.gz", ref},
+		Cmd:    []string{"archive", "--format=tar.gz", "--", ref},
 		Stdout: out,
 	}); err != nil {
 		return fmt.Errorf("git archive %s: %w", ref, err)
@@ -39,7 +39,7 @@ func (g *Repo) UploadArchive(ctx context.Context, in io.Reader, out io.Writer) e
 var isValidRefRe = regexp.MustCompile(`^[a-zA-Z0-9._/-]+$`)
 
 func isValidRef(ref string) bool {
-	if ref == "" || strings.Contains(ref, "..") {
+	if ref == "" || strings.Contains(ref, "..") || strings.HasPrefix(ref, "-") {
 		return false
 	}
 	return isValidRefRe.MatchString(ref)
