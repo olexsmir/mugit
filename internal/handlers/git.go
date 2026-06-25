@@ -56,6 +56,8 @@ func (h *handlers) uploadPackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	r.Body = http.MaxBytesReader(w, r.Body, 5<<20) // 5 MB limit
+
 	bodyReader := r.Body
 	if r.Header.Get("Content-Encoding") == "gzip" {
 		gzipReader, err := gzip.NewReader(r.Body)
