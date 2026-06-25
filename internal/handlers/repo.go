@@ -254,6 +254,8 @@ func (h *handlers) rawFileContentsHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	w.Header().Set("Content-Type", fc.Mime)
+	w.Header().Set("Content-Disposition", "attachment")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(fc.Content)
 }
