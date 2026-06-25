@@ -534,7 +534,7 @@ func (h *handlers) renderReadme(r *git.Repo, ref, treePath string) (template.HTM
 	return readmeContents, nil
 }
 
-func (h handlers) pageData(repo *git.Repo, p any) PageData[any] {
+func (h handlers) pageData[T any](repo *git.Repo, p T) PageData[T] {
 	var name string
 	var gomod, empty bool
 	if repo != nil {
@@ -543,7 +543,7 @@ func (h handlers) pageData(repo *git.Repo, p any) PageData[any] {
 		name = repo.Name()
 	}
 
-	return PageData[any]{
+	return PageData[T]{
 		P:        p,
 		RepoName: name,
 		Meta: Meta{

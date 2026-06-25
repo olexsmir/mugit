@@ -10,7 +10,7 @@
         let version = self.rev or "dev";
         in {
           default = self.packages.${pkgs.stdenv.hostPlatform.system}.mugit;
-          mugit = pkgs.buildGo126Module {
+          mugit = pkgs.buildGo127Module {
             pname = "mugit";
             version = version;
             src = ./.;
