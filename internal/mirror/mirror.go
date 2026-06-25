@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"golang.org/x/sync/semaphore"
+
 	"olexsmir.xyz/mugit/internal/config"
 	"olexsmir.xyz/mugit/internal/git"
 )

@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/urfave/cli/v3"
+
 	"olexsmir.xyz/mugit/internal/config"
 	"olexsmir.xyz/mugit/internal/git"
 	"olexsmir.xyz/mugit/internal/ssh"

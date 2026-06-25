@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/bluekeyes/go-gitdiff/gitdiff"
+
 	"olexsmir.xyz/x/is"
 )
 
