@@ -25,7 +25,7 @@ func (g *Repo) InfoRefs(ctx context.Context, protocol string, out io.Writer) err
 			"upload-pack", "--stateless-rpc", "--advertise-refs",
 		},
 		Stdout: out,
-		Stderr: out, // TODO: Check if this is correct.
+		Stderr: io.Discard,
 	}); err != nil {
 		return fmt.Errorf("git-upload-pack: %w", err)
 	}
@@ -45,7 +45,7 @@ func (g *Repo) UploadPack(ctx context.Context, statelessRPC bool, protocol strin
 		GitProtocol: protocol,
 		Stdin:       in,
 		Stdout:      out,
-		Stderr:      out, // TODO: Check if this is correct.
+		Stderr:      io.Discard,
 	}); err != nil {
 		return fmt.Errorf("git-upload-pack: %w", err)
 	}
